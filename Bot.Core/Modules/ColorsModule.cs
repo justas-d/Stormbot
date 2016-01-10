@@ -9,7 +9,6 @@ using Discord.Modules;
 
 namespace Stormbot.Bot.Core.Modules
 {
-    /// <summary> Creates a role for each built-in color and allows users to freely select them. </summary>
     internal class ColorsModule : IModule
     {
         private string _colorRoleName = "ColorsAddRole";

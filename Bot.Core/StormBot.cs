@@ -34,7 +34,7 @@ namespace Stormbot.Bot.Core
 
         private async Task Init()
         {
-            Logger.Writeline("Initializing StormBot v2");
+            Logger.Writeline("Initializing Stormbot v2");
             Logger.Writeline("Connecting to Discord... ");
             await _client.Connect(_email, _password);
             Logger.Writeline("Installing services... ");
@@ -75,7 +75,6 @@ namespace Stormbot.Bot.Core
 
             _client.AddModule<BotManagementModule>("Bot Management");
             _client.AddModule<ServerManagementModule>("Server Management");
-           // _client.AddModule<AudioModule>("Audio");
             _client.AddModule<AudioStreamModule>("Audio");
             _client.AddModule<QualityOfLifeModule>("QoL");
             _client.AddModule<ColorsModule>("Color");
@@ -90,7 +89,7 @@ namespace Stormbot.Bot.Core
             Logger.Writeline("Loading data... ");
             io.Load();
 
-            Logger.Writeline(" -WE ARE LIVE-" + Environment.NewLine);
+            Logger.Writeline($" -WE ARE LIVE-{Environment.NewLine}");
         }
     }
 }

@@ -1,0 +1,7 @@
+﻿High priority:
+
+Medium priority:
+* !info - displays memory usage, github page, owner info, bot info.
+
+Low priority:
+* !timetostop - plays https://www.youtube.com/watch?v=2k0SmqbBIpQ whenever called

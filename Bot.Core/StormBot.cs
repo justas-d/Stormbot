@@ -80,6 +80,7 @@ namespace Stormbot.Bot.Core
             _client.AddModule<ColorsModule>("Color");
             _client.AddModule<TestModule>("Test");
             _client.AddModule<TwitchModule>("Twitch");
+            _client.AddModule<InfoModule>("Information");
 
             _client.Log.Message += delegate(object sender, LogMessageEventArgs args)
             {

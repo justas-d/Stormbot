@@ -4,6 +4,7 @@ A Discord.Net based personal bot.
 # Prerequisites.
 * C#6
 * .NET 4.5.2
+* StrmyCore
 * Discord.Net, Modules, Commands, Audio
 * A Discord account the bot can log into.
 * Livestreamer, ffmpeg and ffprobe for audio.
@@ -21,5 +22,6 @@ After that you will need to create a ````config.json```` and fill it with inform
 }
 
 ````
+Compile the bot, have it log in with the details we gave it in ````config.json````.
+Then you will want to give it the owner id, stored in ````Stormbot.Helpers.Constants.UserOwner````. You can use the !whoami command to find out your user id.
 
-Once all that is done you should be able to compile the code and run the bot.

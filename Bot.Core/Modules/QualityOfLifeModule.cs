@@ -74,10 +74,10 @@ namespace Stormbot.Bot.Core.Modules
                         }
 
                         StringBuilder builder = new StringBuilder();
-                        builder.AppendLine($"**Listing remidners for {e.User.Name}:**");
+                        builder.AppendLine($"**Listing reminders for {e.User.Name}:**");
 
                         foreach (ReminderData rem in userRem)
-                            builder.AppendLine($"{rem.EndTime, -20} Remaining time: {rem.EndTime - DateTime.Now}");
+                            builder.AppendLine($"`{rem.EndTime, -20}` Remaining time: `{(rem.EndTime - DateTime.Now).ToString(@"hh\:mm\:ss")}`");
 
                         await e.Channel.SendMessage(builder.ToString());
                     });
@@ -112,7 +112,7 @@ namespace Stormbot.Bot.Core.Modules
 
                 group.CreateCommand("quote")
                     .MinPermissions((int) PermissionLevel.User)
-                    .Description("Returns a thing some faggot a few million years ago said while fucking their dog.")
+                    .Description("Kappa.")
                     .Do(async e =>
                     {
                         await e.Channel.SendMessage($"`{_quotes.PickRandom()}`");

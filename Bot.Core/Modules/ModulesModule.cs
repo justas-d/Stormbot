@@ -62,7 +62,7 @@ namespace Stormbot.Bot.Core.Modules
                             return;
                         }
                         AddModuleToSave(module.Id, e.Server.Id);
-                        await e.Channel.SendMessage($"Module {module.Id} was enabled for server {server.Name}.");
+                        await e.Channel.SendMessage($"Module `{module.Id}` was enabled for server `{server.Name}`.");
 
                     });
                 group.CreateCommand("disable")
@@ -90,11 +90,11 @@ namespace Stormbot.Bot.Core.Modules
                         var server = e.Server;
                         if (!module.DisableServer(server))
                         {
-                            await e.Channel.SendMessage($"Module {module.Id} was not enabled for server {server.Name}.");
+                            await e.Channel.SendMessage($"Module `{module.Id}` was not enabled for server `{server.Name}`.");
                             return;
                         }
                         DeleteModuleFromSave(module.Id, e.Server.Id);
-                        await e.Channel.SendMessage($"Module {module.Id} was disabled for server {server.Name}.");
+                        await e.Channel.SendMessage($"Module `{module.Id}` was disabled for server `{server.Name}`.");
                     });
                 group.CreateCommand("list")
                     .Do(async e =>

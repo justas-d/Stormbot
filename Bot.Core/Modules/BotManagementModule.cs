@@ -29,7 +29,7 @@ namespace Stormbot.Bot.Core.Modules
                 group.MinPermissions((int) PermissionLevel.BotOwner);
 
                 group.CreateCommand("join")
-                .MinPermissions((int)PermissionLevel.User)
+                    .MinPermissions((int) PermissionLevel.User)
                     .Description("Joins a server by invite.")
                     .Parameter("invite")
                     .Do(async e =>
@@ -42,7 +42,8 @@ namespace Stormbot.Bot.Core.Modules
                         }
                         else if (invite.IsRevoked)
                         {
-                            await e.Channel.SendMessage("This invite has expired or the bot is banned from that server.");
+                            await
+                                e.Channel.SendMessage("This invite has expired or the bot is banned from that server.");
                             return;
                         }
 
@@ -52,8 +53,8 @@ namespace Stormbot.Bot.Core.Modules
 
                 group.CreateCommand("leave")
                     .Description("Instructs the bot to leave this server.")
-                    .MinPermissions((int)PermissionLevel.ServerModerator)
-                    .MinPermissions((int)PermissionLevel.BotOwner)
+                    .MinPermissions((int) PermissionLevel.ServerModerator)
+                    .MinPermissions((int) PermissionLevel.BotOwner)
                     .Do(async e =>
                     {
                         await e.Channel.SendMessage("Leaving~");
@@ -67,7 +68,7 @@ namespace Stormbot.Bot.Core.Modules
                         io.Save();
                     });
 
-                group.CreateCommand("io reload")
+                group.CreateCommand("io load")
                     .Description("Loads data that the bot loads at runtime.")
                     .Do(e =>
                     {
@@ -82,7 +83,7 @@ namespace Stormbot.Bot.Core.Modules
                         await _client.CurrentUser.Edit(Constants.Pass, e.GetArg("name"));
                     });
 
-                group.CreateCommand("avatar")
+                group.CreateCommand("setavatar")
                     .Description("Changes the avatar of the bot")
                     .Parameter("name")
                     .Do(async e =>
@@ -148,6 +149,7 @@ namespace Stormbot.Bot.Core.Modules
                         await Collect(e);
                     });
                 group.CreateCommand("list")
+                    .MinPermissions((int) PermissionLevel.User)
                     .Description("Calls GC.GetTotalMemory()")
                     .Do(async e =>
                     {

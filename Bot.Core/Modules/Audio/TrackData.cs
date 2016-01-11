@@ -5,8 +5,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
-using Discord;
 using JetBrains.Annotations;
 using Newtonsoft.Json;
 using Stormbot.Helpers;

@@ -7,18 +7,21 @@ A Discord.Net based personal bot.
 * StrmyCore
 * Discord.Net, Modules, Commands, Audio
 * A Discord account the bot can log into.
-* Livestreamer, ffmpeg and ffprobe for audio.
+* Livestreamer, ffmpeg, ffprobe, YoutubeExtractor and a Soundcloud API key for audio.
 
 You will first want to set up a Data folder (stored in ````Stormbot.Helpers.Constants.DataFolderDir````). 
 
 After that you will need to create a ````config.json```` and fill it with information in the given json format:
 ````
 {
-  "Email"           : "",
-  "Password"        : "",
-  "FfmpegDir"       : "",
-  "FfprobeDir"      : "",
-  "LivestreamerDir" : ""
+  "Email"            : "",
+  "Password"         : "",
+
+  //only if using audio
+  "FfmpegDir"        : "",
+  "FfprobeDir"       : "", 
+  "SoundcloudApiKey" : "",
+  ""
 }
 
 ````

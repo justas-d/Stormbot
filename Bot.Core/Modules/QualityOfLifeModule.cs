@@ -54,8 +54,6 @@ namespace Stormbot.Bot.Core.Modules
 
         private bool _isReminderTimerRunning;
 
-        private static readonly string QupteDir = Path.Combine(Constants.DataFolderDir, "qupte.png");
-
         public void Install(ModuleManager manager)
         {
             _client = manager.Client;
@@ -122,12 +120,10 @@ namespace Stormbot.Bot.Core.Modules
                     .MinPermissions((int)PermissionLevel.User)
                     .Do(async e =>
                     {
-                        if (!File.Exists(QupteDir))
-                        {
-                            Logger.Writeline("qupte.png doesn't exist at bot data folder.");
-                            return;
-                        }
-                        await e.Channel.SendFile(QupteDir);
+                        const string quptePoolDir = Constants.DataFolderDir + @"12\";
+                        if (!File.Exists(quptePoolDir)) return;
+
+                        await e.Channel.SendFile(Directory.GetFiles(quptePoolDir).PickRandom());
                     });
             });
 

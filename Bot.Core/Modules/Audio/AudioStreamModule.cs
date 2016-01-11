@@ -2,8 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -12,172 +10,14 @@ using Discord.Audio;
 using Discord.Commands;
 using Discord.Commands.Permissions.Levels;
 using Discord.Modules;
-using JetBrains.Annotations;
-using Newtonsoft.Json;
 using Stormbot.Bot.Core.Services;
-using Stormbot.Helpers;
 using StrmyCore;
 
-namespace Stormbot.Bot.Core.Modules
+namespace Stormbot.Bot.Core.Modules.Audio
 {
     [DataModule]
     public class AudioStreamModule : IModule
     {
-        private class AudioStreamer : IDisposable
-        {
-            private string Location { get; }
-            private DiscordClient Client { get; }
-
-            public Stream OutputStream { get; private set; }
-            private Process _ffmpeg;
-
-            public AudioStreamer(string location, DiscordClient client)
-            {
-                Location = location;
-                Client = client;
-            }
-
-            public void Start()
-            {
-                _ffmpeg = new Process
-                {
-                    StartInfo =
-                    {
-                        FileName = Constants.FfmpegDir,
-                        Arguments = $"-i \"{Location}\" -f s16le -ar 48000 -ac {Client.Audio().Config.Channels} pipe:1",
-                        UseShellExecute = false,
-                        RedirectStandardOutput = true,
-                        CreateNoWindow = true,
-                    },
-                };
-                if (!_ffmpeg.Start())
-                {
-                    Logger.FormattedWrite(GetType().Name, "Failed starting ffmpeg.", ConsoleColor.Red);
-                    return;
-                }
-                OutputStream = _ffmpeg.StandardOutput.BaseStream;
-            }
-
-            public void Dispose()
-            {
-                OutputStream?.Dispose();
-                _ffmpeg?.Dispose();
-            }
-        }
-
-        [Serializable]
-        internal class MusicData
-        {
-            public string Location { get; }
-            public TimeSpan Length { get; private set; }
-            public string Name { get; set; }
-
-            [JsonConstructor, UsedImplicitly]
-            private MusicData(string location, TimeSpan length, string name)
-            {
-                Location = location;
-                Length = length;
-                Name = name;
-            }
-
-            internal MusicData(string location)
-            {
-                Location = location;
-                ReadTrackLengthFromDisk();
-            }
-
-            private MusicData(string location, string name) : this(location)
-            {
-                Name = name;
-            }
-
-            internal static MusicData Create(string location)
-            {
-                if (File.Exists(location))
-                    return new MusicData(location) { Name = location.GetFilename() };
-
-                using (Process livestreamer = new Process
-                {
-                    StartInfo =
-                    {
-                        FileName = Constants.LivestreamerDir,
-                        Arguments = $"--stream-url {location} best",
-                        UseShellExecute = false,
-                        RedirectStandardOutput = true,
-                        CreateNoWindow = true,
-                    },
-                    EnableRaisingEvents = true
-                })
-                {
-                    MusicData retval = null;
-                    livestreamer.OutputDataReceived += (sender, args) =>
-                    {
-                        if (string.IsNullOrEmpty(args.Data)) return;
-                        if (args.Data.StartsWith("error")) return;
-
-                        retval = new MusicData(args.Data, location);
-                    };
-
-                    if (!livestreamer.Start())
-                    {
-                        Logger.FormattedWrite(typeof(MusicData).Name, "Failed starting livestreamer.",
-                            ConsoleColor.Red);
-                        return null;
-                    }
-                    livestreamer.BeginOutputReadLine();
-                    livestreamer.WaitForExit();
-                    return retval;
-                }
-            }
-
-            private void ReadTrackLengthFromDisk()
-            {
-                try
-                {
-                    using (Process ffprobe = new Process
-                    {
-                        StartInfo =
-                        {
-                            FileName = Constants.FfprobeDir,
-                            Arguments =
-                                $"-v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 \"{Location}\"",
-                            UseShellExecute = false,
-                            RedirectStandardOutput = true,
-                            CreateNoWindow = true,
-                        },
-                        EnableRaisingEvents = true
-                    })
-                    {
-                        ffprobe.OutputDataReceived += (sender, args) =>
-                        {
-                            if (string.IsNullOrEmpty(args.Data)) return;
-                            if (args.Data == "N/A") Length = TimeSpan.Zero;
-                            else
-                            {
-                                Length = TimeSpan.FromSeconds(
-                                    int.Parse(
-                                        args.Data.Remove(
-                                            args.Data.IndexOf('.'))));
-                            }
-                        };
-
-                        if (!ffprobe.Start())
-                        {
-                            Logger.FormattedWrite(GetType().Name, "Failed starting ffprobe.", ConsoleColor.Red);
-                            return;
-                        }
-
-                        ffprobe.BeginOutputReadLine();
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Logger.FormattedWrite(GetType().Name, $"Failed getting track length. Exception: {ex}",
-                        ConsoleColor.Red);
-                }
-            }
-        }
-
         private DiscordClient _client;
 
         private Channel _audioPlaybackChannel;
@@ -203,8 +43,8 @@ namespace Stormbot.Bot.Core.Modules
         private bool _pauseTrack;
         private bool _prevFlag;
 
-        [DataSave] [DataLoad] private readonly List<MusicData> _playlist = new List<MusicData>();
-        private MusicData CurrentTrack => _playlist[TrackIndex];
+        [DataSave] [DataLoad] private readonly List<TrackData> _playlist = new List<TrackData>();
+        private TrackData CurrentTrack => _playlist[TrackIndex];
 
         public void Install(ModuleManager manager)
         {
@@ -220,14 +60,16 @@ namespace Stormbot.Bot.Core.Modules
                     .Do(async e =>
                     {
                         string loc = e.GetArg("location");
-                        MusicData track = MusicData.Create(loc);
-                        if (track == null)
+                        TrackResolveResult result = TrackData.Create(loc);
+
+                        if (result == null)
                         {
-                            await e.Channel.SendMessage($"Failled adding `{loc}` to the playlist.");
+                            await e.Channel.SendMessage($"Failed getting the stream url for `{loc}. Info: {result.Message}`");
                             return;
                         }
-                        _playlist.Add(track);
-                        await e.Channel.SendMessage($"Added `{track.Name}` to the playlist.");
+
+                        _playlist.Add(result.Track);
+                        await e.Channel.SendMessage($"Added `{result.Track.Name}` to the playlist.");
                     });
                 group.CreateCommand("raw")
                     .Description("Adds a raw stream to the track playlist.")
@@ -235,7 +77,7 @@ namespace Stormbot.Bot.Core.Modules
                     .Do(async e =>
                     {
                         string url = e.GetArg("url");
-                        MusicData track = new MusicData(url) {Name = $"Raw stream: {url}"};
+                        TrackData track = new TrackData(url, $"Raw stream: {url}");
 
                         _playlist.Add(track);
                         await e.Channel.SendMessage($"Added `{track.Name}` to the playlist.");
@@ -305,7 +147,7 @@ namespace Stormbot.Bot.Core.Modules
                     .Do(async e =>
                     {
                         int remIndex = int.Parse(e.GetArg("index")) - 1;
-                        MusicData remData = _playlist[remIndex];
+                        TrackData remData = _playlist[remIndex];
                         _playlist.RemoveAt(remIndex);
                         await e.Channel.SendMessage($"Removed track `{remData.Name}` from the playlist.");
                     });
@@ -411,7 +253,7 @@ namespace Stormbot.Bot.Core.Modules
             await voice.Disconnect();
         }
 
-        private async Task StartAudioStream(Channel text, IAudioClient voice, MusicData track)
+        private async Task StartAudioStream(Channel text, IAudioClient voice, TrackData track)
         {
             if (_isPlaying) return;
 

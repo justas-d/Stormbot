@@ -4,6 +4,7 @@ using System;
 using System.IO;
 using Newtonsoft.Json;
 using Stormbot.Bot.Core;
+using Stormbot.Bot.Core.Modules.Audio;
 using Stormbot.Helpers;
 using Logger = Stormbot.Bot.Core.Logger;
 
@@ -22,6 +23,7 @@ namespace Stormbot
                     Constants.FfprobeDir = config.FfprobeDir;
                     Constants.FfmpegDir = config.FfmpegDir;
                     Constants.LivestreamerDir = config.LivestreamerDir;
+                    SoundcloudResolver.ApiKey = config.SoundcloudApiKey;
                 }
                 catch (Exception ex)
                 {

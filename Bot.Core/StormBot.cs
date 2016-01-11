@@ -9,6 +9,7 @@ using Discord.Commands;
 using Discord.Commands.Permissions.Levels;
 using Discord.Modules;
 using Stormbot.Bot.Core.Modules;
+using Stormbot.Bot.Core.Modules.Audio;
 using Stormbot.Bot.Core.Services;
 using Stormbot.Helpers;
 

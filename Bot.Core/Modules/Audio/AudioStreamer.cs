@@ -17,20 +17,33 @@ namespace Stormbot.Bot.Core.Modules.Audio
         public Stream OutputStream { get; private set; }
         private Process _ffmpeg;
 
+        private string DefaultStartArgs
+            => $"-i \"{Location}\" -f s16le -ar 48000 -ac {Client.Audio().Config.Channels} pipe:1";
+
         public AudioStreamer(string location, DiscordClient client)
         {
             Location = location;
             Client = client;
         }
 
+        public void Start(TimeSpan startTime)
+        {
+            StartFfmpeg($"-ss {startTime} {DefaultStartArgs}");
+        }
+
         public void Start()
+        {
+            StartFfmpeg(DefaultStartArgs);
+        }
+
+        private void StartFfmpeg(string args)
         {
             _ffmpeg = new Process
             {
                 StartInfo =
                     {
                         FileName = Constants.FfmpegDir,
-                        Arguments = $"-i \"{Location}\" -f s16le -ar 48000 -ac {Client.Audio().Config.Channels} pipe:1",
+                        Arguments = args,
                         UseShellExecute = false,
                         RedirectStandardOutput = true,
                         CreateNoWindow = true,

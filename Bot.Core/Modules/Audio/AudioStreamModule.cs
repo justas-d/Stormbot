@@ -11,6 +11,7 @@ using Discord.Commands;
 using Discord.Commands.Permissions.Levels;
 using Discord.Modules;
 using Stormbot.Bot.Core.Services;
+using Stormbot.Helpers;
 using StrmyCore;
 
 namespace Stormbot.Bot.Core.Modules.Audio
@@ -42,6 +43,9 @@ namespace Stormbot.Bot.Core.Modules.Audio
         private bool _pauseTrack;
         private bool _prevFlag;
 
+        private bool _skipFlag;
+        private TimeSpan _skipTime;
+
         [DataSave] [DataLoad] private readonly List<TrackData> _playlist = new List<TrackData>();
         private TrackData CurrentTrack => _playlist[TrackIndex];
 
@@ -52,6 +56,24 @@ namespace Stormbot.Bot.Core.Modules.Audio
             manager.CreateCommands("stream", group =>
             {
                 group.MinPermissions((int) PermissionLevel.Trusted);
+
+                group.CreateCommand("goto")
+                    .Description("Skips to the given point in the track.")
+                    .Parameter("time")
+                    .Do(e =>
+                    {
+                        if (!_isPlaying) return;
+
+                        _pauseTrack = false;
+                        _stopTrack = true;
+
+                        TimeSpan time = TimeSpan.Parse(e.GetArg("time"));
+                        if (time >= CurrentTrack.Length ||
+                            CurrentTrack.Length <= TimeSpan.Zero) return;
+
+                        _skipTime = time;
+                        _skipFlag = true;
+                    });
 
                 group.CreateCommand("add")
                     .Description("Adds a track to the music playlist.")
@@ -208,7 +230,7 @@ namespace Stormbot.Bot.Core.Modules.Audio
                 if (CurrentTrack != null)
                     await
                         channel.SendMessage(
-                            $"Currently playing: `{CurrentTrack.Name}` [`{CurrentTrack.Length.ToString("hh\\:mm\\:ss")}`]");
+                            $"Currently playing: `{CurrentTrack.Name}` [`{CurrentTrack.Length}`]");
                 else
                     await channel.SendMessage("No track playing");
             }
@@ -244,6 +266,7 @@ namespace Stormbot.Bot.Core.Modules.Audio
                 }
 
                 await StartAudioStream(textChannel, voice, CurrentTrack);
+                if (_skipFlag) continue;
 
                 if (_prevFlag)
                 {
@@ -266,14 +289,23 @@ namespace Stormbot.Bot.Core.Modules.Audio
 
             using (var streamer = new AudioStreamer(track.Location, _client))
             {
-                streamer.Start();
+                if (_skipFlag)
+                {
+                    streamer.Start(_skipTime);
+                    _skipTime = TimeSpan.Zero;
+                    _skipFlag = false;
+                }
+                else
+                {
+                    streamer.Start();
+                    await PrintCurrentTrack(text);
+                }
 
                 int bufferSize = 1920*_client.Audio().Config.Channels;
                 byte[] buffer = new byte[bufferSize];
 
                 // Wait for the ffmpeg stream to become available.
                 while (streamer.OutputStream == null) await Task.Delay(100);
-                await PrintCurrentTrack(text);
 
                 while (true)
                 {

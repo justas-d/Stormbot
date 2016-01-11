@@ -47,12 +47,14 @@ namespace Stormbot.Bot.Core.Modules
 
         [DataLoad]
         private List<string> _quotes = new List<string>();
+
         [DataLoad, DataSave]
         private readonly List<ReminderData> _reminders = new List<ReminderData>();
+        private bool _isReminderTimerRunning;
+
+        private const string ColorRoleName = "ColorsAddRole";
 
         private DiscordClient _client;
-
-        private bool _isReminderTimerRunning;
 
         public void Install(ModuleManager manager)
         {
@@ -75,7 +77,8 @@ namespace Stormbot.Bot.Core.Modules
                         builder.AppendLine($"**Listing reminders for {e.User.Name}:**");
 
                         foreach (ReminderData rem in userRem)
-                            builder.AppendLine($"`{rem.EndTime, -20}` Remaining time: `{(rem.EndTime - DateTime.Now).ToString(@"hh\:mm\:ss")}`");
+                            builder.AppendLine(
+                                $"`{rem.EndTime,-20}` Remaining time: `{(rem.EndTime - DateTime.Now).ToString(@"hh\:mm\:ss")}`");
 
                         await e.Channel.SendMessage(builder.ToString());
                     });
@@ -117,13 +120,48 @@ namespace Stormbot.Bot.Core.Modules
                     });
                 group.CreateCommand("qupte")
                     .Description("Ruby for fucks sake...")
-                    .MinPermissions((int)PermissionLevel.User)
+                    .MinPermissions((int) PermissionLevel.User)
                     .Do(async e =>
                     {
                         const string quptePoolDir = Constants.DataFolderDir + @"12\";
                         if (!File.Exists(quptePoolDir)) return;
 
                         await e.Channel.SendFile(Directory.GetFiles(quptePoolDir).PickRandom());
+                    });
+
+            });
+
+            manager.CreateCommands("color", group =>
+            {
+                group.CreateCommand("set")
+                    .Description("Sets your username to a hex color. Format: RRGGBB")
+                    .Parameter("hex")
+                    .Do(async e =>
+                    {
+                        string stringhex = e.GetArg("hex").ToUpper();
+                        Role role = e.Server.Roles.FirstOrDefault(x => x.Name == ColorRoleName + stringhex);
+
+                        if (role == null || !e.User.HasRole(role) && role.CanEdit())
+                        {
+                            role = await e.Server.CreateRole(ColorRoleName + stringhex);
+                            role.SetColor(stringhex);
+                            await e.User.Edit(roles: GetOtherRoles(e.User).Concat(new[] { role }));
+                        }
+                        await CleanColorRoles(e.Server);
+                    });
+                group.CreateCommand("clear")
+                    .Description("Removes your username color, returning it to default.")
+                    .Do(async e =>
+                    {
+                        await e.User.Edit(roles: GetOtherRoles(e.User));
+                    });
+
+                group.CreateCommand("clean")
+                    .MinPermissions((int)PermissionLevel.ServerModerator)
+                    .Description("Removes unused color roles. Gets automatically called whenever a color is set.")
+                    .Do(async e =>
+                    {
+                        await CleanColorRoles(e.Server);
                     });
             });
 
@@ -133,6 +171,18 @@ namespace Stormbot.Bot.Core.Modules
                 _isReminderTimerRunning = true;
             }
         }
+
+        private async Task CleanColorRoles(Server server)
+        {
+            foreach (Role role in server.Roles
+                .Where(role => role.Name.StartsWith(ColorRoleName))
+                .Where(role => !role.Members.Any()))
+            {
+                await role.Delete();
+            }
+        }
+
+        private IEnumerable<Role> GetOtherRoles(User user) => user.Roles.Where(x => !x.Name.StartsWith(_colorRoleName));
 
         private async void StartReminderTimer()
         {

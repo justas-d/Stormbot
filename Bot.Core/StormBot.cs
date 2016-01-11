@@ -74,11 +74,10 @@ namespace Stormbot.Bot.Core
             }));
             Logger.Writeline("Installing modules... ");
 
-            _client.AddModule<BotManagementModule>("Bot Management");
+            _client.AddModule<BotManagementModule>("Bot");
             _client.AddModule<ServerManagementModule>("Server Management");
             _client.AddModule<AudioStreamModule>("Audio");
             _client.AddModule<QualityOfLifeModule>("QoL");
-            _client.AddModule<ColorsModule>("Color");
             _client.AddModule<TestModule>("Test");
             _client.AddModule<TwitchModule>("Twitch");
             _client.AddModule<InfoModule>("Information");

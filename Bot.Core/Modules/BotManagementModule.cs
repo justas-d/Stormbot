@@ -28,6 +28,38 @@ namespace Stormbot.Bot.Core.Modules
             {
                 group.MinPermissions((int) PermissionLevel.BotOwner);
 
+                group.CreateCommand("join")
+                .MinPermissions((int)PermissionLevel.User)
+                    .Description("Joins a server by invite.")
+                    .Parameter("invite")
+                    .Do(async e =>
+                    {
+                        Invite invite = await _client.GetInvite(e.GetArg("invite"));
+                        if (invite == null)
+                        {
+                            await e.Channel.SendMessage("Invite not found.");
+                            return;
+                        }
+                        else if (invite.IsRevoked)
+                        {
+                            await e.Channel.SendMessage("This invite has expired or the bot is banned from that server.");
+                            return;
+                        }
+
+                        await invite.Accept();
+                        await e.Channel.SendMessage("Joined server.");
+                    });
+
+                group.CreateCommand("leave")
+                    .Description("Instructs the bot to leave this server.")
+                    .MinPermissions((int)PermissionLevel.ServerModerator)
+                    .MinPermissions((int)PermissionLevel.BotOwner)
+                    .Do(async e =>
+                    {
+                        await e.Channel.SendMessage("Leaving~");
+                        await e.Server.Leave();
+                    });
+
                 group.CreateCommand("io save")
                     .Description("Saves data used by the bot.")
                     .Do(e =>

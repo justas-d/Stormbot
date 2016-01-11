@@ -12,15 +12,20 @@ using Stormbot.Helpers;
 
 namespace Stormbot.Bot.Core.Services
 {
+    internal interface IDataModule : IModule
+    {
+        void OnDataLoad();
+    }
+
     public class DataIoService : IService
     {
         private class SerializationData
         {
-            public IModule Module { get; }
+            public IDataModule Module { get; }
             public FieldInfo Field { get; }
             public string SaveDir { get; }
 
-            public SerializationData(IModule module, FieldInfo field, string saveDir)
+            public SerializationData(IDataModule module, FieldInfo field, string saveDir)
             {
                 Module = module;
                 Field = field;
@@ -39,15 +44,19 @@ namespace Stormbot.Bot.Core.Services
 
         private IEnumerable<SerializationData> GetFields<T>() where T : Attribute
         {
-            return from module in _client.Modules().Modules.Select(m => m.Instance)
-                let type = module.GetType()
-                where type.GetCustomAttribute<DataModuleAttribute>() != null
-                let fields = type.GetRuntimeFields().Where(f => f.GetCustomAttribute<T>() != null)
-                from serializeField in fields
-                select new SerializationData(
-                    module,
-                    serializeField,
-                    $"{DataDir}{type.Name}_{serializeField.Name}.json");
+            foreach (
+                IDataModule module in
+                    _client.Modules()
+                        .Modules.Select(m => m.Instance)
+                        .Where(m => m.GetType().GetInterfaces().Contains(typeof (IDataModule))))
+            {
+                Type type = module.GetType();
+                IEnumerable<FieldInfo> fields = type.GetRuntimeFields().Where(f => f.GetCustomAttribute<T>() != null);
+                foreach (var serializeField in fields)
+                    yield return
+                        new SerializationData(module, serializeField, $"{DataDir}{type.Name}_{serializeField.Name}.json")
+                        ;
+            }
         }
 
         public void Load()
@@ -64,6 +73,8 @@ namespace Stormbot.Bot.Core.Services
                     data.Field.SetValue(
                         data.Module,
                         JsonConvert.DeserializeObject(jsondata, data.Field.FieldType));
+
+                    data.Module.OnDataLoad();
                 }
                 catch (Exception ex)
                 {
@@ -93,11 +104,6 @@ namespace Stormbot.Bot.Core.Services
                 }
             }
         }
-    }
-
-    [AttributeUsage(AttributeTargets.Class)]
-    public class DataModuleAttribute : Attribute
-    {
     }
 
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]

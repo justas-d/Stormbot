@@ -15,8 +15,7 @@ using StrmyCore;
 
 namespace Stormbot.Bot.Core.Modules.Audio
 {
-    [DataModule]
-    public class AudioStreamModule : IModule
+    public class AudioStreamModule : IDataModule
     {
         private DiscordClient _client;
 
@@ -195,6 +194,11 @@ namespace Stormbot.Bot.Core.Modules.Audio
                         await PrintCurrentTrack(e.Channel);
                     });
             });
+        }
+
+        public void OnDataLoad()
+        {
+            // ignored
         }
 
         private async Task PrintCurrentTrack(Channel channel)

@@ -19,8 +19,7 @@ using StrmyCore;
 
 namespace Stormbot.Bot.Core.Modules
 {
-    [DataModule]
-    public class QualityOfLifeModule : IModule
+    public class QualityOfLifeModule : IDataModule
     {
         [Serializable]
         private class ReminderData
@@ -170,6 +169,11 @@ namespace Stormbot.Bot.Core.Modules
                 Task.Run(() => StartReminderTimer());
                 _isReminderTimerRunning = true;
             }
+        }
+
+        public void OnDataLoad()
+        {
+            
         }
 
         private async Task CleanColorRoles(Server server)

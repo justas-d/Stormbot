@@ -75,17 +75,15 @@ namespace Stormbot.Bot.Core
             Logger.Writeline("Installing modules... ");
 
             _client.AddModule<BotManagementModule>("Bot");
-            _client.AddModule<ServerManagementModule>("Server Management");
-            _client.AddModule<AudioStreamModule>("Audio");
-            _client.AddModule<QualityOfLifeModule>("QoL");
-            _client.AddModule<TestModule>("Test");
-            _client.AddModule<TwitchModule>("Twitch");
+            _client.AddModule<ServerManagementModule>("Server Management", ModuleFilter.ServerWhitelist);
+            _client.AddModule<AudioStreamModule>("Audio", ModuleFilter.ServerWhitelist);
+            _client.AddModule<QualityOfLifeModule>("QoL", ModuleFilter.ServerWhitelist);
+            _client.AddModule<TestModule>("Test", ModuleFilter.ServerWhitelist);
+            _client.AddModule<TwitchModule>("Twitch", ModuleFilter.ServerWhitelist);
             _client.AddModule<InfoModule>("Information");
+            _client.AddModule<ModulesModule>("Modules");
 
-            _client.Log.Message += delegate(object sender, LogMessageEventArgs args)
-            {
-                Logger.DiscordLog(args);
-            };
+            _client.Log.Message += (sender, args) => Logger.DiscordLog(args);
 
             Logger.Writeline("Loading data... ");
             io.Load();

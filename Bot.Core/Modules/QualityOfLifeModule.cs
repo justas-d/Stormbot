@@ -182,7 +182,7 @@ namespace Stormbot.Bot.Core.Modules
             }
         }
 
-        private IEnumerable<Role> GetOtherRoles(User user) => user.Roles.Where(x => !x.Name.StartsWith(_colorRoleName));
+        private IEnumerable<Role> GetOtherRoles(User user) => user.Roles.Where(x => !x.Name.StartsWith(ColorRoleName));
 
         private async void StartReminderTimer()
         {

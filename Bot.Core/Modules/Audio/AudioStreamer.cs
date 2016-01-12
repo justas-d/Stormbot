@@ -26,15 +26,9 @@ namespace Stormbot.Bot.Core.Modules.Audio
             Client = client;
         }
 
-        public void Start(TimeSpan startTime)
-        {
-            StartFfmpeg($"-ss {startTime} {DefaultStartArgs}");
-        }
+        public void Start(TimeSpan startTime) => StartFfmpeg($"-ss {startTime} {DefaultStartArgs}");
 
-        public void Start()
-        {
-            StartFfmpeg(DefaultStartArgs);
-        }
+        public void Start() => StartFfmpeg(DefaultStartArgs);
 
         private void StartFfmpeg(string args)
         {

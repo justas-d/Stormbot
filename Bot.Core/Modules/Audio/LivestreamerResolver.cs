@@ -48,9 +48,6 @@ namespace Stormbot.Bot.Core.Modules.Audio
             }
         }
 
-        public bool CanResolve(string input)
-        {
-            return true;
-        }
+        public bool CanResolve(string input) => true;
     }
 }

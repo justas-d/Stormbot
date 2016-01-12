@@ -27,20 +27,23 @@ namespace Stormbot.Bot.Core.Modules
             public ulong User { get; }
             public DateTime EndTime { get; }
             public DateTime CreateTime { get; }
+            public string Reason { get; }
 
-            public ReminderData(ulong user, TimeSpan span)
+            public ReminderData(ulong user, TimeSpan span, string reason)
             {
                 User = user;
                 EndTime = DateTime.Now + span;
                 CreateTime = DateTime.Now;
+                Reason = reason;
             }
 
             [JsonConstructor, UsedImplicitly]
-            private ReminderData(ulong user, DateTime endTime, DateTime createTime)
+            private ReminderData(ulong user, DateTime endTime, DateTime createTime, string reason)
             {
                 User = user;
                 EndTime = endTime;
                 CreateTime = createTime;
+                Reason = reason;
             }
         }
 
@@ -95,10 +98,11 @@ namespace Stormbot.Bot.Core.Modules
                 group.CreateCommand("remind")
                     .Description("Reminds you about something after the given time span has passed.")
                     .Parameter("timespan")
+                    .Parameter("reason", ParameterType.Unparsed)
                     .Do(async e =>
                     {
                         string rawSpan = e.GetArg("timespan");
-                        _reminders.Add(new ReminderData(e.User.Id, TimeSpan.Parse(rawSpan)));
+                        _reminders.Add(new ReminderData(e.User.Id, TimeSpan.Parse(rawSpan), e.GetArg("reason")));
                         await e.Channel.SendMessage($"Reminding `{e.User.Name}` in `{rawSpan}`");
                     });
                 group.CreateCommand("google")
@@ -201,7 +205,7 @@ namespace Stormbot.Bot.Core.Modules
 
                         if (user.PrivateChannel == null) await user.CreatePMChannel();
                         await user.PrivateChannel.SendMessage(
-                            $"Paging you about the reminder you've set at `{_reminders[i].CreateTime}`");
+                            $"Paging you about the reminder you've set at `{_reminders[i].CreateTime}` for \"{_reminders[i].Reason}\"");
                         _reminders.RemoveAt(i);
                     }
                     await Task.Delay(1000); // wait 1 second.

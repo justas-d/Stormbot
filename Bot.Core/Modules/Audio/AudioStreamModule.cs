@@ -287,7 +287,7 @@ namespace Stormbot.Bot.Core.Modules.Audio
             _isPlaying = true;
             _client.SetGame(track.Name);
 
-            using (var streamer = new AudioStreamer(track.Location, _client))
+            using (AudioStreamer streamer = new AudioStreamer(track.Location, _client))
             {
                 if (_skipFlag)
                 {

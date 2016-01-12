@@ -50,11 +50,11 @@ namespace Stormbot.Bot.Core.Modules.Audio
             if (File.Exists(location))
                 return new TrackData(location, location.GetFilename());
 
-            foreach (var res in Resolvers)
+            foreach (IStreamResolver res in Resolvers)
             {
                 if (res.CanResolve(location))
                 {
-                    var resolveResult = res.Resolve(location);
+                    TrackData resolveResult = res.Resolve(location);
                     if (resolveResult != null) return resolveResult;
                 }
             }

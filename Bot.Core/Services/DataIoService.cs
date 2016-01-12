@@ -52,7 +52,7 @@ namespace Stormbot.Bot.Core.Services
             {
                 Type type = module.GetType();
                 IEnumerable<FieldInfo> fields = type.GetRuntimeFields().Where(f => f.GetCustomAttribute<T>() != null);
-                foreach (var serializeField in fields)
+                foreach (FieldInfo serializeField in fields)
                     yield return
                         new SerializationData(module, serializeField, $"{DataDir}{type.Name}_{serializeField.Name}.json")
                         ;

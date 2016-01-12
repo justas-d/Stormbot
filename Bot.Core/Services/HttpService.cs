@@ -42,7 +42,7 @@ namespace Stormbot.Bot.Core.Services
                 msg.Content = new StringContent(json, Encoding.UTF8, "application/json");
             }
 
-            var response = await _http.SendAsync(msg, HttpCompletionOption.ResponseContentRead);
+            HttpResponseMessage response = await _http.SendAsync(msg, HttpCompletionOption.ResponseContentRead);
             if (!response.IsSuccessStatusCode)
                 throw new HttpException(response.StatusCode);
             return response.Content;

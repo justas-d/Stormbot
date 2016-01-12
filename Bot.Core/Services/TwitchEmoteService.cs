@@ -91,7 +91,7 @@ namespace Stormbot.Bot.Core.Services
                     $"Fetching emote data for {GetType().Name}",
                     ConsoleColor.Green);
 
-                var content = await http.Send(HttpMethod.Get, DataSource);
+                HttpContent content = await http.Send(HttpMethod.Get, DataSource);
                 File.WriteAllText(fileDir, await content.ReadAsStringAsync());
             }
             PopulateDictionary(JObject.Parse(File.ReadAllText(fileDir)));

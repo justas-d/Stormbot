@@ -81,7 +81,6 @@
     <Compile Include="Bot.Core\Modules\Audio\LivestreamerResolver.cs" />
     <Compile Include="Bot.Core\Modules\Audio\SoundcloudResolver.cs" />
     <Compile Include="Bot.Core\Modules\Audio\TrackData.cs" />
-    <Compile Include="Bot.Core\Modules\Audio\TrackResolveResult.cs" />
     <Compile Include="Bot.Core\Modules\Audio\YoutubeResolver.cs" />
     <Compile Include="Bot.Core\Modules\BotManagementModule.cs" />
     <Compile Include="Bot.Core\Modules\Audio\AudioStreamModule.cs" />

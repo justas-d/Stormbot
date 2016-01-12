@@ -83,7 +83,7 @@ namespace Stormbot.Bot.Core.Modules.Audio
                         string loc = e.GetArg("location");
                         TrackResolveResult result = TrackData.Create(loc);
 
-                        if (result == null)
+                        if (result.Track == null)
                         {
                             await e.Channel.SendMessage($"Failed getting the stream url for `{loc}. Info: {result.Message}`");
                             return;

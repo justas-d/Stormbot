@@ -2,6 +2,7 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
@@ -114,12 +115,10 @@ namespace Stormbot.Bot.Core.Modules
 
                 group.CreateCommand("set game")
                     .Description("Sets the current played game for the bot.")
-                    .Parameter("game")
-                    .Do(async e =>
+                    .Parameter("game", ParameterType.Unparsed)
+                    .Do(e =>
                     {
-                        string game = e.GetArg("game");
-                        _client.SetGame(game);
-                        await e.User.SendMessage($"Set game to `{game}`");
+                        _client.SetGame(e.GetArg("game"));
                     });
                 group.CreateCommand("killbot")
                     .Description("Kills the bot.")
@@ -128,28 +127,32 @@ namespace Stormbot.Bot.Core.Modules
                         io.Save();
                         Environment.Exit(0);
                     });
-            });
 
-            manager.CreateCommands("gc", group =>
-            {
-                group.MinPermissions((int) PermissionLevel.BotOwner);
-
-                group.CreateCommand("")
-                    .Description("Lists used memory, then collects it.")
+                group.CreateCommand("cleanmsg")
+                    .Description("Removes the last 100 messages sent by the bot in this channel.")
+                    .MinPermissions((int)PermissionLevel.ChannelModerator)
                     .Do(async e =>
                     {
-                        await GetMemUsage(e);
-                        await Collect(e);
+                        foreach(Message msg in (await e.Channel.DownloadMessages()).Where(m => m.IsAuthor))
+                            await msg.Delete();
                     });
 
-                group.CreateCommand("collect")
+                group.CreateCommand("gc")
+                   .Description("Lists used memory, then collects it.")
+                   .Do(async e =>
+                   {
+                       await GetMemUsage(e);
+                       await Collect(e);
+                   });
+
+                group.CreateCommand("gc collect")
                     .Description("Calls GC.Collect()")
                     .Do(async e =>
                     {
                         await Collect(e);
                     });
-                group.CreateCommand("list")
-                    .MinPermissions((int) PermissionLevel.User)
+                group.CreateCommand("gc list")
+                    .MinPermissions((int)PermissionLevel.User)
                     .Description("Calls GC.GetTotalMemory()")
                     .Do(async e =>
                     {
@@ -160,17 +163,19 @@ namespace Stormbot.Bot.Core.Modules
 
         private async Task Collect(CommandEventArgs e)
         {
-            long bytesBefore = GC.GetTotalMemory(false);
+            double memoryBefore = GetMemoryUsage();
             GC.Collect();
             await
                 e.Channel.SendMessage(
-                    $"Collected `{((bytesBefore - GC.GetTotalMemory(false))/1024f)/1024f} mb` of trash.");
+                    $"Collected `{memoryBefore - GetMemoryUsage()} mb` of trash.");
         }
 
         private async Task GetMemUsage(CommandEventArgs e)
         {
-            await e.Channel.SendMessage($"Memory usage: `{(GC.GetTotalMemory(false)/1024f)/1024f} mb`");
+            await e.Channel.SendMessage($"Memory usage: `{GetMemoryUsage()} mb`");
 
         }
+
+        private double GetMemoryUsage() => Math.Round(GC.GetTotalMemory(false) /(1024.0*1024.0), 2);
     }
 }

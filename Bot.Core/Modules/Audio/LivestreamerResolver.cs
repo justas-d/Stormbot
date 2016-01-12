@@ -8,9 +8,9 @@ namespace Stormbot.Bot.Core.Modules.Audio
 {
     internal sealed class LivestreamerResolver : IStreamResolver
     {
-        public TrackResolveResult Resolve(string input)
+        public TrackData Resolve(string input)
         {
-            TrackResolveResult retval = new TrackResolveResult();
+            TrackData retval = null;
 
             using (Process livestreamer = new Process
             {
@@ -31,20 +31,17 @@ namespace Stormbot.Bot.Core.Modules.Audio
 
                     if (args.Data.StartsWith("error"))
                     {
-                        retval.Message = args.Data;
+                        Logger.FormattedWrite(GetType().Name, $"Livestreamer returned error: {args.Data}");
                         return;
                     }
 
-                    retval.Track = new TrackData(args.Data, input);
-                    retval.WasSuccessful = true;
+                    retval = new TrackData(args.Data, input);
                 };
 
                 if (!livestreamer.Start())
-                {
                     Logger.FormattedWrite(typeof(TrackData).Name, "Failed starting livestreamer.",
                         ConsoleColor.Red);
-                    retval.Message = "Failed starting livestreamer.";
-                }
+
                 livestreamer.BeginOutputReadLine();
                 livestreamer.WaitForExit();
                 return retval;

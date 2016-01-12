@@ -4,7 +4,7 @@ namespace Stormbot.Bot.Core.Modules.Audio
 {
     internal interface IStreamResolver
     {
-        TrackResolveResult Resolve(string input);
+        TrackData Resolve(string input);
         bool CanResolve(string input);
     }
 }

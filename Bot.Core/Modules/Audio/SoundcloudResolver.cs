@@ -10,14 +10,12 @@ namespace Stormbot.Bot.Core.Modules.Audio
     {
         internal static string ApiKey;
 
-        public TrackResolveResult Resolve(string input)
+        public TrackData Resolve(string input)
         {
-            TrackResolveResult retval = new TrackResolveResult();
-
             if (ApiKey == null)
             {
-                retval.Message = "Soundcloud API Key was not set.";
-                return retval;
+                Logger.FormattedWrite(GetType().Name, "Soundcloud API Key was not set.");
+                return null;
             }
             try
             {
@@ -26,17 +24,13 @@ namespace Stormbot.Bot.Core.Modules.Audio
                     JObject.Parse(
                         Utils.DownloadRaw($"http://api.soundcloud.com/tracks/{GetPermalink(input)}?client_id={ApiKey}"));
 
-                retval.Track = new TrackData($"{((string)responce.stream_url)}?client_id={ApiKey}", (string)responce.title);
-                retval.WasSuccessful = true;
+                return new TrackData($"{((string) responce.stream_url)}?client_id={ApiKey}", (string) responce.title);
             }
             catch (Exception ex)
             {
                 Logger.FormattedWrite(GetType().Name, $"Failed resolving soundcloud url. Ex: {ex}", ConsoleColor.Red);
-                retval.Message = "Failed getting soundcloud stream.";
-                return retval;
+                return null;
             }
-
-            return retval;
         }
 
         private string GetPermalink(string input)

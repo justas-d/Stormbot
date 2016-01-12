@@ -45,15 +45,20 @@ namespace Stormbot.Bot.Core.Modules.Audio
             Name = name;
         }
 
-        internal static TrackResolveResult Create(string location)
+        internal static TrackData Create(string location)
         {
             if (File.Exists(location))
-                return new TrackResolveResult {Track = new TrackData(location, location.GetFilename())};
+                return new TrackData(location, location.GetFilename());
 
-            return
-                Resolvers.Where(res => res.CanResolve(location))
-                    .Select(resolver => resolver.Resolve(location))
-                    .FirstOrDefault(resolveResult => resolveResult.WasSuccessful);
+            foreach (var res in Resolvers)
+            {
+                if (res.CanResolve(location))
+                {
+                    var resolveResult = res.Resolve(location);
+                    if (resolveResult != null) return resolveResult;
+                }
+            }
+            return null;
         }
 
         private void ReadLenght()

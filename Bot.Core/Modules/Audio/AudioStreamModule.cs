@@ -81,16 +81,16 @@ namespace Stormbot.Bot.Core.Modules.Audio
                     .Do(async e =>
                     {
                         string loc = e.GetArg("location");
-                        TrackResolveResult result = TrackData.Create(loc);
+                        TrackData result = TrackData.Create(loc);
 
-                        if (result.Track == null)
+                        if (result == null)
                         {
-                            await e.Channel.SendMessage($"Failed getting the stream url for `{loc}. Info: {result.Message}`");
+                            await e.Channel.SendMessage($"Failed getting the stream url for `{loc}.");
                             return;
                         }
 
-                        _playlist.Add(result.Track);
-                        await e.Channel.SendMessage($"Added `{result.Track.Name}` to the playlist.");
+                        _playlist.Add(result);
+                        await e.Channel.SendMessage($"Added `{result.Name}` to the playlist.");
                     });
                 group.CreateCommand("raw")
                     .Description("Adds a raw stream to the track playlist.")

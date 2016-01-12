@@ -7,15 +7,9 @@ namespace Stormbot.Bot.Core.Modules.Audio
 {
     internal sealed class YoutubeResolver : IStreamResolver
     {
-        public TrackResolveResult Resolve(string input)
+        public TrackData Resolve(string input)
         {
-            TrackResolveResult retval = new TrackResolveResult();
-
-            if (!CanResolve(input))
-            {
-                retval.Message = "Input wasn't a valid youtube url.";
-                return retval;
-            }
+            if (!CanResolve(input)) return null;
 
             VideoInfo video = DownloadUrlResolver.GetDownloadUrls(input)
                 .OrderByDescending(v => v.AudioBitrate)
@@ -23,16 +17,14 @@ namespace Stormbot.Bot.Core.Modules.Audio
 
             if (video == null)
             {
-                retval.Message = "A video stream we could use wasn't found.";
-                return retval;
+                Logger.FormattedWrite(GetType().Name, "A video stream we could use wasn't found.");
+                return null;
             }
 
             if (video.RequiresDecryption)
                 DownloadUrlResolver.DecryptDownloadUrl(video);
 
-            retval.Track = new TrackData(video.DownloadUrl, video.Title);
-            retval.WasSuccessful = true;
-            return retval;
+            return new TrackData(video.DownloadUrl, video.Title);
         }
 
         public bool CanResolve(string input)

@@ -75,7 +75,7 @@ namespace Stormbot.Bot.Core.Modules
                         io.Load();
                     });
 
-                group.CreateCommand("name")
+                group.CreateCommand("set name")
                     .Description("Changes the name of the bot")
                     .Parameter("name", ParameterType.Unparsed)
                     .Do(async e =>
@@ -83,7 +83,7 @@ namespace Stormbot.Bot.Core.Modules
                         await _client.CurrentUser.Edit(Constants.Pass, e.GetArg("name"));
                     });
 
-                group.CreateCommand("setavatar")
+                group.CreateCommand("set avatar")
                     .Description("Changes the avatar of the bot")
                     .Parameter("name")
                     .Do(async e =>
@@ -112,7 +112,7 @@ namespace Stormbot.Bot.Core.Modules
                         }
                     });
 
-                group.CreateCommand("setgame")
+                group.CreateCommand("set game")
                     .Description("Sets the current played game for the bot.")
                     .Parameter("game")
                     .Do(async e =>

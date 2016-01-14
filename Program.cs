@@ -12,11 +12,11 @@ namespace Stormbot
 {
     internal static class Program
     {
-        private static void Main()
+        private static void Main(string[] args)
         {
-            if (File.Exists(Constants.ConfigFileDir))
+            if (File.Exists(Constants.ConfigDir))
             {
-                dynamic config = JsonConvert.DeserializeObject(File.ReadAllText(Constants.ConfigFileDir));
+                dynamic config = JsonConvert.DeserializeObject(File.ReadAllText(Constants.ConfigDir));
                 try
                 {
                     Constants.Pass = config.Password;

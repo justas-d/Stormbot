@@ -10,37 +10,45 @@ namespace Stormbot.Bot.Core.Modules.Audio
     {
         internal static string ApiKey;
 
-        public TrackData Resolve(string input)
+        public string ResolveStreamUrl(string input)
         {
-            if (ApiKey == null)
-            {
-                Logger.FormattedWrite(GetType().Name, "Soundcloud API Key was not set.");
-                return null;
-            }
+            if (ApiKey != null) return (string) GetTrackData(GetPermalink(input)).stream_url;
+
+            Logger.FormattedWrite(GetType().Name, "Soundcloud API Key was not set.");
+            return null;
+        }
+
+        public bool CanResolve(string input) => input.Contains("soundcloud.com");
+        public string GetTrackName(string input) => GetTrackData(GetPermalink(input)).title;
+
+        private dynamic GetTrackData(string permalink)
+        {
             try
             {
                 // make the api request.
-                dynamic responce =
-                    JObject.Parse(
-                        Utils.DownloadRaw($"http://api.soundcloud.com/tracks/{GetPermalink(input)}?client_id={ApiKey}"));
-
-                return new TrackData($"{((string) responce.stream_url)}?client_id={ApiKey}", (string) responce.title);
+                return JObject.Parse(
+                    Utils.DownloadRaw($"http://api.soundcloud.com/tracks/{permalink}?client_id={ApiKey}"));
             }
             catch (Exception ex)
             {
-                Logger.FormattedWrite(GetType().Name, $"Failed resolving soundcloud url. Ex: {ex}", ConsoleColor.Red);
+                Logger.FormattedWrite(GetType().Name, $"Failed getting sc track data. Ex: {ex}", ConsoleColor.Red);
                 return null;
             }
         }
 
         private string GetPermalink(string input)
         {
-            if (input.EndsWith("/"))
-                input = input.Remove(input.Length - 1);
-            input = input.Replace("https://", "");
-            return input.Substring(input.LastIndexOf('/') + 1);
+            try
+            {
+                if (input.EndsWith("/"))
+                    input = input.Remove(input.Length - 1);
+                input = input.Replace("https://", "");
+                return input.Substring(input.LastIndexOf('/') + 1);
+            }
+            catch
+            {
+                return string.Empty;
+            }
         }
-
-        public bool CanResolve(string input) => input.Contains("soundcloud.com");
     }
 }

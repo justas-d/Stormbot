@@ -4,9 +4,12 @@ namespace Stormbot.Helpers
 {
     internal static class Constants
     {
-        internal const string ConfigFileDir = DataFolderDir + "config.json";
-
+        internal const string ConfigDir = DataFolderDir + "config.json";
+#if DEBUG_DEV
+        internal const string DataFolderDir = @"C:\Stuff\BotData\Dev\";
+#else
         internal const string DataFolderDir = @"C:\Stuff\BotData\";
+#endif
         internal const string TwitchEmoteFolderDir = DataFolderDir + @"emotes\";
 
         internal const long RoleTrusted = 131446561547878400;

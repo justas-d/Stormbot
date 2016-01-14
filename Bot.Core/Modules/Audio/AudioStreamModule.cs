@@ -11,7 +11,6 @@ using Discord.Commands;
 using Discord.Commands.Permissions.Levels;
 using Discord.Modules;
 using Stormbot.Bot.Core.Services;
-using Stormbot.Helpers;
 using StrmyCore;
 
 namespace Stormbot.Bot.Core.Modules.Audio
@@ -45,6 +44,8 @@ namespace Stormbot.Bot.Core.Modules.Audio
 
         private bool _skipFlag;
         private TimeSpan _skipTime;
+
+        private IAudioClient _voice;
 
         [DataSave] [DataLoad] private readonly List<TrackData> _playlist = new List<TrackData>();
         private TrackData CurrentTrack => _playlist[TrackIndex];
@@ -81,7 +82,7 @@ namespace Stormbot.Bot.Core.Modules.Audio
                     .Do(async e =>
                     {
                         string loc = e.GetArg("location");
-                        TrackData result = TrackData.Create(loc);
+                        TrackData result = TrackData.Parse(loc);
 
                         if (result == null)
                         {
@@ -92,17 +93,6 @@ namespace Stormbot.Bot.Core.Modules.Audio
                         _playlist.Add(result);
                         await e.Channel.SendMessage($"Added `{result.Name}` to the playlist.");
                     });
-                group.CreateCommand("raw")
-                    .Description("Adds a raw stream to the track playlist.")
-                    .Parameter("url", ParameterType.Unparsed)
-                    .Do(async e =>
-                    {
-                        string url = e.GetArg("url");
-                        TrackData track = new TrackData(url, $"Raw stream: {url}");
-
-                        _playlist.Add(track);
-                        await e.Channel.SendMessage($"Added `{track.Name}` to the playlist.");
-                    });
 
                 group.CreateCommand("setpos")
                     .Alias("set")
@@ -111,6 +101,9 @@ namespace Stormbot.Bot.Core.Modules.Audio
                     .Do(async e =>
                     {
                         int newPos = int.Parse(e.GetArg("index")) - 1;
+
+                        if (_isPlaying) newPos--;
+
                         TrackIndex = newPos;
                         await
                             e.Channel.SendMessage(
@@ -124,6 +117,17 @@ namespace Stormbot.Bot.Core.Modules.Audio
                     {
                         _stopTrack = true;
                         _stopPlaylist = true;
+                    });
+
+                group.CreateCommand("forcestop")
+                    .Description("Forcefully stops playback of the playlist, track and leaves the voice channel.")
+                    .MinPermissions((int)PermissionLevel.ChannelAdmin)
+                    .Do(async e =>
+                    {
+                        if (_voice != null)
+                            await _voice.Disconnect();
+
+                        _isPlaying = false;
                     });
                 group.CreateCommand("next")
                     .Description("Skips the current track and plays the next track in the playlist.")
@@ -254,7 +258,7 @@ namespace Stormbot.Bot.Core.Modules.Audio
             if (_audioPlaybackChannel.Type != ChannelType.Voice) return;
             if (_isPlaying) return;
 
-            IAudioClient voice = await _client.Audio().Join(_audioPlaybackChannel);
+            _voice = await _client.Audio().Join(_audioPlaybackChannel);
 
             // try playing the playlist while track index is withing range of _playlist.s
             while (_playlist.Count > TrackIndex)
@@ -265,7 +269,7 @@ namespace Stormbot.Bot.Core.Modules.Audio
                     break;
                 }
 
-                await StartAudioStream(textChannel, voice, CurrentTrack);
+                await StartAudioStream(textChannel, CurrentTrack);
                 if (_skipFlag) continue;
 
                 if (_prevFlag)
@@ -276,18 +280,21 @@ namespace Stormbot.Bot.Core.Modules.Audio
                 else
                     TrackIndex++;
             }
-            voice.Wait();
-            await voice.Disconnect();
+            _voice.Wait();
+            await _voice.Disconnect();
         }
 
-        private async Task StartAudioStream(Channel text, IAudioClient voice, TrackData track)
+        private async Task StartAudioStream(Channel text, TrackData track)
         {
             if (_isPlaying) return;
+            if (_voice == null) return;
+
+            _stopTrack = false;
 
             _isPlaying = true;
             _client.SetGame(track.Name);
 
-            using (AudioStreamer streamer = new AudioStreamer(track.Location, _client))
+            using (AudioStreamer streamer = new AudioStreamer(track.GetStream(), _client))
             {
                 if (_skipFlag)
                 {
@@ -321,7 +328,7 @@ namespace Stormbot.Bot.Core.Modules.Audio
                     {
                         if (streamer.OutputStream.ReadExactly(buffer, bufferSize))
                             break;
-                        voice.Send(buffer, 0, bufferSize);
+                        _voice.Send(buffer, 0, bufferSize);
                     }
                 }
             }

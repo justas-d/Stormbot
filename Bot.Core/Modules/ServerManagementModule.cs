@@ -52,7 +52,7 @@ namespace Stormbot.Bot.Core.Modules
                 group.CreateCommand("name")
                     .Description("Sets the channel name.")
                     .Parameter(Constants.ChannelIdArg)
-                    .Parameter("value")
+                    .Parameter("value", ParameterType.Unparsed)
                     .Do(async e =>
                     {
                         await e.GetChannel().Edit(e.GetArg("value"));

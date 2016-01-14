@@ -36,8 +36,6 @@ namespace Stormbot.Bot.Core
         private async Task Init()
         {
             Logger.Writeline("Initializing Stormbot v2");
-            Logger.Writeline("Connecting to Discord... ");
-            await _client.Connect(_email, _password);
             Logger.Writeline("Installing services... ");
             _client.Services.Add(new HttpService());
             _client.Services.Add(new ModuleService());
@@ -57,12 +55,12 @@ namespace Stormbot.Bot.Core
                 {
                     if (Equals(u, c.Server.Owner))
                         return (int) PermissionLevel.ServerOwner;
-                    var serverPerms = u.ServerPermissions;
+                    ServerPermissions serverPerms = u.ServerPermissions;
                     if (serverPerms.ManageRoles)
                         return (int) PermissionLevel.ServerAdmin;
                     if (serverPerms.ManageMessages && serverPerms.KickMembers && serverPerms.BanMembers)
                         return (int) PermissionLevel.ServerModerator;
-                    var channelPerms = u.GetPermissions(c);
+                    ChannelPermissions channelPerms = u.GetPermissions(c);
                     if (channelPerms.ManagePermissions)
                         return (int) PermissionLevel.ChannelAdmin;
                     if (channelPerms.ManageMessages)
@@ -72,21 +70,26 @@ namespace Stormbot.Bot.Core
                 }
                 return (int) PermissionLevel.User;
             }));
+
+            Logger.Writeline("Connecting to Discord... ");
+            await _client.Connect(_email, _password);
+
             Logger.Writeline("Installing modules... ");
 
-            _client.AddModule<BotManagementModule>("Bot");
+            _client.AddModule<BotManagementModule>("Bot", ModuleFilter.ServerWhitelist | ModuleFilter.AlwaysAllowPrivate);
             _client.AddModule<ServerManagementModule>("Server Management", ModuleFilter.ServerWhitelist);
             _client.AddModule<AudioStreamModule>("Audio", ModuleFilter.ServerWhitelist);
             _client.AddModule<QualityOfLifeModule>("QoL", ModuleFilter.ServerWhitelist);
             _client.AddModule<TestModule>("Test", ModuleFilter.ServerWhitelist);
             _client.AddModule<TwitchModule>("Twitch", ModuleFilter.ServerWhitelist);
-            _client.AddModule<InfoModule>("Information");
+            _client.AddModule<InfoModule>("Information", ModuleFilter.ServerWhitelist | ModuleFilter.AlwaysAllowPrivate);
             _client.AddModule<ModulesModule>("Modules");
 
             _client.Log.Message += (sender, args) => Logger.DiscordLog(args);
 
             Logger.Writeline("Loading data... ");
             io.Load();
+
 
             Logger.Writeline($" -WE ARE LIVE-{Environment.NewLine}");
         }

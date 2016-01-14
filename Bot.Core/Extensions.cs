@@ -2,6 +2,7 @@
 
 using System.Globalization;
 using System.Linq;
+using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Stormbot.Helpers;
@@ -16,6 +17,13 @@ namespace Stormbot.Bot.Core
             if (stringhex.Length > 6) return; //input is invalid if length isn't 0 < x > 7
             uint hex = uint.Parse(stringhex, NumberStyles.HexNumber);
             await role.Edit(color: new Color(hex));
+        }
+
+        public static async Task SendPrivate(this User user, string message)
+        {
+            if (user.PrivateChannel == null)
+                await user.CreatePMChannel();
+            await user.SendMessage(message);
         }
 
         /// <summary>

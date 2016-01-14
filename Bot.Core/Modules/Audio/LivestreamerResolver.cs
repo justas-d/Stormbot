@@ -6,48 +6,72 @@ using Stormbot.Helpers;
 
 namespace Stormbot.Bot.Core.Modules.Audio
 {
-    internal sealed class LivestreamerResolver : IStreamResolver
+    public sealed class LivestreamerResolver : IStreamResolver
     {
-        public TrackData Resolve(string input)
+        public string ResolveStreamUrl(string input)
         {
-            TrackData retval = null;
+            string retval = string.Empty;
 
-            using (Process livestreamer = new Process
+            using (Process livestreamer = StartLivestreamer(input, (sender, args) =>
             {
-                StartInfo =
-                    {
-                        FileName = Constants.LivestreamerDir,
-                        Arguments = $"--stream-url {input} best",
-                        UseShellExecute = false,
-                        RedirectStandardOutput = true,
-                        CreateNoWindow = true,
-                    },
-                EnableRaisingEvents = true
-            })
-            {
-                livestreamer.OutputDataReceived += (sender, args) =>
+                if (string.IsNullOrEmpty(args.Data)) return;
+
+                if (args.Data.StartsWith("error"))
                 {
-                    if (string.IsNullOrEmpty(args.Data)) return;
+                    Logger.FormattedWrite(GetType().Name,
+                        $"Livestreamer returned error while parsing input {input}. Error: {args.Data}");
+                    return;
+                }
 
-                    if (args.Data.StartsWith("error"))
-                    {
-                        Logger.FormattedWrite(GetType().Name, $"Livestreamer returned error: {args.Data}");
-                        return;
-                    }
-
-                    retval = new TrackData(args.Data, input);
-                };
-
-                if (!livestreamer.Start())
-                    Logger.FormattedWrite(typeof(TrackData).Name, "Failed starting livestreamer.",
-                        ConsoleColor.Red);
-
-                livestreamer.BeginOutputReadLine();
+                retval = args.Data;
+            }))
                 livestreamer.WaitForExit();
-                return retval;
-            }
+
+            return retval;
         }
 
-        public bool CanResolve(string input) => true;
+        public bool CanResolve(string input)
+        {
+            bool retval = false;
+
+            // let livestreamer decide whether it can handle the input.
+            using (Process livestreamer = StartLivestreamer(input, (sender, args) =>
+            {
+                if (string.IsNullOrEmpty(args.Data)) return;
+
+                if (args.Data.StartsWith("error")) retval = false;
+                retval = true;
+            }))
+                livestreamer.WaitForExit();
+
+            return retval;
+        }
+
+        private Process StartLivestreamer(string inputUrl, DataReceivedEventHandler onData)
+        {
+            Process livestreamer = new Process
+            {
+                StartInfo =
+                {
+                    FileName = Constants.LivestreamerDir,
+                    Arguments = $"--stream-url {inputUrl} best",
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    CreateNoWindow = true,
+                },
+                EnableRaisingEvents = true
+            };
+
+            livestreamer.OutputDataReceived += onData;
+
+            if (!livestreamer.Start())
+                Logger.FormattedWrite(typeof(TrackData).Name, "Failed starting livestreamer.",
+                    ConsoleColor.Red);
+
+            livestreamer.BeginOutputReadLine();
+            return livestreamer;
+        }
+
+        public string GetTrackName(string input) => input;
     }
 }

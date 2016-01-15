@@ -1,6 +1,4 @@
-﻿// Copyright (c) 2015 Justas Dabrila (justasdabrila@gmail.com)
-
-using System;
+﻿using System;
 using System.IO;
 using Newtonsoft.Json;
 using Stormbot.Bot.Core;

@@ -1,6 +1,4 @@
-﻿// Copyright (c) 2015 Justas Dabrila (justasdabrila@gmail.com)
-
-using System;
+﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
@@ -10,6 +8,9 @@ using Discord.Commands.Permissions.Levels;
 using Discord.Modules;
 using Stormbot.Bot.Core.Modules;
 using Stormbot.Bot.Core.Modules.Audio;
+#if DEBUG_DEV
+using Stormbot.Bot.Core.Modules.Game;
+#endif
 using Stormbot.Bot.Core.Services;
 using Stormbot.Helpers;
 
@@ -46,7 +47,9 @@ namespace Stormbot.Bot.Core
                     Logger.FormattedWrite("CommandService", $"CmdEx: {args.ErrorType} Ex: {args.Exception}", ConsoleColor.Red);
                 };
             _client.Services.Add(new AudioService(new AudioServiceConfig {Channels = 2}));
+#if !DEBUG_DEV
             _client.Services.Add(new TwitchEmoteService());
+#endif
             _client.Services.Add(new PermissionLevelService((u, c) =>
             {
                 if (u.Id == Constants.UserOwner)
@@ -76,15 +79,17 @@ namespace Stormbot.Bot.Core
 
             Logger.Writeline("Installing modules... ");
 
-            _client.AddModule<BotManagementModule>("Bot", ModuleFilter.ServerWhitelist | ModuleFilter.AlwaysAllowPrivate);
-            _client.AddModule<ServerManagementModule>("Server Management", ModuleFilter.ServerWhitelist);
-            _client.AddModule<AudioStreamModule>("Audio", ModuleFilter.ServerWhitelist);
-            _client.AddModule<QualityOfLifeModule>("QoL", ModuleFilter.ServerWhitelist);
-            _client.AddModule<TestModule>("Test", ModuleFilter.ServerWhitelist);
-            _client.AddModule<InfoModule>("Information", ModuleFilter.ServerWhitelist | ModuleFilter.AlwaysAllowPrivate);
+            _client.AddModule<BotManagementModule>("Bot", ModuleFilter.ServerWhitelist | ModuleFilter.ChannelWhitelist | ModuleFilter.AlwaysAllowPrivate);
+            _client.AddModule<ServerManagementModule>("Server Management", ModuleFilter.ServerWhitelist | ModuleFilter.ChannelWhitelist);
+            _client.AddModule<AudioStreamModule>("Audio", ModuleFilter.ServerWhitelist | ModuleFilter.ChannelWhitelist);
+            _client.AddModule<QualityOfLifeModule>("QoL", ModuleFilter.ServerWhitelist | ModuleFilter.ChannelWhitelist);
+            _client.AddModule<TestModule>("Test", ModuleFilter.ServerWhitelist | ModuleFilter.ChannelWhitelist);
+            _client.AddModule<InfoModule>("Information", ModuleFilter.ServerWhitelist | ModuleFilter.ChannelWhitelist | ModuleFilter.AlwaysAllowPrivate);
             _client.AddModule<ModulesModule>("Modules");
-            _client.AddModule<ExecuteModule>("Execute");
-
+            _client.AddModule<ExecuteModule>("Execute", ModuleFilter.ServerWhitelist | ModuleFilter.ChannelWhitelist);
+#if DEBUG_DEV
+            _client.AddModule<GameModule>("Game", ModuleFilter.ServerWhitelist | ModuleFilter.ChannelWhitelist);
+#endif
             _client.Log.Message += (sender, args) => Logger.DiscordLog(args);
 
             Logger.Writeline("Loading data... ");

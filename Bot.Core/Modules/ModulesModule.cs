@@ -1,6 +1,4 @@
-﻿//https://github.com/RogueException/DiscordBot/blob/master/src/DiscordBot/Modules/Modules/ModulesModule.cs
-
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;

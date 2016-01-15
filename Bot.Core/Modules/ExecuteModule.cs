@@ -1,6 +1,7 @@
 ﻿// Copyright (c) 2015 Justas Dabrila (justasdabrila@gmail.com)
 
 using System;
+using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.Commands.Permissions.Levels;
@@ -35,8 +36,9 @@ namespace Stormbot.Bot.Core.Modules
             _scriptOptions = _scriptOptions.AddReferences(
                 typeof (object).Assembly,
                 typeof (System.Linq.Enumerable).Assembly,
-                GetType().Assembly)
-                .AddImports("System", "System.Linq", "System.Collections.Generic", "Stormbot");
+                GetType().Assembly,
+                _client.GetType().Assembly)
+                .AddImports("System", "System.Linq", "System.Collections.Generic", "Stormbot", "Discord");
 
             manager.CreateCommands("exec", group =>
             {
@@ -52,7 +54,7 @@ namespace Stormbot.Bot.Core.Modules
                             object output =
                                 await CSharpScript.EvaluateAsync(e.GetArg("query"), globals: new Globals(e, _client));
 
-                            if (output == null || (output as string) == string.Empty)
+                            if (output == null || (output as Task) != null || (output as string) == string.Empty)
                                 await e.Channel.SendMessage("Output was empty or null.");
                             else
                                 await e.Channel.SendMessage(Format.Code(output.ToString()));

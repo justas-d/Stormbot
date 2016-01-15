@@ -173,11 +173,14 @@ namespace Stormbot.Bot.Core.Modules
         {
             foreach (KeyValuePair<ulong, HashSet<string>> pair in _serverModulesDictionary)
                 foreach (ModuleManager module in pair.Value.Select(GetModule))
-                    module?.EnableServer(_client.GetServer(pair.Key));
+                    if (module != null && module.FilterType.HasFlag(ModuleFilter.ServerWhitelist))
+                        module.EnableServer(_client.GetServer(pair.Key));
 
-            foreach(KeyValuePair<ulong, HashSet<string>> pair in _channelModulesDictionary)
+
+            foreach (KeyValuePair<ulong, HashSet<string>> pair in _channelModulesDictionary)
                 foreach (ModuleManager module in pair.Value.Select(GetModule))
-                    module?.EnableChannel(_client.GetChannel(pair.Key));
+                    if (module != null && module.FilterType.HasFlag(ModuleFilter.ChannelWhitelist))
+                        module.EnableChannel(_client.GetChannel(pair.Key));
         }
 
         private ModuleManager GetModule(string id)

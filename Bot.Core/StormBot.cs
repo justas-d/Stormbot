@@ -83,6 +83,7 @@ namespace Stormbot.Bot.Core
             _client.AddModule<TestModule>("Test", ModuleFilter.ServerWhitelist);
             _client.AddModule<InfoModule>("Information", ModuleFilter.ServerWhitelist | ModuleFilter.AlwaysAllowPrivate);
             _client.AddModule<ModulesModule>("Modules");
+            _client.AddModule<ExecuteModule>("Execute");
 
             _client.Log.Message += (sender, args) => Logger.DiscordLog(args);
 

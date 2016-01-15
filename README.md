@@ -3,7 +3,7 @@ A Discord.Net based personal bot.
 
 # Prerequisites.
 * C#6
-* .NET 4.5.2
+* .NET 4.6
 * StrmyCore
 * Discord.Net, Modules, Commands, Audio
 * A Discord account the bot can log into.

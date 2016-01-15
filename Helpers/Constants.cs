@@ -1,6 +1,4 @@
-﻿// Copyright (c) 2015 Justas Dabrila (justasdabrila@gmail.com)
-
-namespace Stormbot.Helpers
+﻿namespace Stormbot.Helpers
 {
     internal static class Constants
     {

@@ -32,13 +32,11 @@ namespace Stormbot.Bot.Core.Modules
         {
             _client = manager.Client;
 
-            _scriptOptions = _scriptOptions.AddReferences(typeof (object).Assembly,
-                typeof (System.Linq.Enumerable).Assembly, GetType().Assembly);
-
-            _scriptOptions = _scriptOptions.AddImports("System");
-            _scriptOptions = _scriptOptions.AddImports("System.Linq");
-            _scriptOptions = _scriptOptions.AddImports("System.Collections.Generic");
-            _scriptOptions = _scriptOptions.AddImports("Stormbot");
+            _scriptOptions = _scriptOptions.AddReferences(
+                typeof (object).Assembly,
+                typeof (System.Linq.Enumerable).Assembly,
+                GetType().Assembly)
+                .AddImports("System", "System.Linq", "System.Collections.Generic", "Stormbot");
 
             manager.CreateCommands("exec", group =>
             {
@@ -57,11 +55,11 @@ namespace Stormbot.Bot.Core.Modules
                             if (output == null || (output as string) == string.Empty)
                                 await e.Channel.SendMessage("Output was empty or null.");
                             else
-                                await e.Channel.SendMessage(output.ToString());
+                                await e.Channel.SendMessage(Format.Code(output.ToString()));
                         }
-                        catch (Exception ex)
+                        catch (CompilationErrorException ex)
                         {
-                            await e.Channel.SendMessage($"Compilation failed: {ex}");
+                            await e.Channel.SendMessage($"Compilation failed: {Format.Code(ex.Message)}");
                         }
                         GC.Collect();
                     });

@@ -16,7 +16,7 @@ namespace Stormbot.Bot.Core.Services
     {
         private HttpService _http;
 
-        private const char EmotePrefix = '.';
+        private const string EmotePrefix = ".";
 
         private readonly List<CentralizedEmoteSource> _emoteSources = new List<CentralizedEmoteSource>
         {
@@ -48,7 +48,7 @@ namespace Stormbot.Bot.Core.Services
 
             client.MessageReceived += async (sender, args) =>
             {
-                if (!args.Message.Text.StartsWith(".")) return;
+                if (!args.Message.Text.StartsWith(EmotePrefix)) return;
                 string emote = (args.Message.Text.Split(' ').FirstOrDefault()).Remove(0, 1);
                 Console.WriteLine(emote);
 

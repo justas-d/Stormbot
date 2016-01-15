@@ -50,6 +50,12 @@ namespace Stormbot.Bot.Core.Modules
                         ModuleManager module = await VerifyFindModule(e.GetArg("module"), e.Channel);
                         if (module == null) return;
 
+                        if (!module.FilterType.HasFlag(ModuleFilter.ChannelWhitelist))
+                        {
+                            await e.Channel.SendMessage("This module doesn't support being enabled for channel.");
+                            return;
+                        }
+
                         Channel channel = e.Channel;
 
                         if (!module.EnableChannel(channel))
@@ -70,6 +76,12 @@ namespace Stormbot.Bot.Core.Modules
                     {
                         ModuleManager module = await VerifyFindModule(e.GetArg("module"), e.Channel);
                         if (module == null) return;
+
+                        if (!module.FilterType.HasFlag(ModuleFilter.ChannelWhitelist))
+                        {
+                            await e.Channel.SendMessage("This module doesn't support being enabled for channel.");
+                            return;
+                        }
 
                         Channel channel = e.Channel;
 
@@ -92,6 +104,12 @@ namespace Stormbot.Bot.Core.Modules
                         ModuleManager module = await VerifyFindModule(e.GetArg("module"), e.Channel);
                         if (module == null) return;
 
+                        if (!module.FilterType.HasFlag(ModuleFilter.ServerWhitelist))
+                        {
+                            await e.Channel.SendMessage("This module doesn't support being enabled for servers.");
+                            return;
+                        }
+
                         Server server = e.Server;
 
                         if (!module.EnableServer(server))
@@ -112,6 +130,12 @@ namespace Stormbot.Bot.Core.Modules
                     {
                         ModuleManager module = await VerifyFindModule(e.GetArg("module"), e.Channel);
                         if (module == null) return;
+
+                        if (!module.FilterType.HasFlag(ModuleFilter.ServerWhitelist))
+                        {
+                            await e.Channel.SendMessage("This module doesn't support being enabled for servers.");
+                            return;
+                        }
 
                         Server server = e.Server;
 
@@ -134,12 +158,11 @@ namespace Stormbot.Bot.Core.Modules
                         {
                             builder.Append($"`* {module.Id,-20} ");
 
-                            if (!(module.FilterType == ModuleFilter.None ||
-                                  module.FilterType == ModuleFilter.AlwaysAllowPrivate))
-                                builder.AppendLine(
-                                    $"Server enabled: {module.EnabledServers.Contains(e.Server)} Channel enabled: {module.EnabledChannels.Contains(e.Channel)}`");
-                            else
-                                builder.AppendLine("Global`");
+                            if (module.FilterType.HasFlag(ModuleFilter.ServerWhitelist))
+                                builder.Append($"Globally server: {module.EnabledServers.Contains(e.Server), -5} ");
+                            if (module.FilterType.HasFlag(ModuleFilter.ChannelWhitelist))
+                                builder.Append($"Channel: {module.EnabledChannels.Contains(e.Channel), -5}");
+                            builder.AppendLine("`");
                         }
 
                         await e.Channel.SendMessage(builder.ToString());
@@ -159,11 +182,6 @@ namespace Stormbot.Bot.Core.Modules
                 module.FilterType == ModuleFilter.AlwaysAllowPrivate)
             {
                 await callback.SendMessage("This module is global and cannot be enabled/disabled.");
-                return null;
-            }
-            if (!module.FilterType.HasFlag(ModuleFilter.ServerWhitelist))
-            {
-                await callback.SendMessage("This module doesn't support being enabled for servers.");
                 return null;
             }
             return module;

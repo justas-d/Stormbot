@@ -7,16 +7,16 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Discord;
-using JetBrains.Annotations;
 using Newtonsoft.Json.Linq;
 using Stormbot.Helpers;
-using StrmyCore;
 
 namespace Stormbot.Bot.Core.Services
 {
     public class TwitchEmoteService : IService
     {
         private HttpService _http;
+
+        private const char EmotePrefix = '.';
 
         private readonly List<CentralizedEmoteSource> _emoteSources = new List<CentralizedEmoteSource>
         {
@@ -28,51 +28,47 @@ namespace Stormbot.Bot.Core.Services
         {
             _http = client.Services.Get<HttpService>();
 
-            foreach (ITwitchEmoteSource source in _emoteSources)
+            Task.Run(async () =>
             {
-                try
+                foreach (CentralizedEmoteSource source in _emoteSources)
                 {
-                    source.FetchData(_http);
+                    try
+                    {
+                        await source.FetchData(_http);
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.FormattedWrite(
+                            GetType().Name,
+                            $"Failed loading emotes for {source.GetType().Name}. Exception: {ex}");
+                    }
+                    GC.Collect();
                 }
-                catch (Exception ex)
-                {
-                    Logger.FormattedWrite(
-                        GetType().Name,
-                        $"Failed loading emotes for {source.GetType().Name}. Exception: {ex}");
-                }
-            }
-            GC.Collect();
-        }
+            });
 
-        public async Task<string> GetRandomEmote()
-        {
-            CentralizedEmoteSource source = _emoteSources.PickRandom();
-            return await source.GetEmote(source.EmoteDict.Keys.PickRandom(), _http);
+            client.MessageReceived += async (sender, args) =>
+            {
+                if (!args.Message.Text.StartsWith(".")) return;
+                string emote = (args.Message.Text.Split(' ').FirstOrDefault()).Remove(0, 1);
+                Console.WriteLine(emote);
+
+                string emotePath = await ResolveEmoteDir(emote);
+                if (!File.Exists(emotePath)) return;
+
+                await args.Channel.SendFile(emotePath);
+            };
         }
 
         public async Task<string> ResolveEmoteDir(string userInput)
         {
-            foreach (ITwitchEmoteSource source in _emoteSources)
+            foreach (CentralizedEmoteSource source in _emoteSources)
                 if (source.ContainsEmote(userInput)) return await source.GetEmote(userInput, _http);
 
             return null;
         }
     }
 
-    internal interface ITwitchEmoteSource
-    {
-        string DataSource { get; }
-        string CachedFileName { get; }
-
-        Task FetchData(HttpService http);
-
-        [CanBeNull]
-        Task<string> GetEmote(string emote, HttpService http);
-
-        bool ContainsEmote(string emote);
-    }
-
-    internal abstract class CentralizedEmoteSource : ITwitchEmoteSource
+    internal abstract class CentralizedEmoteSource
     {
         public abstract string DataSource { get; }
         public abstract string CachedFileName { get; }
@@ -81,20 +77,27 @@ namespace Stormbot.Bot.Core.Services
 
         public virtual async Task FetchData(HttpService http)
         {
-            string fileDir = Path.Combine(Constants.TwitchEmoteFolderDir, CachedFileName);
-
-            if (!File.Exists(fileDir))
+            try
             {
-                // download the data if it doesn't exist.
-                Logger.FormattedWrite(
-                    GetType().Name,
-                    $"Fetching emote data for {GetType().Name}",
-                    ConsoleColor.Green);
+                string fileDir = Path.Combine(Constants.TwitchEmoteFolderDir, CachedFileName);
 
-                HttpContent content = await http.Send(HttpMethod.Get, DataSource);
-                File.WriteAllText(fileDir, await content.ReadAsStringAsync());
+                if (!File.Exists(fileDir))
+                {
+                    // download the data if it doesn't exist.
+                    Logger.FormattedWrite(
+                        GetType().Name,
+                        $"Fetching emote data for {GetType().Name}",
+                        ConsoleColor.Green);
+
+                    HttpContent content = await http.Send(HttpMethod.Get, DataSource);
+                    File.WriteAllText(fileDir, await content.ReadAsStringAsync());
+                }
+                PopulateDictionary(JObject.Parse(File.ReadAllText(fileDir)));
             }
-            PopulateDictionary(JObject.Parse(File.ReadAllText(fileDir)));
+            catch (Exception ex)
+            {
+                Logger.FormattedWrite(GetType().Name, $"Failed fetching emote data. Ex: {ex}", ConsoleColor.Red);
+            }
         }
 
         protected abstract void PopulateDictionary(JObject data);
@@ -106,7 +109,6 @@ namespace Stormbot.Bot.Core.Services
     {
         public override string DataSource => "https://api.twitch.tv/kraken/chat/emoticons";
         public override string CachedFileName => "globaltwitch.json";
-
 
         protected override void PopulateDictionary(JObject data)
         {

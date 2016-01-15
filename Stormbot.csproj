@@ -94,15 +94,11 @@
     <Compile Include="Bot.Core\Modules\Audio\YoutubeResolver.cs" />
     <Compile Include="Bot.Core\Modules\BotManagementModule.cs" />
     <Compile Include="Bot.Core\Modules\Audio\AudioStreamModule.cs" />
-    <Compile Include="Bot.Core\Modules\Game\GameModule.cs" />
-    <Compile Include="Bot.Core\Modules\Game\GamePlayer.cs" />
-    <Compile Include="Bot.Core\Modules\Game\GameSessionManager.cs" />
     <Compile Include="Bot.Core\Modules\InfoModule.cs" />
     <Compile Include="Bot.Core\Modules\ModulesModule.cs" />
     <Compile Include="Bot.Core\Modules\QualityOfLifeModule.cs" />
     <Compile Include="Bot.Core\Modules\ServerManagementModule.cs" />
     <Compile Include="Bot.Core\Modules\TestModule.cs" />
-    <Compile Include="Bot.Core\Modules\TwitchModule.cs" />
     <Compile Include="Bot.Core\PermissionLevel.cs" />
     <Compile Include="Bot.Core\Services\DataIoService.cs" />
     <Compile Include="Bot.Core\Services\HttpService.cs" />

@@ -81,7 +81,6 @@ namespace Stormbot.Bot.Core
             _client.AddModule<AudioStreamModule>("Audio", ModuleFilter.ServerWhitelist);
             _client.AddModule<QualityOfLifeModule>("QoL", ModuleFilter.ServerWhitelist);
             _client.AddModule<TestModule>("Test", ModuleFilter.ServerWhitelist);
-            _client.AddModule<TwitchModule>("Twitch", ModuleFilter.ServerWhitelist);
             _client.AddModule<InfoModule>("Information", ModuleFilter.ServerWhitelist | ModuleFilter.AlwaysAllowPrivate);
             _client.AddModule<ModulesModule>("Modules");
 

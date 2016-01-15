@@ -40,8 +40,8 @@ namespace Stormbot.Bot.Core.Services
                             GetType().Name,
                             $"Failed loading emotes for {source.GetType().Name}. Exception: {ex}");
                     }
-                    GC.Collect();
                 }
+                GC.Collect();
             });
 
             client.MessageReceived += async (sender, args) =>

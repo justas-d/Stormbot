@@ -88,7 +88,7 @@ namespace Stormbot.Bot.Core
             _client.AddModule<ModulesModule>("Modules");
             _client.AddModule<ExecuteModule>("Execute", ModuleFilter.ServerWhitelist | ModuleFilter.ChannelWhitelist);
 #if DEBUG_DEV
-            _client.AddModule<GameModule>("Game", ModuleFilter.ServerWhitelist | ModuleFilter.ChannelWhitelist);
+            _client.AddModule<GameModule>("Game", ModuleFilter.ServerWhitelist | ModuleFilter.ChannelWhitelist | ModuleFilter.AlwaysAllowPrivate);
 #endif
             _client.Log.Message += (sender, args) => Logger.DiscordLog(args);
 

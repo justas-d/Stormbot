@@ -130,6 +130,7 @@
     <Compile Include="Bot.Core\Modules\Audio\AudioStreamer.cs" />
     <Compile Include="Bot.Core\Modules\Audio\IStreamResolver.cs" />
     <Compile Include="Bot.Core\Modules\Audio\LivestreamerResolver.cs" />
+    <Compile Include="Bot.Core\Modules\Game\Location.cs" />
     <Compile Include="Bot.Core\Modules\Game\Inventory.cs" />
     <Compile Include="Bot.Core\Modules\Game\Item.cs" />
     <Compile Include="Bot.Core\Modules\Game\ItemDefinition.cs" />

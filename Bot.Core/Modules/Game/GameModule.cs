@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
@@ -14,8 +15,12 @@ namespace Stormbot.Bot.Core.Modules.Game
         [DataLoad, DataSave] private GameSessionManager _sesh;
         private GameSessionManager GameSesh => _sesh ?? (_sesh = new GameSessionManager());
 
+        private DiscordClient _client;
+
         public void Install(ModuleManager manager)
         {
+            _client = manager.Client;
+
             manager.CreateCommands("game", group =>
             {
                 group.CreateCommand("join")
@@ -29,20 +34,19 @@ namespace Stormbot.Bot.Core.Modules.Game
 
             manager.CreateCommands("char", group =>
             {
-                group.AddCheck((cmd, usr, chl) => GameSesh.PlayerExists(usr.Id)); // check if user exists
+                group.AddCheck((cmd, usr, chl) =>
+                {
+                    GamePlayer player = GameSesh.GetPlayer(usr);
+                    if (player == null) return false;
+                    return !player.IsInCharacterCreation;
+                }); // only allow these commnads for users who have a player and the player did the character creation.
 
                 group.CreateCommand("info")
                     .Description("Displays information about your character.")
                     .Do(async e =>
                     {
                         GamePlayer player = GameSesh.GetPlayer(e.User);
-
-                        StringBuilder builder =
-                            new StringBuilder($"{Format.Bold($"{e.User.Name}'s character info:")}\r\n");
-
-                        builder.AppendLine(player.CreateState?.ToString() ?? player.ToString());
-
-                        await e.Channel.SendMessage(builder.ToString());
+                        await e.Channel.SendMessage(player.ToString());
                     });
 
                 group.CreateCommand("inv add")
@@ -70,15 +74,103 @@ namespace Stormbot.Bot.Core.Modules.Game
                         GamePlayer player = GameSesh.GetPlayer(e.User);
                         await e.User.SendPrivate($"{Format.Bold("Your inventory:")}\r\n`{player.Inventory}`");
                     });
+
+                group.CreateCommand("loc nearby")
+                    .Description("Lists locations that you enter from your current location.")
+                    .Do(async e =>
+                    {
+                        GamePlayer player = GameSesh.GetPlayer(e.User);
+                        await e.Channel.SendMessage($"**Nearby locations:**\r\n{player.Location.ToStringNearby()}");
+                    });
+
+                group.CreateCommand("loc interact")
+                    .Alias("loc int")
+                    .Description("Interact with a object in your current location")
+                    .Parameter("name", ParameterType.Unparsed)
+                    .Do(async e =>
+                    {;
+                        string objName = e.GetArg("name").ToLower();
+                        GamePlayer player = GameSesh.GetPlayer(e.User);
+                        LocObject obj = player.Location.Objects.FirstOrDefault(o => o.Name.ToLower() == objName);
+
+                        if (obj == null)
+                        {
+                            await e.Channel.SendMessage($"Could not find object `{objName}` in current location (`{player.Location.Name}`)");
+                            return;
+                        }
+                        await e.Channel.SendMessage($"You interact with `{objName}`");
+                        await obj.OnInteract(player);
+                    });
+
+                group.CreateCommand("loc enter")
+                    .Description("Enters a nearby location, found by it's name.")
+                    .Parameter("name", ParameterType.Unparsed)
+                    .Do(async e =>
+                    {
+                        string name = e.GetArg("name").ToLower();
+                        GamePlayer player = GameSesh.GetPlayer(e.User);
+                        Location loc = player.Location.NearbyLocations.All.FirstOrDefault(l => l.Name.ToLower() == name);
+
+                        if (loc == null)
+                        {
+                            await e.Channel.SendMessage($"Location {name} wasn't found or isn't nearby.");
+                            return;
+                        }
+
+                        if (!loc.Enter(player))
+                        {
+                            await e.Channel.SendMessage($"Couldn't enter nearby location {name}.");
+                            return;
+                        }
+
+                        await e.Channel.SendMessage($"**You have entered {player.Location.Name}.**\r\n```{player.Location}```");
+                    });
+
+                group.CreateCommand("loc")
+                    .Description("Displays information about your current location.")
+                    .Do(async e =>
+                    {
+                        GamePlayer player = GameSesh.GetPlayer(e.User);
+                        await e.Channel.SendMessage($"**{player.Location}:**\r\n{player.Location.ToString()}");
+                    });
+
+                group.CreateCommand("loc enterany")
+                    .MinPermissions((int) PermissionLevel.BotOwner)
+                    .Description("Tries to enter your users location to the given location id.")
+                    .Parameter("id")
+                    .Do(async e =>
+                    {
+                        GamePlayer player = GameSesh.GetPlayer(e.User);
+                        Location loc = Location.Get(uint.Parse(e.GetArg("id")));
+                        if (loc.Enter(player))
+                        {
+                            await e.Channel.SendMessage($"You have entered location {player.Location.Name}");
+                            return;
+                        }
+                        await e.Channel.SendMessage($"Couldn't enter locaton {loc.Name}");
+                    });
+
+                group.CreateCommand("loc set")
+                    .MinPermissions((int) PermissionLevel.BotOwner)
+                    .Description("Sets your users location to the given location id. Not recommended.")
+                    .Parameter("id")
+                    .Do(async e =>
+                    {
+                        GamePlayer player = GameSesh.GetPlayer(e.User);
+                        Location loc = Location.Get(uint.Parse(e.GetArg("id")));
+
+                        player.Location = loc;
+                        await e.Channel.SendMessage($"You have entered location {loc.Name}");
+                    });
             });
 
             manager.CreateCommands("cc", group =>
             {
-                // if player or the create state is null dont allow execution.
+                // only allow if player is in the char create state.
                 group.AddCheck((cmd, usr, cnl) =>
                 {
                     GamePlayer player = GameSesh.GetPlayer(usr);
-                    return player?.CreateState != null;
+                    return player != null && player.IsInCharacterCreation;
                 });
 
                 group.CreateCommand("name")
@@ -105,14 +197,23 @@ namespace Stormbot.Bot.Core.Modules.Game
                         await CheckForCanFinish(e.User);
                     });
 
+                group.CreateCommand("info")
+                    .Description("Displays the current information you have set for your character.")
+                    .Do(async e =>
+                    {
+                        GamePlayer player = GameSesh.GetPlayer(e.User);
+                        await e.Channel.SendMessage(player.CreateState.ToString());
+                    });
+
                 group.CreateCommand("finish")
                     .AddCheck(
                         (cmd, usr, chnl) =>
-                            //if player or create state is null or we cant finish creation - dont execute.
                         {
                             GamePlayer player = GameSesh.GetPlayer(usr);
-                            return player?.CreateState != null && player.CreateState.CanFinishCreation;
+                            return player != null && player.IsInCharacterCreation &&
+                                   player.CreateState.CanFinishCreation;
                         })
+                    // only allow this finish command for players who are in the char creation state exist and have the can finish creation state.
                     .Description("Finishes character creation.")
                     .Do(async e =>
                     {
@@ -142,7 +243,9 @@ namespace Stormbot.Bot.Core.Modules.Game
 
         public void OnDataLoad()
         {
-            // ignored
+            // find the user associated with the gameplayer.
+            foreach (GamePlayer player in GameSesh.Players.Where(player => player.User == null))
+                player.User = _client.GetUser(player.UserId);
         }
     }
 }

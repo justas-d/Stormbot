@@ -12,7 +12,7 @@ namespace Stormbot.Bot.Core.Modules.Game
     public class GameSessionManager
     {
         [JsonProperty] private HashSet<GamePlayer> _players = new HashSet<GamePlayer>();
-        private HashSet<GamePlayer> Players => _players ?? (_players = new HashSet<GamePlayer>());
+        public HashSet<GamePlayer> Players => _players ?? (_players = new HashSet<GamePlayer>());
 
         [JsonConstructor]
         private GameSessionManager(HashSet<GamePlayer> players)
@@ -39,6 +39,7 @@ namespace Stormbot.Bot.Core.Modules.Game
 
         [CanBeNull]
         public GamePlayer GetPlayer(ulong userid) => Players.FirstOrDefault(p => p.UserId == userid);
+
         [CanBeNull]
         public GamePlayer GetPlayer(User user) => GetPlayer(user.Id);
 

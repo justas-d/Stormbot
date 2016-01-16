@@ -292,7 +292,10 @@ namespace Stormbot.Bot.Core.Modules.Audio
             _isPlaying = true;
             _client.SetGame(track.Name);
 
-            using (AudioStreamer streamer = new AudioStreamer(track.GetStream(), _client))
+            string streamUrl = track.GetStream();
+            track.Length = TrackData.GetLength(streamUrl);
+
+            using (AudioStreamer streamer = new AudioStreamer(streamUrl, _client))
             {
                 if (_skipFlag)
                 {

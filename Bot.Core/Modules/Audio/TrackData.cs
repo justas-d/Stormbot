@@ -23,7 +23,7 @@ namespace Stormbot.Bot.Core.Modules.Audio
         [JsonIgnore] private IStreamResolver _cachedResolver;
 
         public string Location { get; }
-        public TimeSpan Length { get; private set; }
+        public TimeSpan Length { get; set; }
         public string Name { get; private set; }
 
         [JsonConstructor, UsedImplicitly]
@@ -38,7 +38,6 @@ namespace Stormbot.Bot.Core.Modules.Audio
         {
             Location = location;
             Name = name;
-            ReadLenght();
         }
 
         [CanBeNull]
@@ -69,51 +68,53 @@ namespace Stormbot.Bot.Core.Modules.Audio
             return null;
         }
 
-        private void ReadLenght()
+        public static TimeSpan GetLength(string location)
         {
+            TimeSpan retval = TimeSpan.Zero;
+
             try
             {
                 using (Process ffprobe = new Process
                 {
                     StartInfo =
-                        {
-                            FileName = Constants.FfprobeDir,
-                            Arguments =
-                                $"-v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 \"{Location}\"",
-                            UseShellExecute = false,
-                            RedirectStandardOutput = true,
-                            CreateNoWindow = true,
-                        },
+                    {
+                        FileName = Constants.FfprobeDir,
+                        Arguments =
+                            $"-v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 \"{location}\"",
+                        UseShellExecute = false,
+                        RedirectStandardOutput = true,
+                        CreateNoWindow = true,
+                    },
                     EnableRaisingEvents = true
                 })
                 {
                     ffprobe.OutputDataReceived += (sender, args) =>
                     {
                         if (string.IsNullOrEmpty(args.Data)) return;
-                        if (args.Data == "N/A") Length = TimeSpan.Zero;
-                        else
-                        {
-                            Length = TimeSpan.FromSeconds(
-                                int.Parse(
-                                    args.Data.Remove(
-                                        args.Data.IndexOf('.'))));
-                        }
+                        if (args.Data == "N/A") return;
+
+                        retval = TimeSpan.FromSeconds(
+                            int.Parse(
+                                args.Data.Remove(
+                                    args.Data.IndexOf('.'))));
                     };
 
                     if (!ffprobe.Start())
                     {
-                        Logger.FormattedWrite(GetType().Name, "Failed starting ffprobe.", ConsoleColor.Red);
-                        return;
+                        Logger.FormattedWrite(typeof (TrackData).Name, "Failed starting ffprobe.", ConsoleColor.Red);
+                        return retval;
                     }
 
                     ffprobe.BeginOutputReadLine();
+                    ffprobe.WaitForExit();
                 }
             }
             catch (Exception ex)
             {
-                Logger.FormattedWrite(GetType().Name, $"Failed getting track length. Exception: {ex}",
+                Logger.FormattedWrite(typeof (TrackData).Name, $"Failed getting track length. Exception: {ex}",
                     ConsoleColor.Red);
             }
+            return retval;
         }
     }
 }

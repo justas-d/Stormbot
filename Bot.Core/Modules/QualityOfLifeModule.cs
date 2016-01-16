@@ -125,7 +125,7 @@ namespace Stormbot.Bot.Core.Modules
                     .Do(async e =>
                     {
                         const string quptePoolDir = Constants.DataFolderDir + @"12\";
-                        if (!File.Exists(quptePoolDir)) return;
+                        if (!Directory.Exists(quptePoolDir)) return;
 
                         await e.Channel.SendFile(Directory.GetFiles(quptePoolDir).PickRandom());
                     });

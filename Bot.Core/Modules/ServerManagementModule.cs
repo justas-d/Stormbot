@@ -13,8 +13,12 @@ namespace Stormbot.Bot.Core.Modules
 {
     public class ServerManagementModule : IModule
     {
+        private DiscordClient _client;
+
         public void Install(ModuleManager manager)
         {
+            _client = manager.Client;
+
             manager.CreateCommands("channel", group =>
             {
                 group.MinPermissions((int)PermissionLevel.ServerAdmin);

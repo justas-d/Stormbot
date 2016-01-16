@@ -129,7 +129,6 @@ namespace Stormbot.Bot.Core.Modules
 
                         await e.Channel.SendFile(Directory.GetFiles(quptePoolDir).PickRandom());
                     });
-
             });
 
             manager.CreateCommands("color", group =>

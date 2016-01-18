@@ -55,7 +55,8 @@ namespace Stormbot.Bot.Core.Modules.Game
         ///<summary>A list of locations that a user can enter while in this location.</summary>
         public NearbyLoc NearbyLocations { get; }
 
-        private Location(uint id, string name, string description, IEnumerable<LocObject> objects, IEnumerable<uint> nearbyLocations)
+        private Location(uint id, string name, string description, IEnumerable<LocObject> objects,
+            IEnumerable<uint> nearbyLocations)
         {
             try
             {
@@ -108,16 +109,6 @@ namespace Stormbot.Bot.Core.Modules.Game
             return true;
         }
 
-        public override string ToString()
-        {
-            StringBuilder builder = new StringBuilder($"{Description}\r\nObjects:\r\n");
-
-            foreach (LocObject obj in Objects)
-                builder.AppendLine($"* {obj.Name, -15} {obj.Description}");
-
-            return builder.ToString();
-        }
-
         ///<summary>Returns a string representation of the nearby locations HashSet.</summary>
         public string ToStringNearby()
         {
@@ -129,6 +120,18 @@ namespace Stormbot.Bot.Core.Modules.Game
             return $"{builder}`";
         }
 
+        #region Overrides
+
+        public override string ToString()
+        {
+            StringBuilder builder = new StringBuilder($"{Description}\r\nObjects:\r\n");
+
+            foreach (LocObject obj in Objects)
+                builder.AppendLine($"* {obj.Name,-15} {obj.Description}");
+
+            return builder.ToString();
+        }
+
         public override int GetHashCode()
         {
             unchecked
@@ -136,6 +139,44 @@ namespace Stormbot.Bot.Core.Modules.Game
                 return (int) Id*13;
             }
         }
+
+        public override bool Equals(object obj)
+        {
+            if (obj == null)
+                return false;
+
+            Location p = obj as Location;
+            if ((object) p == null)
+                return false;
+
+            return Id == p.Id;
+        }
+
+        public bool Equals(Location p)
+        {
+            if ((object) p == null)
+                return false;
+
+            return Id == p.Id;
+        }
+
+        public static bool operator ==(Location a, Location b)
+        {
+            if (ReferenceEquals(a, b))
+                return true;
+
+            if (((object) a == null) || ((object) b == null))
+                return false;
+
+            return a.Id == b.Id;
+        }
+
+        public static bool operator !=(Location a, Location b)
+        {
+            return !(a == b);
+        }
+
+        #endregion
     }
 
     public class LocObject
@@ -146,6 +187,7 @@ namespace Stormbot.Bot.Core.Modules.Game
 
         public LocObject(uint id, string name, string desc)
         {
+            Id = id;
             Name = name;
             Description = desc;
         }
@@ -155,6 +197,54 @@ namespace Stormbot.Bot.Core.Modules.Game
         {
             await player.User.SendPrivate("Nothing interesting happens.");
         }
+
+        #region Overrides
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return (int) Id*13;
+            }
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj == null)
+                return false;
+
+            LocObject p = obj as LocObject;
+            if ((object) p == null)
+                return false;
+
+            return Id == p.Id;
+        }
+
+        public bool Equals(LocObject p)
+        {
+            if ((object) p == null)
+                return false;
+
+            return Id == p.Id;
+        }
+
+        public static bool operator ==(LocObject a, LocObject b)
+        {
+            if (ReferenceEquals(a, b))
+                return true;
+
+            if (((object) a == null) || ((object) b == null))
+                return false;
+
+            return a.Id == b.Id;
+        }
+
+        public static bool operator !=(LocObject a, LocObject b)
+        {
+            return !(a == b);
+        }
+
+        #endregion
 
         #region Generic Objects
 

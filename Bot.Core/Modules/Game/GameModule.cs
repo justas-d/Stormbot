@@ -1,5 +1,4 @@
 ﻿using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
@@ -32,136 +31,284 @@ namespace Stormbot.Bot.Core.Modules.Game
                     });
             });
 
-            manager.CreateCommands("char", group =>
+            // commands, which require the caller to have an in game user.
+            // bug : http://puu.sh/mzUz3/309cc7df23.png
+            // asked volt about this, hopefuly a solution comes soon.
+            // if not, I should not chain groups like that, only make groups from the manager object.
+            manager.CreateCommands("", ingameG =>
             {
-                group.AddCheck((cmd, usr, chl) =>
+                ingameG.AddCheck((cmd, usr, chl) =>
                 {
                     GamePlayer player = GameSesh.GetPlayer(usr);
                     if (player == null) return false;
                     return !player.IsInCharacterCreation;
                 }); // only allow these commnads for users who have a player and the player did the character creation.
 
-                group.CreateCommand("info")
-                    .Description("Displays information about your character.")
-                    .Do(async e =>
-                    {
-                        GamePlayer player = GameSesh.GetPlayer(e.User);
-                        await e.Channel.SendMessage(player.ToString());
-                    });
-
-                group.CreateCommand("inv add")
-                    .Parameter("id")
-                    .Parameter("val")
-                    .Description("Adds an item id with a certain amount to your inventory.")
-                    .MinPermissions((int) PermissionLevel.BotOwner)
-                    .Do(async e =>
-                    {
-                        GamePlayer player = GameSesh.GetPlayer(e.User);
-                        Item add = new Item(uint.Parse(e.GetArg("id")), int.Parse(e.GetArg("val")));
-
-                        if (!player.Inventory.AddItem(add))
+                ingameG.CreateGroup("char", charG =>
+                {
+                    charG.CreateCommand("info")
+                        .Description("Displays information about your character.")
+                        .Do(async e =>
                         {
-                            await e.Channel.SendMessage("Couldn't fully add all the requested items to your inventory.");
-                            return;
-                        }
-                        await e.Channel.SendMessage($"Added {add.ItemDef.Name} x{add.Amount} to your inventory.");
-                    });
+                            GamePlayer player = GameSesh.GetPlayer(e.User);
+                            await e.Channel.SendMessage(player.ToString());
+                        });
+                });
 
-                group.CreateCommand("inv show")
-                    .Description("Shows you your inventory.")
-                    .Do(async e =>
-                    {
-                        GamePlayer player = GameSesh.GetPlayer(e.User);
-                        await e.User.SendPrivate($"{Format.Bold("Your inventory:")}\r\n`{player.Inventory}`");
-                    });
-
-                group.CreateCommand("loc nearby")
-                    .Description("Lists locations that you enter from your current location.")
-                    .Do(async e =>
-                    {
-                        GamePlayer player = GameSesh.GetPlayer(e.User);
-                        await e.Channel.SendMessage($"**Nearby locations:**\r\n{player.Location.ToStringNearby()}");
-                    });
-
-                group.CreateCommand("loc interact")
-                    .Alias("loc int")
-                    .Description("Interact with a object in your current location")
-                    .Parameter("name", ParameterType.Unparsed)
-                    .Do(async e =>
-                    {;
-                        string objName = e.GetArg("name").ToLower();
-                        GamePlayer player = GameSesh.GetPlayer(e.User);
-                        LocObject obj = player.Location.Objects.FirstOrDefault(o => o.Name.ToLower() == objName);
-
-                        if (obj == null)
+                ingameG.CreateGroup("inv", invG =>
+                {
+                    invG.CreateCommand("add")
+                        .Parameter("id")
+                        .Parameter("val")
+                        .Description("Adds an item id with a certain amount to your inventory.")
+                        .MinPermissions((int) PermissionLevel.BotOwner)
+                        .Do(async e =>
                         {
-                            await e.Channel.SendMessage($"Could not find object `{objName}` in current location (`{player.Location.Name}`)");
-                            return;
-                        }
-                        await e.Channel.SendMessage($"You interact with `{objName}`");
-                        await obj.OnInteract(player);
-                    });
+                            GamePlayer player = GameSesh.GetPlayer(e.User);
+                            Item add = new Item(uint.Parse(e.GetArg("id")), int.Parse(e.GetArg("val")));
 
-                group.CreateCommand("loc enter")
-                    .Description("Enters a nearby location, found by it's name.")
-                    .Parameter("name", ParameterType.Unparsed)
-                    .Do(async e =>
-                    {
-                        string name = e.GetArg("name").ToLower();
-                        GamePlayer player = GameSesh.GetPlayer(e.User);
-                        Location loc = player.Location.NearbyLocations.All.FirstOrDefault(l => l.Name.ToLower() == name);
+                            if (!player.Inventory.AddItem(add))
+                            {
+                                await
+                                    e.Channel.SendMessage(
+                                        "Couldn't fully add all the requested items to your inventory.");
+                                return;
+                            }
+                            await e.Channel.SendMessage($"Added {add.ItemDef.Name} x{add.Amount} to your inventory.");
+                        });
 
-                        if (loc == null)
+                    invG.CreateCommand("show")
+                        .Description("Shows you your inventory.")
+                        .Do(async e =>
                         {
-                            await e.Channel.SendMessage($"Location {name} wasn't found or isn't nearby.");
-                            return;
-                        }
+                            GamePlayer player = GameSesh.GetPlayer(e.User);
+                            await e.User.SendPrivate($"{Format.Bold("Your inventory:")}\r\n`{player.Inventory}`");
+                        });
+                });
 
-                        if (!loc.Enter(player))
+                ingameG.CreateGroup("bank", bankG =>
+                {
+                    bankG.AddCheck((cmd, usr, chnl) =>
+                    {
+                        GamePlayer player = GameSesh.GetPlayer(usr);
+                        return player.Location.Objects.Contains(LocObject.Bank);
+                    }); // only allow these commands to players who are in a location that contains a bank locobject.
+
+                    bankG.CreateCommand("show")
+                        .Parameter("page", ParameterType.Optional)
+                        .Description(
+                            "Displays the items in the given page from your bank. If not page argument was passed, instead we will show how many pages are available.")
+                        .Do(async e =>
                         {
-                            await e.Channel.SendMessage($"Couldn't enter nearby location {name}.");
-                            return;
-                        }
+                            // check for page argunement;
+                            int page;
+                            GamePlayer player = GameSesh.GetPlayer(e.User);
 
-                        await e.Channel.SendMessage($"**You have entered {player.Location.Name}.**\r\n```{player.Location}```");
-                    });
+                            if (int.TryParse(e.GetArg("page"), out page))
+                            {
+                                page--; // convert to zero based.
+                                await
+                                    e.Channel.SendMessage(
+                                        $"**{e.User}'s bank page {page + 1}:**\r\n`{player.Bank.GetPageData(page)}`");
+                            }
+                            else
+                            {
+                                await e.Channel.SendMessage($"Available bank pages: {Bank.Pages}");
+                            }
+                        });
 
-                group.CreateCommand("loc")
-                    .Description("Displays information about your current location.")
-                    .Do(async e =>
-                    {
-                        GamePlayer player = GameSesh.GetPlayer(e.User);
-                        await e.Channel.SendMessage($"**{player.Location}:**\r\n{player.Location.ToString()}");
-                    });
-
-                group.CreateCommand("loc enterany")
-                    .MinPermissions((int) PermissionLevel.BotOwner)
-                    .Description("Tries to enter your users location to the given location id.")
-                    .Parameter("id")
-                    .Do(async e =>
-                    {
-                        GamePlayer player = GameSesh.GetPlayer(e.User);
-                        Location loc = Location.Get(uint.Parse(e.GetArg("id")));
-                        if (loc.Enter(player))
+                    bankG.CreateCommand("take")
+                        .AddCheck((cmd, usr, chnl) =>
                         {
-                            await e.Channel.SendMessage($"You have entered location {player.Location.Name}");
+                            GamePlayer player = GameSesh.GetPlayer(usr);
+                            return player.Inventory.HasSpace;
+                        })
+                        .Description("Takes an item out of your bank and puts it into your inventory")
+                        .Parameter("bank index")
+                        .Do(async e =>
+                        {
+                            int bankIndex = int.Parse(e.GetArg("bank index")) - 1;
+
+                            GamePlayer player = GameSesh.GetPlayer(e.User);
+                            Item takeItem = player.Bank.TakeItem(bankIndex);
+
+                            if (takeItem == null)
+                            {
+                                await e.Channel.SendMessage("You cannot take nothing from your bank!");
+                                return;
+                            }
+                            if (player.Inventory.AddItem(takeItem))
+                            {
+                                await
+                                    e.Channel.SendMessage(
+                                        $"You took `{takeItem.ItemDef.Name}` from your bank and put it in your inventory.");
+                                return;
+                            }
+                            await e.Channel.SendMessage($"Failed takinng `{takeItem.ItemDef.Name}` from your bank.");
+                        });
+
+                    bankG.CreateCommand("deposit") // todo : optional amount argument
+                        .AddCheck((comd, usr, chnl) =>
+                        {
+                            GamePlayer player = GameSesh.GetPlayer(usr);
+                            return player.Bank.HasSpace;
+                        })
+                        .Parameter("inventory index")
+                        .Parameter("bank index", ParameterType.Optional)
+                        .Description(
+                            "Displays an item at the given index from your inventory to your bank. If an optional bank index paramater is passed, we will try to deposit an item at that given index.")
+                        .Do(async e =>
+                        {
+                            int inventoryIndex = int.Parse(e.GetArg("inventory index")) - 1; // convert to zero based.
+                            int bankIndex;
+
+                            GamePlayer player = GameSesh.GetPlayer(e.User);
+                            Item depositItem = player.Inventory.TakeItem(inventoryIndex);
+
+                            if (depositItem == null) // check if we are trying to depost an existing item.
+                            {
+                                await e.Channel.SendMessage("You cannot deposit nothing into your bank!");
+                                return;
+                            }
+                            if (!player.Bank.CanHoldItem(depositItem)) // check if the bank can hold the item.
+                            {
+                                await
+                                    e.Channel.SendMessage(
+                                        $"Your bank doesn't have enough space to hold `{depositItem.ItemDef.Name}`");
+                                return;
+                            }
+
+                            // all looks good, proceed to depositiong.
+
+                            //check for optional index paramater
+                            if (int.TryParse(e.GetArg("inventory index"), out bankIndex))
+                            {
+                                bankIndex--; // convert to zero based.
+                                if (player.Bank.AddItemIndex(depositItem, bankIndex))
+                                    goto deposit;
+                                else
+                                    goto failed;
+                            }
+
+                            // no set index, add to the first empty spot.
+                            if (player.Bank.AddItem(depositItem))
+                                goto deposit;
+                            else
+                                goto failed;
+
+                            //as close to local functions as we can get right now, i suppose.
+                            deposit:
+                            await
+                                e.Channel.SendMessage($"You deposit `{depositItem.ItemDef.Name}` into your bank.");
                             return;
-                        }
-                        await e.Channel.SendMessage($"Couldn't enter locaton {loc.Name}");
-                    });
 
-                group.CreateCommand("loc set")
-                    .MinPermissions((int) PermissionLevel.BotOwner)
-                    .Description("Sets your users location to the given location id. Not recommended.")
-                    .Parameter("id")
-                    .Do(async e =>
-                    {
-                        GamePlayer player = GameSesh.GetPlayer(e.User);
-                        Location loc = Location.Get(uint.Parse(e.GetArg("id")));
+                            failed:
+                            await
+                                e.Channel.SendMessage(
+                                    $"Couldn't fully deposit `{depositItem.ItemDef.Name}` to your bank.");
+                            return;
+                        });
+                });
 
-                        player.Location = loc;
-                        await e.Channel.SendMessage($"You have entered location {loc.Name}");
-                    });
+                ingameG.CreateGroup("loc", locG =>
+                {
+                    locG.CreateCommand("nearby")
+                        .Alias("near")
+                        .Description("Lists locations that you enter from your current location.")
+                        .Do(async e =>
+                        {
+                            GamePlayer player = GameSesh.GetPlayer(e.User);
+                            await e.Channel.SendMessage($"**Nearby locations:**\r\n{player.Location.ToStringNearby()}");
+                        });
+
+                    locG.CreateCommand("interact")
+                        .Alias("use")
+                        .Alias("int")
+                        .Description("Interact with a object in your current location")
+                        .Parameter("name", ParameterType.Unparsed)
+                        .Do(async e =>
+                        {
+                            ;
+                            string objName = e.GetArg("name").ToLower();
+                            GamePlayer player = GameSesh.GetPlayer(e.User);
+                            LocObject obj = player.Location.Objects.FirstOrDefault(o => o.Name.ToLower() == objName);
+
+                            if (obj == null)
+                            {
+                                await
+                                    e.Channel.SendMessage(
+                                        $"Could not find object `{objName}` in current location (`{player.Location.Name}`)");
+                                return;
+                            }
+                            await e.Channel.SendMessage($"You interact with `{objName}`");
+                            await obj.OnInteract(player);
+                        });
+
+                    locG.CreateCommand("enter")
+                        .Alias("goto")
+                        .Description("Enters a nearby location, found by it's name.")
+                        .Parameter("name", ParameterType.Unparsed)
+                        .Do(async e =>
+                        {
+                            string name = e.GetArg("name").ToLower();
+                            GamePlayer player = GameSesh.GetPlayer(e.User);
+                            Location loc =
+                                player.Location.NearbyLocations.All.FirstOrDefault(l => l.Name.ToLower() == name);
+
+                            if (loc == null)
+                            {
+                                await e.Channel.SendMessage($"Location {name} wasn't found or isn't nearby.");
+                                return;
+                            }
+
+                            if (!loc.Enter(player))
+                            {
+                                await e.Channel.SendMessage($"Couldn't enter nearby location {name}.");
+                                return;
+                            }
+
+                            await
+                                e.Channel.SendMessage(
+                                    $"**You have entered {player.Location.Name}.**\r\n```{player.Location}```");
+                        });
+
+                    locG.CreateCommand("")
+                        .Description("Displays information about your current location.")
+                        .Do(async e =>
+                        {
+                            GamePlayer player = GameSesh.GetPlayer(e.User);
+                            await e.Channel.SendMessage($"**{player.Location}:**\r\n{player.Location.ToString()}");
+                        });
+
+                    locG.CreateCommand("enterany")
+                        .MinPermissions((int) PermissionLevel.BotOwner)
+                        .Description("Tries to enter your users location to the given location id.")
+                        .Parameter("id")
+                        .Do(async e =>
+                        {
+                            GamePlayer player = GameSesh.GetPlayer(e.User);
+                            Location loc = Location.Get(uint.Parse(e.GetArg("id")));
+                            if (loc.Enter(player))
+                            {
+                                await e.Channel.SendMessage($"You have entered location {player.Location.Name}");
+                                return;
+                            }
+                            await e.Channel.SendMessage($"Couldn't enter locaton {loc.Name}");
+                        });
+
+                    locG.CreateCommand("set")
+                        .MinPermissions((int) PermissionLevel.BotOwner)
+                        .Description("Sets your users location to the given location id. Not recommended.")
+                        .Parameter("id")
+                        .Do(async e =>
+                        {
+                            GamePlayer player = GameSesh.GetPlayer(e.User);
+                            Location loc = Location.Get(uint.Parse(e.GetArg("id")));
+
+                            player.Location = loc;
+                            await e.Channel.SendMessage($"You have entered location {loc.Name}");
+                        });
+                });
             });
 
             manager.CreateCommands("cc", group =>
@@ -244,7 +391,7 @@ namespace Stormbot.Bot.Core.Modules.Game
         public void OnDataLoad()
         {
             // find the user associated with the gameplayer.
-            foreach (GamePlayer player in GameSesh.Players.Where(player => player.User == null))
+            foreach (GamePlayer player in GameSesh.Players.Values.Where(player => player.User == null))
                 player.User = _client.GetUser(player.UserId);
         }
     }

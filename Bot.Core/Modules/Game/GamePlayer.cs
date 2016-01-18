@@ -3,6 +3,7 @@ using System.Text;
 using Discord;
 using JetBrains.Annotations;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Stormbot.Bot.Core.Modules.Game
 {
@@ -19,6 +20,7 @@ namespace Stormbot.Bot.Core.Modules.Game
         public const int DefaultInventorySize = 28;
 
         private Inventory _inventory;
+        private Bank _bank;
 
         /// <summary> Gets or sets the players location. 
         /// Use Location.Enter to "Enter" the location properly instead of setting it manually here. 
@@ -43,6 +45,9 @@ namespace Stormbot.Bot.Core.Modules.Game
         public Inventory Inventory => _inventory ?? (_inventory = new Inventory(DefaultInventorySize));
 
         [JsonProperty]
+        public Bank Bank => _bank ?? (_bank = new Bank());
+
+        [JsonProperty]
         public uint LocationId => Location.Id;
 
         #endregion
@@ -54,12 +59,15 @@ namespace Stormbot.Bot.Core.Modules.Game
 
         [JsonConstructor]
         private GamePlayer(string name, ulong userid, GenderType gender, PlayerCreateState createState,
-            Inventory inventory, uint locationId)
+            Inventory inventory, uint locationId, JObject bank)
         {
             Name = name;
             UserId = userid;
             Gender = gender;
             _inventory = inventory;
+
+            _bank = bank.ToObject<Bank>();
+
             Location = Location.Get(locationId);
 
             CreateState = createState;

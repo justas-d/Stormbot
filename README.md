@@ -22,7 +22,7 @@ After that you will need to create a ````config.json```` and fill it with inform
   "FfmpegDir"        : "",
   "FfprobeDir"       : "", 
   "SoundcloudApiKey" : "",
-  ""
+  "LivestreamerDir"  : ""
 }
 
 ````

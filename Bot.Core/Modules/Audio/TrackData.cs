@@ -43,6 +43,9 @@ namespace Stormbot.Bot.Core.Modules.Audio
         [CanBeNull]
         public string GetStream()
         {
+            if (Length == TimeSpan.Zero)
+                GetLength();
+
             if (File.Exists(Location)) return Location;
 
             if (_cachedResolver != null)
@@ -68,10 +71,8 @@ namespace Stormbot.Bot.Core.Modules.Audio
             return null;
         }
 
-        public static TimeSpan GetLength(string location)
+        private void GetLength()
         {
-            TimeSpan retval = TimeSpan.Zero;
-
             try
             {
                 using (Process ffprobe = new Process
@@ -80,7 +81,7 @@ namespace Stormbot.Bot.Core.Modules.Audio
                     {
                         FileName = Constants.FfprobeDir,
                         Arguments =
-                            $"-v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 \"{location}\"",
+                            $"-v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 \"{Location}\"",
                         UseShellExecute = false,
                         RedirectStandardOutput = true,
                         CreateNoWindow = true,
@@ -93,17 +94,14 @@ namespace Stormbot.Bot.Core.Modules.Audio
                         if (string.IsNullOrEmpty(args.Data)) return;
                         if (args.Data == "N/A") return;
 
-                        retval = TimeSpan.FromSeconds(
+                        Length = TimeSpan.FromSeconds(
                             int.Parse(
                                 args.Data.Remove(
                                     args.Data.IndexOf('.'))));
                     };
 
                     if (!ffprobe.Start())
-                    {
                         Logger.FormattedWrite(typeof (TrackData).Name, "Failed starting ffprobe.", ConsoleColor.Red);
-                        return retval;
-                    }
 
                     ffprobe.BeginOutputReadLine();
                     ffprobe.WaitForExit();
@@ -114,7 +112,6 @@ namespace Stormbot.Bot.Core.Modules.Audio
                 Logger.FormattedWrite(typeof (TrackData).Name, $"Failed getting track length. Exception: {ex}",
                     ConsoleColor.Red);
             }
-            return retval;
         }
     }
 }

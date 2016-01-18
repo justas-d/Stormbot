@@ -119,7 +119,7 @@ namespace Stormbot.Bot.Core.Modules.Audio
 
                 group.CreateCommand("forcestop")
                     .Description("Forcefully stops playback of the playlist, track and leaves the voice channel.")
-                    .MinPermissions((int)PermissionLevel.ChannelAdmin)
+                    .MinPermissions((int) PermissionLevel.ChannelAdmin)
                     .Do(async e =>
                     {
                         if (_voice != null)
@@ -292,12 +292,7 @@ namespace Stormbot.Bot.Core.Modules.Audio
             _isPlaying = true;
             _client.SetGame(track.Name);
 
-            string streamUrl = track.GetStream();
-
-            if(track.Length == TimeSpan.Zero)
-                track.Length = TrackData.GetLength(streamUrl);
-
-            using (AudioStreamer streamer = new AudioStreamer(streamUrl, _client))
+            using (AudioStreamer streamer = new AudioStreamer(track.GetStream(), _client))
             {
                 if (_skipFlag)
                 {

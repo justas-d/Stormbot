@@ -38,6 +38,7 @@ namespace Stormbot.Bot.Core.Modules.Game
             new ItemDef(0, "Book", "A fucking book", true);
             new ItemDef(1, "Clay Pot", "A pot, made out of clay.", true);
             new ItemDef(2, "Fedora", "M'lady", false);
+            new ItemDef(3, "Coin", "Lovely money!", true);
         }
 
         #region Overrides

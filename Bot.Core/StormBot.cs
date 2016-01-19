@@ -31,7 +31,7 @@ namespace Stormbot.Bot.Core
 
         public void Start()
         {
-            _client.Run(Init);
+            _client.ExecuteAndWait(Init);
         }
 
         private async Task Init()

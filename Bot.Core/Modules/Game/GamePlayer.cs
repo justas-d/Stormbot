@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Text;
 using Discord;
-using JetBrains.Annotations;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -18,9 +17,11 @@ namespace Stormbot.Bot.Core.Modules.Game
         }
 
         public const int DefaultInventorySize = 28;
+        public const int DefaultMaxHealth = 100;
 
         private Inventory _inventory;
         private Bank _bank;
+        private int _health = DefaultMaxHealth;
 
         /// <summary> Gets or sets the players location. 
         /// Use Location.Enter to "Enter" the location properly instead of setting it manually here. 
@@ -28,6 +29,24 @@ namespace Stormbot.Bot.Core.Modules.Game
         public Location Location { get; set; }
 
         #region Serialization Objects
+
+        [JsonProperty]
+        public int MaxHealth { get; set; } = DefaultMaxHealth;
+
+        [JsonProperty]
+        public int Health
+        {
+            get { return _health; }
+            set
+            {
+                _health = value > MaxHealth
+                    ? MaxHealth
+                    : value;
+
+                if (_health <= 0)
+                    OnDead();
+            }
+        }
 
         [JsonProperty]
         public string Name { get; private set; }
@@ -54,19 +73,25 @@ namespace Stormbot.Bot.Core.Modules.Game
 
         public User User { get; set; }
 
+        public bool IsDead => Health <= 0;
+
         ///<summary>Returns whether the player is still in the character creation process.</summary>
         public bool IsInCharacterCreation => Name == null || CreateState != null;
 
         [JsonConstructor]
         private GamePlayer(string name, ulong userid, GenderType gender, PlayerCreateState createState,
-            Inventory inventory, uint locationId, JObject bank)
+            Inventory inventory, uint locationId, Bank bank, int health, int maxhealth)
         {
             Name = name;
             UserId = userid;
             Gender = gender;
             _inventory = inventory;
+            Health = health;
+            MaxHealth = maxhealth;
 
-            _bank = bank.ToObject<Bank>();
+            if(MaxHealth == 0)
+
+            _bank = bank;
 
             Location = Location.Get(locationId);
 
@@ -98,13 +123,18 @@ namespace Stormbot.Bot.Core.Modules.Game
             }
         }
 
+        private void OnDead()
+        {
+            
+        }
+
         public override string ToString()
         {
             StringBuilder builder = new StringBuilder();
 
             builder.AppendLine(IsInCharacterCreation
                 ? CreateState.ToString()
-                : $"Name: {Format.Code(Name)}\r\nGender: {Format.Code(Gender.ToString())}\r\nLocation: {Format.Code(Location.Name)}.\r\n ```{Location}```");
+                : $"Name: {Format.Code(Name)}\r\nHealth: {Format.Code($"{Health}/{MaxHealth}")}\r\nGender: {Format.Code(Gender.ToString())}\r\nLocation: {Format.Code(Location.Name)}.\r\n ```{Location}```");
 
             return builder.ToString();
         }

@@ -109,7 +109,9 @@ namespace Stormbot.Bot.Core.Modules
                     .Parameter("query", ParameterType.Unparsed)
                     .Do(async e =>
                     {
-                        await e.Channel.SendMessage($"http://lmgtfy.com/?q={HttpUtility.UrlEncode(e.GetArg("query"))}");
+                        string query = e.GetArg("query");
+                        if (string.IsNullOrEmpty(query)) return;
+                        await e.Channel.SendMessage($"http://lmgtfy.com/?q={HttpUtility.UrlEncode(query)}");
                     });
 
                 group.CreateCommand("quote")

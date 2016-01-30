@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
+using Discord.Commands.Permissions.Levels;
 using Discord.Modules;
 using Newtonsoft.Json;
 using Stormbot.Bot.Core.Services;
@@ -30,6 +31,10 @@ namespace Stormbot.Bot.Core.Modules
             public string Password { get; }
             [JsonProperty]
             public int Port { get; }
+
+            public EventHandler<MessageReceivedEventArgs> TerrariaMessageReceivedEvent;
+            public EventHandler<DisconnectEventArgs> TerrariaDisconnectedEvent;
+            public EventHandler<MessageEventArgs> DiscordMessageReceivedEvent;
 
             [JsonConstructor]
             private TerrChannelRelay(ulong channelId, string host, int port, string password)
@@ -66,61 +71,59 @@ namespace Stormbot.Bot.Core.Modules
         {
             _client = manager.Client;
 
-            manager.CreateCommands("terraria", group =>
+            manager.CreateCommands("terraria", mainGroup =>
             {
-                group.CreateCommand("info")
-                    .Description("Shows the info for the terraria server connected to this channel.")
-                    .Do(async e =>
-                    {
-                        TerrChannelRelay relay = _relays.FirstOrDefault(r => r.ChannelId == e.Channel.Id);
-                        if (relay == null)
-                        {
-                            await e.Channel.SendMessage($"This channel is not connected to a terraria server.");
-                            return;
-                        }
-                        await
-                            e.Channel.SendMessage(
-                                $"This channel is connected to:\r\n``` * Ip: {relay.Host}\r\n * Port:{relay.Port}\r\n * World: {relay.Client.World.WorldName}\r\n * Players: {relay.Client.Players.Count()}```");
-                    });
-                group.CreateCommand("connect")
-                    .Description("Connects this channel to a terraria server.")
-                    .Parameter("ip")
-                    .Parameter("port")
-                    .Parameter("password", ParameterType.Optional)
-                    .Do(async e =>
-                    {
-                        if (IsConnected(e.Channel))
-                        {
-                            await e.Channel.SendMessage($"This channel is already connected to a terraria server.");
-                            return;
-                        }
+                // commands which can only be used when caller channel is connected to a terraria server.
+                mainGroup.CreateGroup("", connectedGroup =>
+                {
+                    connectedGroup.AddCheck(
+                        (cmd, usr, chnl) => GetRelay(chnl) != null);
 
-                        TerrChannelRelay newRelay = new TerrChannelRelay(e.Channel, e.GetArg("ip"),
-                            int.Parse(e.GetArg("port")), e.GetArg("password"));
-                        _relays.Add(newRelay);
-                        await StartClient(newRelay);
-                    });
-
-                group.CreateCommand("disconnect")
-                    .Description("Disconnects from the terraria server connected to this channel.")
-                    .Do(async e =>
-                    {
-                        TerrChannelRelay relay = _relays.FirstOrDefault(r => r.ChannelId == e.Channel.Id);
-                        if (relay == null)
+                    connectedGroup.CreateCommand("info")
+                        .Description("Shows the info for the terraria server connected to this channel.")
+                        .Do(async e =>
                         {
-                            await e.Channel.SendMessage($"This channel is not connected to any terraria server.");
-                            return;
-                        }
-                        CleanRelay(relay);
-                    });
+                            TerrChannelRelay relay = GetRelay(e.Channel);
+                            await
+                                e.Channel.SendMessage(
+                                    $"This channel is connected to:\r\n```* Ip: {relay.Host}\r\n* Port:{relay.Port}\r\n* World: {relay.Client.World.WorldName}\r\n* Players: {relay.Client.Players.Count()}```");
+                        });
+
+                    connectedGroup.CreateCommand("disconnect")
+                        .MinPermissions((int) PermissionLevel.ChannelModerator)
+                        .Description("Disconnects from the terraria server connected to this channel.")
+                        .Do(async e =>
+                        {
+                            TerrChannelRelay relay = _relays.FirstOrDefault(r => r.ChannelId == e.Channel.Id);
+                            CleanRelay(relay);
+                        });
+
+                });
+
+                // commands which can only be used when caler channel is not connected to a terraria server.
+                mainGroup.CreateGroup("", disconnectedGroup =>
+                {
+                    disconnectedGroup.AddCheck((cmd, usr, chnl) => GetRelay(chnl) == null);
+
+                    disconnectedGroup.CreateCommand("connect")
+                        .MinPermissions((int) PermissionLevel.ChannelModerator)
+                        .Description("Connects this channel to a terraria server.")
+                        .Parameter("ip")
+                        .Parameter("port")
+                        .Parameter("password", ParameterType.Optional)
+                        .Do(async e =>
+                        {
+                            TerrChannelRelay newRelay = new TerrChannelRelay(e.Channel, e.GetArg("ip"),
+                                int.Parse(e.GetArg("port")), e.GetArg("password"));
+                            _relays.Add(newRelay);
+                            await StartClient(newRelay);
+                        });
+                });
             });
         }
 
-        private bool IsConnected(Channel channel)
-        {
-            TerrChannelRelay relay = _relays.FirstOrDefault(r => r.ChannelId == channel.Id);
-            return relay != null && relay.Client.IsConnected;
-        }
+        private TerrChannelRelay GetRelay(Channel channel)
+            => _relays.FirstOrDefault(r => r.ChannelId == channel.Id);
 
         private async Task StartClient(TerrChannelRelay relay)
         {
@@ -137,23 +140,41 @@ namespace Stormbot.Bot.Core.Modules
                     cfg.Player(player =>
                     {
                         player.Appearance(appear => appear.Name(relay.Channel.Name));
-                      //  player.Buffs(buffs => buffs.Add(10)); // invis
+                        player.Buffs(buffs => buffs.Add(10)); // invis
                     });
                 });
 
-                relay.Client.MessageReceived += async (s, e) =>
+
+                // create event handlers
+                relay.TerrariaMessageReceivedEvent = async (s, e) =>
                 {
                     if (e.Message.Text.StartsWith(EscapePrefix)) return;
 
-                    await relay.Channel.SendMessage($"*Terraria*: `<{e.Player.Appearance.Name}> {e.Message.Text}`");
+                    await relay.Channel.SendMessage($"**Terraria**: `<{e.Player.Appearance.Name}> {e.Message.Text}`");
                 };
-                _client.MessageReceived += (s, e) =>
+                relay.TerrariaDisconnectedEvent = async (s, e) =>
                 {
+                    await relay.Channel.SendMessage($"Disconnected from terraria server: `{e.Reason}`");
+                    CleanRelay(relay);
+                };
+                relay.DiscordMessageReceivedEvent = (s, e) =>
+                {
+                    if (e.Channel.Id != relay.ChannelId) return;
                     if (e.Message.Text.StartsWith(EscapePrefix)) return;
+
+                    char? commandChar = _client.Commands().Config.CommandChar;
+                    if (commandChar != null)
+                        if (e.Message.Text.StartsWith(commandChar.Value.ToString())) return;
+
                     if (e.Message.IsAuthor) return;
 
                     relay.Client.CurrentPlayer.SendMessage($"<{e.User.Name}> {e.Message.Text}");
                 };
+
+                //set handlers
+                relay.Client.MessageReceived += relay.TerrariaMessageReceivedEvent;
+                relay.Client.Disconnected += relay.TerrariaDisconnectedEvent;
+                _client.MessageReceived += relay.DiscordMessageReceivedEvent;
 
                 relay.Client.Log.MessageReceived +=
                     (s, e) => Logger.FormattedWrite(e.Severity.ToString(), e.Message, ConsoleColor.White);
@@ -165,7 +186,7 @@ namespace Stormbot.Bot.Core.Modules
             catch (Exception ex)
             {
                 await relay.Channel.SendMessage(
-                    $"Couldn't relay terraria server at {relay.Host}:{relay.Port}. Exception:\r\n`{ex}`");
+                    $"Couldn't relay terraria server at {relay.Host}:{relay.Port}. Exception:\r\n`{ex.Message}`");
                 CleanRelay(relay);
             }
         }
@@ -174,11 +195,16 @@ namespace Stormbot.Bot.Core.Modules
         {
             if (!_relays.Contains(relay))
             {
-                Console.WriteLine($"Referenced unregisted relay.");
+                Console.WriteLine($"CleanRelay treid to clean unregisted relay.");
                 return;
             }
 
-            relay.Client.Dispose();
+            relay.Client.MessageReceived -= relay.TerrariaMessageReceivedEvent;
+            relay.Client.Disconnected -= relay.TerrariaDisconnectedEvent;
+            _client.MessageReceived -= relay.DiscordMessageReceivedEvent;
+
+            _relays.Remove(relay);
+            relay.Client.SocketDispose();
         }
 
         public void OnDataLoad()

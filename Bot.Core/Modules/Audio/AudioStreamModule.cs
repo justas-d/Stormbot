@@ -96,7 +96,7 @@ namespace Stormbot.Bot.Core.Modules.Audio
                     .Alias("set")
                     .Description("Sets the position of the current played track index to a given number.")
                     .Parameter("index")
-                    .Do(async e =>
+                    .Do(e =>
                     {
                         int newPos = int.Parse(e.GetArg("index")) - 1;
 

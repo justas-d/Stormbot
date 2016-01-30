@@ -63,7 +63,11 @@ namespace Stormbot.Bot.Core.Services
             {
                 try
                 {
-                    if (!File.Exists(data.SaveDir)) continue;
+                    if (!File.Exists(data.SaveDir))
+                    {
+                        data.Module.OnDataLoad();
+                        continue;
+                    }
 
                     Logger.FormattedWrite(GetType().Name, $"Loading field {data.Field.Name}", ConsoleColor.DarkBlue);
                     string jsondata = File.ReadAllText(data.SaveDir);

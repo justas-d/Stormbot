@@ -148,6 +148,7 @@
     <Compile Include="Bot.Core\Modules\ModulesModule.cs" />
     <Compile Include="Bot.Core\Modules\QualityOfLifeModule.cs" />
     <Compile Include="Bot.Core\Modules\ServerManagementModule.cs" />
+    <Compile Include="Bot.Core\Modules\TerrariaModule.cs" />
     <Compile Include="Bot.Core\Modules\TestModule.cs" />
     <Compile Include="Bot.Core\PermissionLevel.cs" />
     <Compile Include="Bot.Core\Services\DataIoService.cs" />
@@ -179,9 +180,13 @@
       <Project>{8d71a857-879a-4a10-859e-5ff824ed6688}</Project>
       <Name>Discord.Net</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\StrmyCore\StrmyCore\StrmyCore.csproj">
+    <ProjectReference Include="..\..\StrmyCore\StrmyCore.csproj">
       <Project>{d753d513-b32f-48da-ae72-a24617fbfc86}</Project>
       <Name>StrmyCore</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\TerrariaBridge\TerrariaBridge\TerrariaBridge.csproj">
+      <Project>{e58c0719-6c38-4d0c-b1e8-3ed0c430b27c}</Project>
+      <Name>TerrariaBridge</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

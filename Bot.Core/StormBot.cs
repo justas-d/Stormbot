@@ -47,9 +47,9 @@ namespace Stormbot.Bot.Core
                     Logger.FormattedWrite("CommandService", $"CmdEx: {args.ErrorType} Ex: {args.Exception}", ConsoleColor.Red);
                 };
             _client.Services.Add(new AudioService(new AudioServiceConfig {Channels = 2}));
-#if !DEBUG_DEV
+//#if !DEBUG_DEV
             _client.Services.Add(new TwitchEmoteService());
-#endif
+//#endif
             _client.Services.Add(new PermissionLevelService((u, c) =>
             {
                 if (u.Id == Constants.UserOwner)
@@ -87,6 +87,7 @@ namespace Stormbot.Bot.Core
             _client.AddModule<InfoModule>("Information", ModuleFilter.ServerWhitelist | ModuleFilter.ChannelWhitelist | ModuleFilter.AlwaysAllowPrivate);
             _client.AddModule<ModulesModule>("Modules");
             _client.AddModule<ExecuteModule>("Execute", ModuleFilter.ServerWhitelist | ModuleFilter.ChannelWhitelist);
+            _client.AddModule<TerrariaModule>("Terraria", ModuleFilter.ChannelWhitelist | ModuleFilter.ChannelWhitelist);
 #if DEBUG_DEV
             _client.AddModule<GameModule>("Game", ModuleFilter.ServerWhitelist | ModuleFilter.ChannelWhitelist | ModuleFilter.AlwaysAllowPrivate);
 #endif

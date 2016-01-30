@@ -53,7 +53,7 @@ namespace Stormbot.Bot.Core.Services
                 string emotePath = await ResolveEmoteDir(emote);
                 if (!File.Exists(emotePath)) return;
 
-                await args.Channel.SendFile(emotePath);
+                await args.Channel.SendFile(emotePath); 
             };
         }
 

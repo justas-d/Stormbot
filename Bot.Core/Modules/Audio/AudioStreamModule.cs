@@ -103,9 +103,6 @@ namespace Stormbot.Bot.Core.Modules.Audio
                         if (_isPlaying) newPos--;
 
                         TrackIndex = newPos;
-                        await
-                            e.Channel.SendMessage(
-                                $"Set track index to `{TrackIndex + 1}`: `{_playlist[TrackIndex].Name}`");
                         _stopTrack = true;
                     });
 

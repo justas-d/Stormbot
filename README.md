@@ -9,6 +9,7 @@ A Discord.Net based personal bot.
 * A Discord account the bot can log into.
 * Livestreamer, ffmpeg, ffprobe, YoutubeExtractor and a Soundcloud API key for audio.
 * Microsoft.CodeAnalysis.Scripting for the execute module.
+* TerrariaBridge for the Terraria module. (https://github.com/SSStormy/TerrariaBridge)
 
 You will first want to set up a Data folder (stored in ````Stormbot.Helpers.Constants.DataFolderDir````). 
 

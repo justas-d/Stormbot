@@ -4,7 +4,7 @@ using Newtonsoft.Json;
 using Stormbot.Bot.Core;
 using Stormbot.Bot.Core.Modules.Audio;
 using Stormbot.Helpers;
-using Logger = Stormbot.Bot.Core.Logger;
+using StrmyCore;
 
 namespace Stormbot
 {

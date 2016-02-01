@@ -79,6 +79,11 @@ namespace Stormbot.Bot.Core.Modules
                     connectedGroup.AddCheck(
                         (cmd, usr, chnl) => GetRelay(chnl) != null);
 
+                    /*
+                      todo : add a command to check traveling merchant items
+                      todo : command for getting player info
+                      todo : command for getting world info
+                    */
                     connectedGroup.CreateCommand("info")
                         .Description("Shows the info for the terraria server connected to this channel.")
                         .Do(async e =>
@@ -92,7 +97,7 @@ namespace Stormbot.Bot.Core.Modules
                     connectedGroup.CreateCommand("disconnect")
                         .MinPermissions((int) PermissionLevel.ChannelModerator)
                         .Description("Disconnects from the terraria server connected to this channel.")
-                        .Do(async e =>
+                        .Do(e =>
                         {
                             TerrChannelRelay relay = _relays.FirstOrDefault(r => r.ChannelId == e.Channel.Id);
                             CleanRelay(relay);
@@ -144,7 +149,6 @@ namespace Stormbot.Bot.Core.Modules
                     });
                 });
 
-
                 // create event handlers
                 relay.TerrariaMessageReceivedEvent = async (s, e) =>
                 {
@@ -177,7 +181,7 @@ namespace Stormbot.Bot.Core.Modules
                 _client.MessageReceived += relay.DiscordMessageReceivedEvent;
 
                 relay.Client.Log.MessageReceived +=
-                    (s, e) => Logger.FormattedWrite(e.Severity.ToString(), e.Message, ConsoleColor.White);
+                    (s, e) => StrmyCore.Logger.FormattedWrite(e.Severity.ToString(), e.Message, ConsoleColor.White);
 
                 relay.Client.ConnectAndLogin(relay.Host, relay.Port);
 

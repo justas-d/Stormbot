@@ -146,7 +146,7 @@ namespace Stormbot.Bot.Core.Modules
                         if (role == null || !e.User.HasRole(role) && role.CanEdit())
                         {
                             role = await e.Server.CreateRole(ColorRoleName + stringhex);
-                            role.SetColor(stringhex);
+                            await role.SetColor(stringhex);
                             await e.User.Edit(roles: GetOtherRoles(e.User).Concat(new[] { role }));
                         }
                         await CleanColorRoles(e.Server);

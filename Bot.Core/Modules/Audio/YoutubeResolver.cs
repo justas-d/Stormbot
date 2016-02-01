@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using StrmyCore;
 using YoutubeExtractor;
 
 namespace Stormbot.Bot.Core.Modules.Audio

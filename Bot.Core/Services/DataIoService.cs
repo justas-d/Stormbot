@@ -7,6 +7,7 @@ using Discord;
 using Discord.Modules;
 using Newtonsoft.Json;
 using Stormbot.Helpers;
+using StrmyCore;
 
 namespace Stormbot.Bot.Core.Services
 {

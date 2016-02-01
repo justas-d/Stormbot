@@ -165,9 +165,9 @@ namespace Stormbot.Bot.Core.Modules
                     .Description("Edits the color (RRGGBB) for a given role, found by id, if it exists. ")
                     .Parameter(Constants.RoleIdArg)
                     .Parameter("hex")
-                    .Do(e =>
+                    .Do(async e =>
                     {
-                        e.GetRole().SetColor(e.GetArg("hex"));
+                        await e.GetRole().SetColor(e.GetArg("hex"));
                     });
             });
 

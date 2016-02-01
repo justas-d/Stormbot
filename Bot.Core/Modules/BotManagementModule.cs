@@ -8,6 +8,7 @@ using Discord.Commands.Permissions.Levels;
 using Discord.Modules;
 using Stormbot.Bot.Core.Services;
 using Stormbot.Helpers;
+using StrmyCore;
 
 namespace Stormbot.Bot.Core.Modules
 {

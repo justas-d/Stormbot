@@ -9,7 +9,7 @@ namespace Stormbot.Bot.Core
 {
     public static class Extensions
     {
-        public static async void SetColor(this Role role, string stringhex)
+        public static async Task SetColor(this Role role, string stringhex)
         {
             if (!CanEdit(role)) return;
             if (stringhex.Length > 6) return; //input is invalid if length isn't 0 < x > 7

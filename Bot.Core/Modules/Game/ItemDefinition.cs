@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using StrmyCore;
 
 namespace Stormbot.Bot.Core.Modules.Game
 {

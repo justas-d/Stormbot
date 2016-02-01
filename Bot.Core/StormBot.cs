@@ -13,6 +13,7 @@ using Stormbot.Bot.Core.Modules.Game;
 #endif
 using Stormbot.Bot.Core.Services;
 using Stormbot.Helpers;
+using StrmyCore;
 
 namespace Stormbot.Bot.Core
 {
@@ -91,7 +92,25 @@ namespace Stormbot.Bot.Core
 #if DEBUG_DEV
             _client.AddModule<GameModule>("Game", ModuleFilter.ServerWhitelist | ModuleFilter.ChannelWhitelist | ModuleFilter.AlwaysAllowPrivate);
 #endif
-            _client.Log.Message += (sender, args) => Logger.DiscordLog(args);
+            _client.Log.Message += (sender, args) =>
+            {
+                switch (args.Severity)
+                {
+                    case LogSeverity.Error:
+                        Logger.FormattedWrite($"{args.Severity}] [{args.Source}",
+                            $"{args.Message} Exception: {args.Exception}",
+                            ConsoleColor.Red);
+                        break;
+                    case LogSeverity.Warning:
+                        Logger.FormattedWrite($"{args.Severity}] [{args.Source}", $"{args.Message}",
+                            ConsoleColor.Yellow);
+                        break;
+                    case LogSeverity.Info:
+                        Logger.FormattedWrite($"{args.Severity}] [{args.Source}", $"{args.Message}",
+                            ConsoleColor.Blue);
+                        break;
+                }
+            };
 
             Logger.Writeline("Loading data... ");
             io.Load();

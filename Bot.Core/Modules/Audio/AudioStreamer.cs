@@ -4,6 +4,7 @@ using System.IO;
 using Discord;
 using Discord.Audio;
 using Stormbot.Helpers;
+using StrmyCore;
 
 namespace Stormbot.Bot.Core.Modules.Audio
 {

@@ -41,27 +41,33 @@ namespace Stormbot.Bot.Core.Modules.Audio
             Name = name;
         }
 
-        [CanBeNull]
-        public string GetStream()
+        private string GetStreamUrl()
         {
-            string retval = null;
-
-            if (File.Exists(Location)) retval = Location;
+            if (File.Exists(Location)) return Location;
 
             if (_cachedResolver != null)
-                retval = _cachedResolver.ResolveStreamUrl(Location);
+                return _cachedResolver.ResolveStreamUrl(Location);
 
             IStreamResolver resolver = Resolvers.FirstOrDefault(r => r.CanResolve(Location));
 
-            if (resolver != null)
-                retval = resolver.ResolveStreamUrl(Location);
-            else
+            return resolver?.ResolveStreamUrl(Location);
+        }
+
+        [CanBeNull]
+        public string GetStream()
+        {
+            string stream = GetStreamUrl();
+
+            if (string.IsNullOrEmpty(stream))
+            {
                 Logger.FormattedWrite("TrackData", $"Failed getting stream url for {Location}", ConsoleColor.Red);
+                return stream;
+            }
 
             if (Length == TimeSpan.Zero)
-                GetLength(retval);
+                GetLength(stream);
 
-            return retval;
+            return stream;
         }
 
         [CanBeNull]

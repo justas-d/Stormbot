@@ -52,7 +52,7 @@ namespace Stormbot.Bot.Core.Services
                 Console.WriteLine(emote);
 
                 string emotePath = await ResolveEmoteDir(emote);
-                if (!File.Exists(emotePath)) return;
+                if (!File.Exists(emotePath)) return; // todo : lower case == upper case in this case. KAPPA = Kappa
 
                 await args.Channel.SendFile(emotePath); 
             };

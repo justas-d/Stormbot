@@ -22,6 +22,9 @@
 
         internal static string Pass;
 
+        internal static string TwitchUsername;
+        internal static string TwitchOauth;
+
         internal static string FfmpegDir;
         internal static string LivestreamerDir;
         internal static string FfprobeDir;

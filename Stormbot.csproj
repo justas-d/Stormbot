@@ -149,6 +149,7 @@
     <Compile Include="Bot.Core\Modules\ServerManagementModule.cs" />
     <Compile Include="Bot.Core\Modules\TerrariaModule.cs" />
     <Compile Include="Bot.Core\Modules\TestModule.cs" />
+    <Compile Include="Bot.Core\Modules\TwitchModule.cs" />
     <Compile Include="Bot.Core\PermissionLevel.cs" />
     <Compile Include="Bot.Core\Services\DataIoService.cs" />
     <Compile Include="Bot.Core\Services\HttpService.cs" />
@@ -178,6 +179,10 @@
     <ProjectReference Include="..\..\..\..\GitHub\Discord.Net\src\Discord.Net.Net45\Discord.Net.csproj">
       <Project>{8d71a857-879a-4a10-859e-5ff824ed6688}</Project>
       <Name>Discord.Net</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Csharp\Bots\TwitchBotBase\TwitchBotBase\TwitchBotBase.csproj">
+      <Project>{a9883f21-3cfd-483b-8247-e645f484d0f5}</Project>
+      <Name>TwitchBotBase</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\StrmyCore\StrmyCore.csproj">
       <Project>{d753d513-b32f-48da-ae72-a24617fbfc86}</Project>

@@ -24,7 +24,7 @@ namespace Stormbot.Bot.Core.Modules.Audio
         [JsonIgnore] private IStreamResolver _cachedResolver;
 
         public string Location { get; }
-        public TimeSpan Length { get; set; }
+        public TimeSpan? Length { get; set; }
         public string Name { get; private set; }
 
         [JsonConstructor, UsedImplicitly]
@@ -64,7 +64,7 @@ namespace Stormbot.Bot.Core.Modules.Audio
                 return stream;
             }
 
-            if (Length == TimeSpan.Zero)
+            if (Length == null)
                 GetLength(stream);
 
             return stream;

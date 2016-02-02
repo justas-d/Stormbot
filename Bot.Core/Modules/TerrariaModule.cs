@@ -84,6 +84,7 @@ namespace Stormbot.Bot.Core.Modules
                       todo : command for getting player info
                       todo : command for getting world info
                     */
+
                     connectedGroup.CreateCommand("info")
                         .Description("Shows the info for the terraria server connected to this channel.")
                         .Do(async e =>
@@ -105,7 +106,7 @@ namespace Stormbot.Bot.Core.Modules
 
                 });
 
-                // commands which can only be used when caler channel is not connected to a terraria server.
+                // commands which can only be used when caller channel is not connected to a terraria server.
                 mainGroup.CreateGroup("", disconnectedGroup =>
                 {
                     disconnectedGroup.AddCheck((cmd, usr, chnl) => GetRelay(chnl) == null);

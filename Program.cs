@@ -22,6 +22,8 @@ namespace Stormbot
                     Constants.FfmpegDir = config.FfmpegDir;
                     Constants.LivestreamerDir = config.LivestreamerDir;
                     SoundcloudResolver.ApiKey = config.SoundcloudApiKey;
+                    Constants.TwitchOauth = config.TwitchOauth;
+                    Constants.TwitchUsername = config.TwitchUsername;
                 }
                 catch (Exception ex)
                 {

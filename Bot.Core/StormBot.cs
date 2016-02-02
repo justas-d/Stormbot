@@ -42,7 +42,7 @@ namespace Stormbot.Bot.Core
             _client.Services.Add(new HttpService());
             _client.Services.Add(new ModuleService());
             DataIoService io = _client.Services.Add(new DataIoService());
-            _client.Services.Add(new CommandService(new CommandServiceConfig {HelpMode = HelpMode.Public})).CommandErrored +=
+            _client.Services.Add(new CommandService(new CommandServiceConfig {HelpMode = HelpMode.Public, CommandChar = '{'})).CommandErrored +=
                 delegate(object sender, CommandErrorEventArgs args)
                 {
                     Logger.FormattedWrite("CommandService", $"CmdEx: {args.ErrorType} Ex: {args.Exception}", ConsoleColor.Red);
@@ -88,8 +88,9 @@ namespace Stormbot.Bot.Core
             _client.AddModule<InfoModule>("Information", ModuleFilter.ServerWhitelist | ModuleFilter.ChannelWhitelist | ModuleFilter.AlwaysAllowPrivate);
             _client.AddModule<ModulesModule>("Modules");
             _client.AddModule<ExecuteModule>("Execute", ModuleFilter.ServerWhitelist | ModuleFilter.ChannelWhitelist);
-            _client.AddModule<TerrariaModule>("Terraria", ModuleFilter.ChannelWhitelist | ModuleFilter.ChannelWhitelist);
+            _client.AddModule<TerrariaModule>("Terraria", ModuleFilter.ChannelWhitelist | ModuleFilter.ServerWhitelist);
 #if DEBUG_DEV
+            _client.AddModule<TwitchModule>("Twitch", ModuleFilter.ChannelWhitelist | ModuleFilter.ServerWhitelist);
             _client.AddModule<GameModule>("Game", ModuleFilter.ServerWhitelist | ModuleFilter.ChannelWhitelist | ModuleFilter.AlwaysAllowPrivate);
 #endif
             _client.Log.Message += (sender, args) =>

@@ -54,34 +54,20 @@ namespace Stormbot.Bot.Core.Modules
                 group.CreateCommand("leave")
                     .Description("Instructs the bot to leave this server.")
                     .MinPermissions((int) PermissionLevel.ServerModerator)
-                    .MinPermissions((int) PermissionLevel.BotOwner)
-                    .Do(async e =>
-                    {
-                        await e.Channel.SendMessage("Leaving~");
-                        await e.Server.Leave();
-                    });
+                    .Do(async e => await e.Server.Leave());
 
                 group.CreateCommand("io save")
                     .Description("Saves data used by the bot.")
-                    .Do(e =>
-                    {
-                        io.Save();
-                    });
+                    .Do(e => io.Save());
 
                 group.CreateCommand("io load")
                     .Description("Loads data that the bot loads at runtime.")
-                    .Do(e =>
-                    {
-                        io.Load();
-                    });
+                    .Do(e => io.Load());
 
                 group.CreateCommand("set name")
                     .Description("Changes the name of the bot")
                     .Parameter("name", ParameterType.Unparsed)
-                    .Do(async e =>
-                    {
-                        await _client.CurrentUser.Edit(Constants.Pass, e.GetArg("name"));
-                    });
+                    .Do(async e => await _client.CurrentUser.Edit(Constants.Pass, e.GetArg("name")));
 
                 group.CreateCommand("set avatar")
                     .Description("Changes the avatar of the bot")
@@ -115,10 +101,8 @@ namespace Stormbot.Bot.Core.Modules
                 group.CreateCommand("set game")
                     .Description("Sets the current played game for the bot.")
                     .Parameter("game", ParameterType.Unparsed)
-                    .Do(e =>
-                    {
-                        _client.SetGame(e.GetArg("game"));
-                    });
+                    .Do(e => _client.SetGame(e.GetArg("game")));
+
                 group.CreateCommand("killbot")
                     .Description("Kills the bot.")
                     .Do(x =>
@@ -146,17 +130,12 @@ namespace Stormbot.Bot.Core.Modules
 
                 group.CreateCommand("gc collect")
                     .Description("Calls GC.Collect()")
-                    .Do(async e =>
-                    {
-                        await Collect(e);
-                    });
+                    .Do(async e => await Collect(e));
+
                 group.CreateCommand("gc list")
-                    .MinPermissions((int)PermissionLevel.User)
+                    .MinPermissions((int) PermissionLevel.User)
                     .Description("Calls GC.GetTotalMemory()")
-                    .Do(async e =>
-                    {
-                        await GetMemUsage(e);
-                    });
+                    .Do(async e => await GetMemUsage(e));
             });
         }
 

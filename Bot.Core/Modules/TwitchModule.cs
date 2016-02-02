@@ -16,7 +16,7 @@ namespace Stormbot.Bot.Core.Modules
 {
     public class TwitchModule : IDataModule
     {
-        private static readonly string EscapePrefix = "{";
+        private static readonly string EscapePrefix = "}";
         private const int MaxViewsPerChannel = 500;
 
         private DiscordClient _client;
@@ -208,7 +208,7 @@ namespace Stormbot.Bot.Core.Modules
         }
 
         /// <summary>
-        /// Returns whether the given channel name is valid twitch channel and that it is currently streaming.
+        /// Returns whether the given channel name is a valid twitch channel and that it is currently streaming.
         /// </summary>
         private async Task<bool> IsValidTwitchChannelAndIsStreaming(string channel)
         {

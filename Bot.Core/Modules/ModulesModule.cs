@@ -12,8 +12,6 @@ namespace Stormbot.Bot.Core.Modules
 {
     public class ModulesModule : IDataModule
     {
-
-
         private ModuleService _moduleService;
         private DiscordClient _client;
 

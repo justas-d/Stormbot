@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
@@ -24,6 +25,21 @@ namespace Stormbot.Bot.Core
 
         private readonly DiscordClient _client = new DiscordClient(new DiscordConfig {LogLevel = LogSeverity.Debug});
 
+        private readonly Dictionary<LogSeverity, ConsoleColor> _colorMap = new Dictionary<LogSeverity, ConsoleColor>()
+        {
+            {LogSeverity.Debug, ConsoleColor.DarkYellow},
+            {LogSeverity.Error, ConsoleColor.Red },
+            {LogSeverity.Info, ConsoleColor.Blue },
+            {LogSeverity.Verbose, ConsoleColor.Gray },
+            {LogSeverity.Warning, ConsoleColor.Yellow}
+        };
+
+        private readonly HashSet<LogSeverity> _ignoredLogs = new HashSet<LogSeverity>()
+        {
+            LogSeverity.Debug,
+            LogSeverity.Verbose
+        };
+
         public StormBot(string email, string password)
         {
             _email = email;
@@ -42,7 +58,7 @@ namespace Stormbot.Bot.Core
             _client.Services.Add(new HttpService());
             _client.Services.Add(new ModuleService());
             DataIoService io = _client.Services.Add(new DataIoService());
-            _client.Services.Add(new CommandService(new CommandServiceConfig {HelpMode = HelpMode.Public, CommandChar = '{'})).CommandErrored +=
+            _client.Services.Add(new CommandService(new CommandServiceConfig {HelpMode = HelpMode.Public, CommandChar = '}'})).CommandErrored +=
                 delegate(object sender, CommandErrorEventArgs args)
                 {
                     Logger.FormattedWrite("CommandService", $"CmdEx: {args.ErrorType} Ex: {args.Exception}", ConsoleColor.Red);
@@ -89,28 +105,18 @@ namespace Stormbot.Bot.Core
             _client.AddModule<ModulesModule>("Modules");
             _client.AddModule<ExecuteModule>("Execute", ModuleFilter.ServerWhitelist | ModuleFilter.ChannelWhitelist);
             _client.AddModule<TerrariaModule>("Terraria", ModuleFilter.ChannelWhitelist | ModuleFilter.ServerWhitelist);
-#if DEBUG_DEV
             _client.AddModule<TwitchModule>("Twitch", ModuleFilter.ChannelWhitelist | ModuleFilter.ServerWhitelist);
+#if DEBUG_DEV
             _client.AddModule<GameModule>("Game", ModuleFilter.ServerWhitelist | ModuleFilter.ChannelWhitelist | ModuleFilter.AlwaysAllowPrivate);
 #endif
             _client.Log.Message += (sender, args) =>
             {
-                switch (args.Severity)
-                {
-                    case LogSeverity.Error:
-                        Logger.FormattedWrite($"{args.Severity}] [{args.Source}",
-                            $"{args.Message} Exception: {args.Exception}",
-                            ConsoleColor.Red);
-                        break;
-                    case LogSeverity.Warning:
-                        Logger.FormattedWrite($"{args.Severity}] [{args.Source}", $"{args.Message}",
-                            ConsoleColor.Yellow);
-                        break;
-                    case LogSeverity.Info:
-                        Logger.FormattedWrite($"{args.Severity}] [{args.Source}", $"{args.Message}",
-                            ConsoleColor.Blue);
-                        break;
-                }
+                if (_ignoredLogs.Contains(args.Severity)) return;
+
+                Logger.FormattedWrite($"[{args.Severity}] [{args.Source}]", $"{args.Message}", _colorMap[args.Severity]);
+
+                if(args.Exception != null)
+                    Logger.Write($"Exception: {args.Exception}");
             };
 
             Logger.Writeline("Loading data... ");

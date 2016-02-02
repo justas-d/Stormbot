@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using JetBrains.Annotations;
 using Newtonsoft.Json;
 using Stormbot.Helpers;
@@ -43,19 +44,24 @@ namespace Stormbot.Bot.Core.Modules.Audio
         [CanBeNull]
         public string GetStream()
         {
-            if (Length == TimeSpan.Zero)
-                GetLength();
+            string retval = null;
 
-            if (File.Exists(Location)) return Location;
+            if (File.Exists(Location)) retval = Location;
 
             if (_cachedResolver != null)
-                return _cachedResolver.ResolveStreamUrl(Location);
+                retval = _cachedResolver.ResolveStreamUrl(Location);
 
-            foreach (IStreamResolver resolver in Resolvers)
-                if (resolver.CanResolve(Location))
-                    return resolver.ResolveStreamUrl(Location);
+            IStreamResolver resolver = Resolvers.FirstOrDefault(r => r.CanResolve(Location));
 
-            return string.Empty;
+            if (resolver != null)
+                retval = resolver.ResolveStreamUrl(Location);
+            else
+                Logger.FormattedWrite("TrackData", $"Failed getting stream url for {Location}", ConsoleColor.Red);
+
+            if (Length == TimeSpan.Zero)
+                GetLength(retval);
+
+            return retval;
         }
 
         [CanBeNull]
@@ -70,8 +76,7 @@ namespace Stormbot.Bot.Core.Modules.Audio
 
             return null;
         }
-
-        private void GetLength()
+        private void GetLength(string location)
         {
             try
             {
@@ -81,7 +86,7 @@ namespace Stormbot.Bot.Core.Modules.Audio
                     {
                         FileName = Constants.FfprobeDir,
                         Arguments =
-                            $"-v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 \"{Location}\"",
+                            $"-v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 \"{location}\"",
                         UseShellExecute = false,
                         RedirectStandardOutput = true,
                         CreateNoWindow = true,

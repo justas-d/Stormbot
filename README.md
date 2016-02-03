@@ -10,6 +10,7 @@ A Discord.Net based personal bot.
 * Livestreamer, ffmpeg, ffprobe, YoutubeExtractor and a Soundcloud API key for audio.
 * Microsoft.CodeAnalysis.Scripting for the execute module.
 * TerrariaBridge for the Terraria module. (https://github.com/SSStormy/TerrariaBridge)
+* TwitchBotBase for the Twitch bridge (https://github.com/SSStormy/TwitchBotBase)
 
 # Highlights
 * Basic server management (editing users, roles, channels etc)
@@ -17,7 +18,7 @@ A Discord.Net based personal bot.
 * Roles with custom hex colors
 * Reminders
 * Audio streaming from basically most of video/audio services (twitch included)
-* A chat bridge between Terraria and Discord
+* A chat bridge between Terraria, Twitch and Discord.
 
 # Setup
 You will first want to set up a Data folder (stored in ````Stormbot.Helpers.Constants.DataFolderDir````). 
@@ -28,11 +29,15 @@ After that you will need to create a ````config.json```` and fill it with inform
   "Email"            : "",
   "Password"         : "",
 
-  //only if using audio
+  // only if using audio
   "FfmpegDir"        : "",
   "FfprobeDir"       : "", 
   "SoundcloudApiKey" : "",
-  "LivestreamerDir"  : ""
+  "LivestreamerDir"  : "",
+  
+  // only if using the twitch bridge
+  "TwitchOauth"      : "",
+  "TwitchUsername"   : ""
 }
 
 ````

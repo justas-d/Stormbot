@@ -21,8 +21,7 @@ namespace Stormbot.Bot.Core.Modules.Relay
 
         private DiscordClient _client;
 
-        [DataLoad, DataSave]
-        private Dictionary<string, List<ulong>> _serializeRelays;
+        [DataLoad, DataSave] private Dictionary<string, List<ulong>> _serializeRelays;
 
         private readonly Dictionary<string, List<Channel>> _relays = new Dictionary<string, List<Channel>>();
 
@@ -36,6 +35,7 @@ namespace Stormbot.Bot.Core.Modules.Relay
             manager.CreateCommands("twitch", group =>
             {
                 group.CreateCommand("connect")
+                    .Description("Connects this channel to a given twitch channel, relaying the messages between them.")
                     .MinPermissions((int) PermissionLevel.ChannelModerator)
                     .Parameter("channel")
                     .Do(async e =>
@@ -51,13 +51,14 @@ namespace Stormbot.Bot.Core.Modules.Relay
                             else
                                 await
                                     e.Channel.SendMessage(
-                                        $"{channel}'s view count ({viewers}) is currently over view barrier ({MaxViewsPerChannel}), therefore, for the sake of not getting a cooldown for spamming Discord, you cannot connect to this channel.");
+                                        $"{channel}'s view count ({viewers}) is currently over the view barrier ({MaxViewsPerChannel}), therefore, for the sake of not getting a cooldown for spamming Discord, we cannot connect to this channel.");
                         }
                         else
                             await e.Channel.SendMessage($"{channel} channel is currently offline.");
                     });
 
                 group.CreateCommand("disconnect")
+                    .Description("Disconnects this channel from the given twitch channel.")
                     .MinPermissions((int) PermissionLevel.ChannelModerator)
                     .Parameter("channel")
                     .Do(async e =>
@@ -65,6 +66,7 @@ namespace Stormbot.Bot.Core.Modules.Relay
                         await Unsubscribe(e.GetArg("channel"), e.Channel);
                     });
                 group.CreateCommand("list")
+                    .Description("Lists all the twitch channels this discord channel is connected to.")
                     .Do(async e =>
                     {
                         List<string> twitchSub = GetTwitchChannels(e.Channel).ToList();
@@ -83,7 +85,7 @@ namespace Stormbot.Bot.Core.Modules.Relay
                     });
             });
 
-            // connect the twitch bot to tmi.twitch.tc
+            // connect the twitch bot to tmi.twitch.tv
             TwitchTryConnect();
 
             _twitch.DisconnectFromTwitch +=
@@ -159,7 +161,7 @@ namespace Stormbot.Bot.Core.Modules.Relay
 
             // we will command the twitch bot to disconnect from the twitch channel if no
             // discord channel is connected to it.
-            if(!_relays[twitchChannel].Any())
+            if (!_relays[twitchChannel].Any())
                 _twitch.PartChannel(twitchChannel);
 
             await discordChannel.SendMessage($"Unsubscribed from twitch chat: {twitchChannel}");
@@ -171,7 +173,7 @@ namespace Stormbot.Bot.Core.Modules.Relay
             twitchChannel = TwitchBot.NormalizeChannelName(twitchChannel);
 
             // if the twitch bot is not in the twitch channel, tell it to join it.
-            if(!_twitch.Channels.Contains(twitchChannel))
+            if (!_twitch.Channels.Contains(twitchChannel))
                 _twitch.JoinChannel(twitchChannel); // todo : only join if the view count if less then ~500.
 
             // if there is no entry in _relays for the twitch channel, create one.

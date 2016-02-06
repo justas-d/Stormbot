@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Audio;
@@ -10,6 +9,7 @@ using Discord.Modules;
 using Stormbot.Bot.Core.Modules;
 using Stormbot.Bot.Core.Modules.Audio;
 using Stormbot.Bot.Core.Modules.Relay;
+using Stormbot.Bot.Core.Modules.Twitch;
 #if DEBUG_DEV
 using Stormbot.Bot.Core.Modules.Game;
 #endif
@@ -65,7 +65,6 @@ namespace Stormbot.Bot.Core
                     Logger.FormattedWrite("CommandService", $"CmdEx: {args.ErrorType} Ex: {args.Exception}", ConsoleColor.Red);
                 };
             _client.Services.Add(new AudioService(new AudioServiceConfig {Channels = 2, EnableMultiserver = true}));
-            _client.Services.Add(new TwitchEmoteService());
             _client.Services.Add(new PermissionLevelService((u, c) =>
             {
                 if (u.Id == Constants.UserOwner)
@@ -102,8 +101,9 @@ namespace Stormbot.Bot.Core
             _client.AddModule<InfoModule>("Information", ModuleFilter.ServerWhitelist | ModuleFilter.ChannelWhitelist | ModuleFilter.AlwaysAllowPrivate);
             _client.AddModule<ModulesModule>("Modules");
             _client.AddModule<ExecuteModule>("Execute", ModuleFilter.ServerWhitelist | ModuleFilter.ChannelWhitelist);
-            _client.AddModule<TerrariaRelayModule>("Terraria", ModuleFilter.ChannelWhitelist | ModuleFilter.ServerWhitelist);
-            _client.AddModule<TwitchRelayModule>("Twitch", ModuleFilter.ChannelWhitelist | ModuleFilter.ServerWhitelist);
+            _client.AddModule<TerrariaRelayModule>("Terraria Relay", ModuleFilter.ChannelWhitelist | ModuleFilter.ServerWhitelist);
+            _client.AddModule<TwitchRelayModule>("Twitch Relay", ModuleFilter.ChannelWhitelist | ModuleFilter.ServerWhitelist);
+            _client.AddModule<TwitchEmoteService>("Twitch Emotes", ModuleFilter.ServerWhitelist | ModuleFilter.ChannelWhitelist);
 #if DEBUG_DEV
             _client.AddModule<GameModule>("Game", ModuleFilter.ServerWhitelist | ModuleFilter.ChannelWhitelist | ModuleFilter.AlwaysAllowPrivate);
 #endif

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -19,15 +20,15 @@ namespace Stormbot.Bot.Core.Modules
         /// Stores the server id and the list of modules the server has enabled.
         /// </summary>
         [DataLoad, DataSave]
-        private Dictionary<ulong, HashSet<string>> _serverModulesDictionary =
-            new Dictionary<ulong, HashSet<string>>();
+        private ConcurrentDictionary<ulong, HashSet<string>> _serverModulesDictionary =
+            new ConcurrentDictionary<ulong, HashSet<string>>();
 
         /// <summary>
         /// Stores the channel id and the list of modules it has enabled.
         /// </summary>
         [DataLoad, DataSave]
-        private Dictionary<ulong, HashSet<string>> _channelModulesDictionary =
-            new Dictionary<ulong, HashSet<string>>();
+        private ConcurrentDictionary<ulong, HashSet<string>> _channelModulesDictionary =
+            new ConcurrentDictionary<ulong, HashSet<string>>();
 
         public void Install(ModuleManager manager)
         {
@@ -81,7 +82,7 @@ namespace Stormbot.Bot.Core.Modules
 
                         Channel channel = e.Channel;
 
-                        if (!module.EnableChannel(channel))
+                        if (!module.DisableChannel(channel))
                         {
                             await
                                 e.Channel.SendMessage(
@@ -183,13 +184,12 @@ namespace Stormbot.Bot.Core.Modules
             return module;
         }
 
-        public void OnDataLoad()
+        void IDataModule.OnDataLoad()
         {
             foreach (KeyValuePair<ulong, HashSet<string>> pair in _serverModulesDictionary)
                 foreach (ModuleManager module in pair.Value.Select(GetModule))
                     if (module != null && module.FilterType.HasFlag(ModuleFilter.ServerWhitelist))
                         module.EnableServer(_client.GetServer(pair.Key));
-
 
             foreach (KeyValuePair<ulong, HashSet<string>> pair in _channelModulesDictionary)
                 foreach (ModuleManager module in pair.Value.Select(GetModule))
@@ -203,18 +203,19 @@ namespace Stormbot.Bot.Core.Modules
             return _moduleService.Modules.FirstOrDefault(x => x.Id == id);
         }
     }
-    // tfw no nested-class extension methods
+
+    // tfw no nested class extension methods
     internal static class PrivateExtenstions
     {
-        internal static void AddModuleToSave(this Dictionary<ulong, HashSet<string>> dict, string moduleId, ulong serverId)
+        internal static void AddModuleToSave(this ConcurrentDictionary<ulong, HashSet<string>> dict, string moduleId, ulong serverId)
         {
             if (dict.ContainsKey(serverId))
                 dict[serverId].Add(moduleId);
             else
-                dict.Add(serverId, new HashSet<string> { moduleId });
+                dict.TryAdd(serverId, new HashSet<string> { moduleId });
         }
 
-        internal static void DeleteModuleFromSave(this Dictionary<ulong, HashSet<string>> dict, string moduleId, ulong serverId)
+        internal static void DeleteModuleFromSave(this ConcurrentDictionary<ulong, HashSet<string>> dict, string moduleId, ulong serverId)
         {
             if (dict.ContainsKey(serverId))
                 dict[serverId].Remove(moduleId);

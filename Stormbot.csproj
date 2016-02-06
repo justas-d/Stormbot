@@ -188,9 +188,9 @@
       <Project>{d753d513-b32f-48da-ae72-a24617fbfc86}</Project>
       <Name>StrmyCore</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\TerrariaBridge\TerrariaBridge\TerrariaBridge.csproj">
+    <ProjectReference Include="..\..\TerrariaBridge\TerrariaBridge\OpenTerrariaClient.csproj">
       <Project>{e58c0719-6c38-4d0c-b1e8-3ed0c430b27c}</Project>
-      <Name>TerrariaBridge</Name>
+      <Name>OpenTerrariaClient</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

@@ -63,14 +63,13 @@ namespace Stormbot.Bot.Core
                 {
                     Logger.FormattedWrite("CommandService", $"CmdEx: {args.ErrorType} Ex: {args.Exception}", ConsoleColor.Red);
                 };
-            _client.Services.Add(new AudioService(new AudioServiceConfig {Channels = 2}));
-//#if !DEBUG_DEV
+            _client.Services.Add(new AudioService(new AudioServiceConfig {Channels = 2, EnableMultiserver = true}));
             _client.Services.Add(new TwitchEmoteService());
-//#endif
             _client.Services.Add(new PermissionLevelService((u, c) =>
             {
                 if (u.Id == Constants.UserOwner)
                     return (int) PermissionLevel.BotOwner;
+
                 if (u.Server != null)
                 {
                     if (Equals(u, c.Server.Owner))
@@ -85,8 +84,6 @@ namespace Stormbot.Bot.Core
                         return (int) PermissionLevel.ChannelAdmin;
                     if (channelPerms.ManageMessages)
                         return (int) PermissionLevel.ChannelModerator;
-                    if (u.Roles.Any(r => r.Id == Constants.RoleTrusted))
-                        return (int) PermissionLevel.Trusted;
                 }
                 return (int) PermissionLevel.User;
             }));

@@ -28,7 +28,7 @@ namespace Stormbot.Bot.Core.Modules.Audio
         public string Name { get; private set; }
 
         [JsonConstructor, UsedImplicitly]
-        private TrackData(string location, TimeSpan length, string name)
+        private TrackData(string location, TimeSpan? length, string name)
         {
             Location = location;
             Length = length;
@@ -82,6 +82,7 @@ namespace Stormbot.Bot.Core.Modules.Audio
 
             return null;
         }
+
         private void GetLength(string location)
         {
             try

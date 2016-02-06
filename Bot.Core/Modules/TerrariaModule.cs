@@ -7,9 +7,9 @@ using Discord.Commands;
 using Discord.Commands.Permissions.Levels;
 using Discord.Modules;
 using Newtonsoft.Json;
+using OpenTerrariaClient;
+using OpenTerrariaClient.Client;
 using Stormbot.Bot.Core.Services;
-using TerrariaBridge;
-using TerrariaBridge.Client;
 
 namespace Stormbot.Bot.Core.Modules
 {

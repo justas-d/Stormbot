@@ -10,15 +10,12 @@
 #endif
         internal const string TwitchEmoteFolderDir = DataFolderDir + @"emotes\";
 
-        internal const long RoleTrusted = 131446561547878400;
+       // internal const long RoleTrusted = 131446561547878400;
         internal const long UserOwner = 131467025456300032;
 
         internal const string RoleIdArg = "roleid";
         internal const string UserIdArg = "userid";
         internal const string ChannelIdArg = "channelid";
-
-        internal const ulong RebbitId = 131468210531860480;
-        internal const ulong CrixiusId = 131465844176715776;
 
         internal static string Pass;
 
@@ -29,6 +26,8 @@
         internal static string LivestreamerDir;
         internal static string FfprobeDir;
 
-        internal const ulong TwinkChannelId = 131490784544292865;
+        internal static int FfmpegProcessCount = 0;
+
+        //  internal const ulong TwinkChannelId = 131490784544292865;
     }
 }

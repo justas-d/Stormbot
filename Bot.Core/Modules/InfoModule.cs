@@ -34,13 +34,14 @@ namespace Stormbot.Bot.Core.Modules
                     .Do(async e =>
                     {
                         User owner = manager.Client.GetUser(Constants.UserOwner);
-                        StringBuilder builder = new StringBuilder("**Bot info:\r\n**");
+                        StringBuilder builder = new StringBuilder("**Bot info:\r\n**```");
                         builder.AppendLine("- Owner: " + (owner == null ? "Not found." : $"{owner.Name} ({owner.Id})"));
                         builder.AppendLine($"- Uptime: {(DateTime.Now - Process.GetCurrentProcess().StartTime).ToString(@"dd\.hh\:mm\:ss")}");
                         builder.AppendLine("- GitHub: https://github.com/SSStormy/Stormbot");
                         builder.AppendLine($"- Memory Usage: {Math.Round(GC.GetTotalMemory(false)/(1024.0*1024.0), 2)} MB");
+                        builder.AppendLine($"- Ffmpeg Process count: {Constants.FfmpegProcessCount}");
 
-                        await e.Channel.SendMessage(builder.ToString());
+                        await e.Channel.SendMessage($"{builder}```");
                     });
             });
         }

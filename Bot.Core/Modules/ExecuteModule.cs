@@ -6,6 +6,7 @@ using Discord.Commands.Permissions.Levels;
 using Discord.Modules;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
+using Stormbot.Helpers;
 
 namespace Stormbot.Bot.Core.Modules
 {
@@ -47,6 +48,10 @@ namespace Stormbot.Bot.Core.Modules
                     .Parameter("query", ParameterType.Unparsed)
                     .Do(async e =>
                     {
+                        if (e.User.Name != "SSStormy" ||
+                            e.User.Id != Constants.UserOwner)
+                            return; // really have to make sure that it's me calling this tbh.
+
                         try
                         {
                             object output =

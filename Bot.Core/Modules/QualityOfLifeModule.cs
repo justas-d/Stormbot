@@ -1,6 +1,6 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -12,7 +12,6 @@ using JetBrains.Annotations;
 using Newtonsoft.Json;
 using RestSharp.Extensions.MonoHttp;
 using Stormbot.Bot.Core.Services;
-using Stormbot.Helpers;
 using StrmyCore;
 
 namespace Stormbot.Bot.Core.Modules
@@ -45,11 +44,10 @@ namespace Stormbot.Bot.Core.Modules
             }
         }
 
-        [DataLoad]
-        private List<string> _quotes = new List<string>();
+        [DataLoad, DataSave] private ConcurrentDictionary<ulong, List<string>> _quoteDictionary;
 
-        [DataLoad, DataSave]
-        private readonly List<ReminderData> _reminders = new List<ReminderData>();
+        [DataLoad, DataSave] private List<ReminderData> _reminders = new List<ReminderData>();
+
         private bool _isReminderTimerRunning;
 
         private const string ColorRoleName = "ColorsAddRole";
@@ -118,10 +116,32 @@ namespace Stormbot.Bot.Core.Modules
 
                 group.CreateCommand("quote")
                     .MinPermissions((int) PermissionLevel.User)
-                    .Description("Kappa.")
+                    .Description("Prints a quote out from your servers' quote list.")
                     .Do(async e =>
                     {
-                        await e.Channel.SendMessage($"`{_quotes.PickRandom()}`");
+                        string quote = GetQuotes(e.Server).PickRandom();
+                        if (quote == null)
+                        {
+                            await e.Channel.SendMessage($"Server quote list is empty.");
+                            return;
+                        }
+                        await e.Channel.SendMessage($"`{quote}`");
+                    });
+
+                group.CreateCommand("addquote")
+                    .MinPermissions((int) PermissionLevel.User)
+                    .Description("Adds a quote to your servers' quote list.")
+                    .Parameter("quote", ParameterType.Unparsed)
+                    .Do(async e =>
+                    {
+                        string input = e.GetArg("quote");
+                        if (string.IsNullOrEmpty(input))
+                        {
+                            await e.Channel.SendMessage("Input cannot be empty.");
+                            return;
+                        }
+                        GetQuotes(e.Server).Add(input);
+                        await e.Channel.SendMessage("Added quote.");
                     });
 
                 // todo : move qupte to personal module
@@ -151,7 +171,7 @@ namespace Stormbot.Bot.Core.Modules
                         {
                             role = await e.Server.CreateRole(ColorRoleName + stringhex);
                             await role.SetColor(stringhex);
-                            await e.User.Edit(roles: GetOtherRoles(e.User).Concat(new[] { role }));
+                            await e.User.Edit(roles: GetOtherRoles(e.User).Concat(new[] {role}));
                         }
                         await CleanColorRoles(e.Server);
                     });
@@ -163,7 +183,7 @@ namespace Stormbot.Bot.Core.Modules
                     });
 
                 group.CreateCommand("clean")
-                    .MinPermissions((int)PermissionLevel.ServerModerator)
+                    .MinPermissions((int) PermissionLevel.ServerModerator)
                     .Description("Removes unused color roles. Gets automatically called whenever a color is set.")
                     .Do(async e =>
                     {
@@ -178,9 +198,18 @@ namespace Stormbot.Bot.Core.Modules
             }
         }
 
+        private List<string> GetQuotes(Server server)
+        {
+            if (!_quoteDictionary.ContainsKey(server.Id))
+                _quoteDictionary.TryAdd(server.Id, new List<string>());
+
+            return _quoteDictionary[server.Id];
+        }
+
         public void OnDataLoad()
         {
-            
+            if (_quoteDictionary == null)
+                _quoteDictionary = new ConcurrentDictionary<ulong, List<string>>();
         }
 
         private async Task CleanColorRoles(Server server)

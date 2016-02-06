@@ -11,8 +11,12 @@ namespace Stormbot.Bot.Core.Modules
 {
     public class InfoModule : IModule
     {
+        private DiscordClient _client;
+
         public void Install(ModuleManager manager)
         {
+            _client = manager.Client;
+
             manager.CreateCommands("", group =>
             {
                 group.CreateCommand("whois")
@@ -29,6 +33,16 @@ namespace Stormbot.Bot.Core.Modules
                     {
                         await PrintUserInfo(e.User, e.Channel);
                     });
+                group.CreateCommand("chatinfo")
+                    .Description("Displays information about the current chat channel.")
+                    .Do(async e =>
+                    {
+                        Channel channel = e.Channel;
+                        StringBuilder builder = new StringBuilder($"**Info for {channel.Name}:\r\n**```");
+                        builder.AppendLine($"- Id: {channel.Id}");
+                        builder.AppendLine($"- Position: {channel.Position}");
+                        builder.AppendLine($"- Parent server id: {channel.Server.Id}");
+                    });
                 group.CreateCommand("info")
                     .Description("Displays information about the bot.")
                     .Do(async e =>
@@ -43,6 +57,15 @@ namespace Stormbot.Bot.Core.Modules
 
                         await e.Channel.SendMessage($"{builder}```");
                     });
+
+                group.CreateCommand("contact")
+                    .Description("Contact @SSStormy")
+                    .Do(async e =>
+                    {
+                        await
+                            e.Channel.SendMessage(
+                                $"**Reach me at**:\r\n```- Steam http://steamcommunity.com/id/SSStormy/```");
+                    });
             });
         }
 
@@ -54,11 +77,12 @@ namespace Stormbot.Bot.Core.Modules
                 return;
             }
 
-            StringBuilder builder = new StringBuilder("**User info:\r\n**");
+            StringBuilder builder = new StringBuilder("**User info:\r\n**```");
             builder.AppendLine($"- Name: {user.Name} ({user.Discriminator})");
             builder.AppendLine($"- Id: {user.Id}");
             builder.AppendLine($"- Avatar: {user.AvatarUrl}");
-            await textChannel.SendMessage(builder.ToString());
+            builder.AppendLine($"- Joined: {user.JoinedAt} ");
+            await textChannel.SendMessage($"{builder}```");
         }
     }
 }

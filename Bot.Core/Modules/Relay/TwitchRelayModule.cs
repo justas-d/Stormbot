@@ -12,9 +12,9 @@ using Stormbot.Helpers;
 using StrmyCore;
 using TwitchBotBase.Twitch.Bot;
 
-namespace Stormbot.Bot.Core.Modules
+namespace Stormbot.Bot.Core.Modules.Relay
 {
-    public class TwitchModule : IDataModule
+    public class TwitchRelayModule : IDataModule
     {
         private static readonly string EscapePrefix = "}";
         private const int MaxViewsPerChannel = 500;

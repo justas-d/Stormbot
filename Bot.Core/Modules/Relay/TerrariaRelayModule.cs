@@ -11,9 +11,9 @@ using OpenTerrariaClient;
 using OpenTerrariaClient.Client;
 using Stormbot.Bot.Core.Services;
 
-namespace Stormbot.Bot.Core.Modules
+namespace Stormbot.Bot.Core.Modules.Relay
 {
-    public class TerrariaModule : IDataModule
+    public class TerrariaRelayModule : IDataModule
     {
         private const string EscapePrefix = ".";
 

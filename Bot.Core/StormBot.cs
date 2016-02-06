@@ -9,6 +9,7 @@ using Discord.Commands.Permissions.Levels;
 using Discord.Modules;
 using Stormbot.Bot.Core.Modules;
 using Stormbot.Bot.Core.Modules.Audio;
+using Stormbot.Bot.Core.Modules.Relay;
 #if DEBUG_DEV
 using Stormbot.Bot.Core.Modules.Game;
 #endif
@@ -101,8 +102,8 @@ namespace Stormbot.Bot.Core
             _client.AddModule<InfoModule>("Information", ModuleFilter.ServerWhitelist | ModuleFilter.ChannelWhitelist | ModuleFilter.AlwaysAllowPrivate);
             _client.AddModule<ModulesModule>("Modules");
             _client.AddModule<ExecuteModule>("Execute", ModuleFilter.ServerWhitelist | ModuleFilter.ChannelWhitelist);
-            _client.AddModule<TerrariaModule>("Terraria", ModuleFilter.ChannelWhitelist | ModuleFilter.ServerWhitelist);
-            _client.AddModule<TwitchModule>("Twitch", ModuleFilter.ChannelWhitelist | ModuleFilter.ServerWhitelist);
+            _client.AddModule<TerrariaRelayModule>("Terraria", ModuleFilter.ChannelWhitelist | ModuleFilter.ServerWhitelist);
+            _client.AddModule<TwitchRelayModule>("Twitch", ModuleFilter.ChannelWhitelist | ModuleFilter.ServerWhitelist);
 #if DEBUG_DEV
             _client.AddModule<GameModule>("Game", ModuleFilter.ServerWhitelist | ModuleFilter.ChannelWhitelist | ModuleFilter.AlwaysAllowPrivate);
 #endif

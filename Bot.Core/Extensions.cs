@@ -3,12 +3,16 @@ using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
+using Discord.Modules;
 using Stormbot.Helpers;
 
 namespace Stormbot.Bot.Core
 {
     public static class Extensions
     {
+        public static bool CanRun(this ModuleManager manager, Channel channel)
+            => manager.EnabledServers.Contains(channel.Server) || manager.EnabledChannels.Contains(channel);
+
         public static async Task SetColor(this Role role, string stringhex)
         {
             if (!CanEdit(role)) return;

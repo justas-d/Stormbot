@@ -174,7 +174,7 @@ namespace Stormbot.Bot.Core.Modules.Relay
 
             // if the twitch bot is not in the twitch channel, tell it to join it.
             if (!_twitch.Channels.Contains(twitchChannel))
-                _twitch.JoinChannel(twitchChannel); // todo : only join if the view count if less then ~500.
+                _twitch.JoinChannel(twitchChannel);
 
             // if there is no entry in _relays for the twitch channel, create one.
             if (!_relays.ContainsKey(twitchChannel))

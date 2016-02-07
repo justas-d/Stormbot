@@ -48,8 +48,7 @@ namespace Stormbot.Bot.Core.Modules.Twitch
 
             _client.MessageReceived += async (sender, args) =>
             {
-                if (!manager.EnabledServers.Contains(args.Server) && !manager.EnabledChannels.Contains(args.Channel))
-                    return;
+                if (!manager.CanRun(args.Channel)) return;
 
                 if (!args.Message.Text.StartsWith(EmotePrefix)) return;
                 string emote = (args.Message.Text.Split(' ').FirstOrDefault()).Remove(0, 1);

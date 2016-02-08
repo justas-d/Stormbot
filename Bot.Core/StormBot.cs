@@ -104,8 +104,8 @@ namespace Stormbot.Bot.Core
             _client.AddModule<TerrariaRelayModule>("Terraria Relay", ModuleFilter.ChannelWhitelist | ModuleFilter.ServerWhitelist);
             _client.AddModule<TwitchRelayModule>("Twitch Relay", ModuleFilter.ChannelWhitelist | ModuleFilter.ServerWhitelist);
             _client.AddModule<TwitchEmoteService>("Twitch Emotes", ModuleFilter.ServerWhitelist | ModuleFilter.ChannelWhitelist);
-            _client.AddModule<AnnoucementModule>("Annoucements", ModuleFilter.ServerWhitelist);
-            #if DEBUG_DEV
+            _client.AddModule<AnnouncementModule>("Annoucements", ModuleFilter.ServerWhitelist);
+#if DEBUG_DEV
             _client.AddModule<GameModule>("Game", ModuleFilter.ServerWhitelist | ModuleFilter.ChannelWhitelist | ModuleFilter.AlwaysAllowPrivate);
 #endif
             _client.Log.Message += (sender, args) =>

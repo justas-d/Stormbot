@@ -8,7 +8,7 @@ using Stormbot.Bot.Core.Services;
 
 namespace Stormbot.Bot.Core.Modules
 {
-    public class AnnoucementModule : IDataModule
+    public class AnnouncementModule : IDataModule
     {
         [JsonObject(MemberSerialization.OptIn)]
         private class UserEventCallback

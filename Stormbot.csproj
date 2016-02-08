@@ -126,7 +126,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Bot.Core\Extensions.cs" />
-    <Compile Include="Bot.Core\Modules\AnnoucementModule.cs" />
+    <Compile Include="Bot.Core\Modules\Announcement Module.cs" />
     <Compile Include="Bot.Core\Modules\Audio\AudioStreamer.cs" />
     <Compile Include="Bot.Core\Modules\Audio\IStreamResolver.cs" />
     <Compile Include="Bot.Core\Modules\Audio\LivestreamerResolver.cs" />

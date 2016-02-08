@@ -10,12 +10,12 @@ namespace Stormbot.Bot.Core.Modules.Audio
         private readonly Dictionary<string, dynamic> _cachedTrackData = new Dictionary<string, dynamic>();
 
         internal static string ApiKey;
-        private string ClientIdParam => $"?client_id={ApiKey}";
+        private string ClientIdParam => $"client_id={ApiKey}";
 
         public string ResolveStreamUrl(string input)
         {
             if (ApiKey != null)
-                return $"{(string) GetTrackData(input).stream_url}{ClientIdParam}";
+                return $"{(string) GetTrackData(input).stream_url}?{ClientIdParam}";
 
             Logger.FormattedWrite(GetType().Name, "Soundcloud API Key was not set.");
             return null;
@@ -33,7 +33,7 @@ namespace Stormbot.Bot.Core.Modules.Audio
 
                 dynamic trackCallback =
                     JObject.Parse(
-                        Utils.DownloadRaw($"http://api.soundcloud.com/resolve?url={trackUrl}&client_id={ApiKey}"));
+                        Utils.DownloadRaw($"http://api.soundcloud.com/resolve?url={trackUrl}&{ClientIdParam}"));
 
                 _cachedTrackData.Add(trackUrl, trackCallback);
 

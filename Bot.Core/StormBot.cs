@@ -47,10 +47,7 @@ namespace Stormbot.Bot.Core
             _password = password;
         }
 
-        public void Start()
-        {
-            _client.ExecuteAndWait(Init);
-        }
+        public void Start() => _client.ExecuteAndWait(Init);
 
         private async Task Init()
         {
@@ -105,6 +102,7 @@ namespace Stormbot.Bot.Core
             _client.AddModule<TwitchRelayModule>("Twitch Relay", ModuleFilter.ChannelWhitelist | ModuleFilter.ServerWhitelist);
             _client.AddModule<TwitchEmoteService>("Twitch Emotes", ModuleFilter.ServerWhitelist | ModuleFilter.ChannelWhitelist);
             _client.AddModule<AnnouncementModule>("Annoucements", ModuleFilter.ServerWhitelist);
+            _client.AddModule<VermintideModule>("Vermintide", ModuleFilter.ServerWhitelist | ModuleFilter.ChannelWhitelist);
 #if DEBUG_DEV
             _client.AddModule<GameModule>("Game", ModuleFilter.ServerWhitelist | ModuleFilter.ChannelWhitelist | ModuleFilter.AlwaysAllowPrivate);
 #endif
@@ -120,7 +118,6 @@ namespace Stormbot.Bot.Core
 
             Logger.Writeline("Loading data... ");
             io.Load();
-
 
             Logger.Writeline($" -WE ARE LIVE-{Environment.NewLine}");
         }

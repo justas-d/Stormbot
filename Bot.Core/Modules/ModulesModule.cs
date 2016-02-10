@@ -177,7 +177,7 @@ namespace Stormbot.Bot.Core.Modules
                     });
             });
 
-            manager.JoinedServer += async (s, e) =>
+            _client.JoinedServer += async (s, e) =>
             {
                 foreach (string moduleName in DefaultModules)
                 {

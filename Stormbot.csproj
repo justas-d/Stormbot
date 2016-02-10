@@ -154,6 +154,7 @@
     <Compile Include="Bot.Core\Modules\Twitch\BttvEmoteSource.cs" />
     <Compile Include="Bot.Core\Modules\Twitch\CentralizedEmoteSource.cs" />
     <Compile Include="Bot.Core\Modules\Twitch\GlobalTwitchEmoteSource.cs" />
+    <Compile Include="Bot.Core\Modules\VermintideModule.cs" />
     <Compile Include="Bot.Core\PermissionLevel.cs" />
     <Compile Include="Bot.Core\Services\DataIoService.cs" />
     <Compile Include="Bot.Core\Services\HttpService.cs" />

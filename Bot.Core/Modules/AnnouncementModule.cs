@@ -196,15 +196,15 @@ namespace Stormbot.Bot.Core.Modules
                                         "Disabled user join messages. You can re-enable them at any time.");
                             });
                     });
-                    // no join callback exists commands
+                    // no leavea callback exists commands
                     leaveGroup.CreateGroup("", doesntExistLeave =>
                     {
                         doesntExistLeave.AddCheck((cmd, usr, chnl) =>
                         {
-                            if (!_userJoinedSubs.ContainsKey(chnl.Server.Id))
+                            if (!_userLeftSubs.ContainsKey(chnl.Server.Id))
                                 return true;
 
-                            return !_userJoinedSubs[chnl.Server.Id].IsEnabled;
+                            return !_userLeftSubs[chnl.Server.Id].IsEnabled;
                         });
 
                         doesntExistLeave.CreateCommand("enable")

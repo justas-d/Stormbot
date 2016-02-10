@@ -35,6 +35,7 @@ namespace Stormbot.Bot.Core.Modules.Relay
             public EventHandler<MessageReceivedEventArgs> TerrariaMessageReceivedEvent;
             public EventHandler<DisconnectEventArgs> TerrariaDisconnectedEvent;
             public EventHandler<MessageEventArgs> DiscordMessageReceivedEvent;
+            public EventHandler<LoggedInEventArgs> TerrariaOnLoginEvent;
 
             [JsonConstructor]
             private TerrChannelRelay(ulong channelId, string host, int port, string password)
@@ -143,6 +144,10 @@ namespace Stormbot.Bot.Core.Modules.Relay
                     if (string.IsNullOrEmpty(relay.Password))
                         cfg.Password(relay.Password);
 
+                    cfg.TrackItems(false);
+                    cfg.TrackNpcs(false);
+                    cfg.TrackProjectiles(false);
+
                     cfg.Player(player =>
                     {
                         player.Appearance(appear => appear.Name(relay.Channel.Name));
@@ -176,10 +181,13 @@ namespace Stormbot.Bot.Core.Modules.Relay
                     relay.Client.CurrentPlayer.SendMessage($"<{e.User.Name}> {e.Message.Text}");
                 };
 
+                relay.TerrariaOnLoginEvent = (s, e) => relay.Client.CurrentPlayer.Killme(" says hi.");
+                
                 //set handlers
                 relay.Client.MessageReceived += relay.TerrariaMessageReceivedEvent;
                 relay.Client.Disconnected += relay.TerrariaDisconnectedEvent;
                 _client.MessageReceived += relay.DiscordMessageReceivedEvent;
+                relay.Client.LoggedIn += relay.TerrariaOnLoginEvent;
 
                 relay.Client.Log.MessageReceived +=
                     (s, e) => StrmyCore.Logger.FormattedWrite(e.Severity.ToString(), e.Message, ConsoleColor.White);
@@ -207,6 +215,7 @@ namespace Stormbot.Bot.Core.Modules.Relay
             relay.Client.MessageReceived -= relay.TerrariaMessageReceivedEvent;
             relay.Client.Disconnected -= relay.TerrariaDisconnectedEvent;
             _client.MessageReceived -= relay.DiscordMessageReceivedEvent;
+            relay.Client.LoggedIn -= relay.TerrariaOnLoginEvent;
 
             _relays.Remove(relay);
             relay.Client.SocketDispose();

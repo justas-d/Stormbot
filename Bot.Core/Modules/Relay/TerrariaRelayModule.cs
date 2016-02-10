@@ -167,7 +167,7 @@ namespace Stormbot.Bot.Core.Modules.Relay
                     if (e.Channel.Id != relay.ChannelId) return;
                     if (e.Message.Text.StartsWith(EscapePrefix)) return;
 
-                    char? commandChar = _client.Commands().Config.CommandChar;
+                    char? commandChar = _client.Commands().Config.PrefixChar;
                     if (commandChar != null)
                         if (e.Message.Text.StartsWith(commandChar.Value.ToString())) return;
 

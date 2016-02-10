@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Linq;
+using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.Modules;
@@ -50,6 +51,7 @@ namespace Stormbot.Bot.Core.Modules
 
         [DataSave, DataLoad] private ConcurrentDictionary<ulong, UserEventCallback> _userJoinedSubs;
         [DataSave, DataLoad] private ConcurrentDictionary<ulong, UserEventCallback> _userLeftSubs;
+        [DataSave, DataLoad] private ConcurrentDictionary<ulong, ulong> _joinedRoleSubs;
 
         private const string UserNameKeyword = "|userName|";
         private const string LocationKeyword = "|location|";
@@ -66,6 +68,63 @@ namespace Stormbot.Bot.Core.Modules
         public void Install(ModuleManager manager)
         {
             _client = manager.Client;
+
+            manager.CreateCommands("autorole", group =>
+            {
+                // commands that are available when the server doesnt have an auto role set on join.
+                group.CreateGroup("", noSubGroup =>
+                {
+                    noSubGroup.AddCheck((cmd, usr, chnl) => !_joinedRoleSubs.ContainsKey(chnl.Server.Id));
+
+                    noSubGroup.CreateCommand("create")
+                        .Description("Enables the bot to add a given role to newly joined users.")
+                        .Parameter("rolename", ParameterType.Unparsed)
+                        .Do(async e =>
+                        {
+                            string roleQuery = e.GetArg("rolename");
+                            Role role = e.Server.FindRoles(roleQuery).FirstOrDefault();
+
+                            if (role == null)
+                            {
+                                await e.Channel.SendMessage($"A role with the name of `{roleQuery}` was not found.");
+                                return;
+                            }
+
+                            _joinedRoleSubs.TryAdd(e.Server.Id, role.Id);
+
+                            await
+                                e.Channel.SendMessage($"Created an auto role asigned for new users. Role: {role.Name}");
+                        });
+                });
+
+                // commands that are available when the server does have an auto role set on join.
+                group.CreateGroup("", subGroup =>
+                {
+                    subGroup.AddCheck((cmd, usr, chnl) => (_joinedRoleSubs.ContainsKey(chnl.Server.Id)));
+
+                    subGroup.CreateCommand("destroy")
+                        .Description("Destoys the auto role assigner for this server.")
+                        .Do(e => RemoveAutoRoleAssigner(e.Server.Id, e.Channel));
+
+                    subGroup.CreateCommand("role")
+                        .Parameter("rolename", ParameterType.Unparsed)
+                        .Description("Changes the role of the auto role assigner for this server.")
+                        .Do(async e =>
+                        {
+                            string roleQuery = e.GetArg("rolename");
+                            Role role = e.Server.FindRoles(roleQuery, false).FirstOrDefault();
+
+                            if (role == null)
+                            {
+                                await e.Channel.SendMessage($"A role with the name of `{roleQuery}` was not found.");
+                                return;
+                            }
+                            _joinedRoleSubs[e.Server.Id] = role.Id;
+
+                            await e.Channel.SendMessage($"Set the auto role assigner role to `{role.Name}`.");
+                        });
+                });
+            });
 
             manager.CreateCommands("announce", group =>
             {
@@ -226,11 +285,31 @@ namespace Stormbot.Bot.Core.Modules
             manager.UserJoined += async (s, e) =>
             {
                 if (!manager.EnabledServers.Contains(e.Server)) return;
-                if (!_userJoinedSubs.ContainsKey(e.Server.Id)) return;
+                if (_userJoinedSubs.ContainsKey(e.Server.Id))
+                {
+                    UserEventCallback callback = _userJoinedSubs[e.Server.Id];
+                    if (callback.IsEnabled)
+                        await callback.Channel.SendMessage(ParseString(callback.Message, e.User, e.Server));
+                }
 
-                UserEventCallback callback = _userJoinedSubs[e.Server.Id];
-                if (callback.IsEnabled)
-                    await callback.Channel.SendMessage(ParseString(callback.Message, e.User, e.Server));
+                if (_joinedRoleSubs.ContainsKey(e.Server.Id))
+                {
+                    // verify that the role still exists.
+                    Role role = e.Server.GetRole(_joinedRoleSubs[e.Server.Id]);
+
+                    if (role == null)
+                    {
+                        await RemoveAutoRoleAssigner(e.Server.Id, null, false);
+
+                        Channel callback = e.Server.TextChannels.FirstOrDefault();
+                        if (callback != null)
+                            await callback.SendMessage("Auto role assigner was given a non existant role. Removing.");
+
+                        return;
+                    }
+
+                    await e.User.AddRoles(role);
+                }
             };
 
             manager.UserLeft += async (s, e) =>
@@ -244,12 +323,23 @@ namespace Stormbot.Bot.Core.Modules
             };
         }
 
+        private async Task RemoveAutoRoleAssigner(ulong serverId, Channel callback, bool shouldCallback = true)
+        {
+            ulong ignored;
+            _joinedRoleSubs.TryRemove(serverId, out ignored);
+
+            if (shouldCallback)
+                await callback.SendMessage("Removed auto role assigner for this server.");
+        }
+
         public void OnDataLoad()
         {
             if (_userJoinedSubs == null)
                 _userJoinedSubs = new ConcurrentDictionary<ulong, UserEventCallback>();
             if (_userLeftSubs == null)
                 _userLeftSubs = new ConcurrentDictionary<ulong, UserEventCallback>();
+            if (_joinedRoleSubs == null)
+                _joinedRoleSubs = new ConcurrentDictionary<ulong, ulong>();
 
             LoadChannels(_userJoinedSubs);
             LoadChannels(_userLeftSubs);

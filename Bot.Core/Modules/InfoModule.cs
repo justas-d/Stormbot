@@ -42,6 +42,8 @@ namespace Stormbot.Bot.Core.Modules
                         builder.AppendLine($"- Id: {channel.Id}");
                         builder.AppendLine($"- Position: {channel.Position}");
                         builder.AppendLine($"- Parent server id: {channel.Server.Id}");
+
+                        await e.Channel.SendMessage($"{builder}```");
                     });
                 group.CreateCommand("info")
                     .Description("Displays information about the bot.")

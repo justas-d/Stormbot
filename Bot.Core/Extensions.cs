@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
+using Discord.Audio;
 using Discord.Commands;
 using Discord.Modules;
 using Stormbot.Helpers;
@@ -10,6 +11,12 @@ namespace Stormbot.Bot.Core
 {
     public static class Extensions
     {
+        public static AudioService Audio(this DiscordClient client, bool required = true)
+            => client.Services.Get<AudioService>(required);
+
+        public static CommandService Commands(this DiscordClient client, bool required = true)
+            => client.Services.Get<CommandService>(required);
+
         public static bool CanRun(this ModuleManager manager, Channel channel)
             => manager.EnabledServers.Contains(channel.Server) || manager.EnabledChannels.Contains(channel);
 

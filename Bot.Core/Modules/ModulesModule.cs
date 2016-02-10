@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -29,6 +30,16 @@ namespace Stormbot.Bot.Core.Modules
         [DataLoad, DataSave]
         private ConcurrentDictionary<ulong, HashSet<string>> _channelModulesDictionary =
             new ConcurrentDictionary<ulong, HashSet<string>>();
+
+        private HashSet<string> DefaultModules => new HashSet<string>
+        {
+            "Bot",
+            "Audio",
+            "QoL",
+            "Information",
+            "Annoucements",
+            "Execute"
+        };
 
         public void Install(ModuleManager manager)
         {
@@ -161,24 +172,43 @@ namespace Stormbot.Bot.Core.Modules
                                 builder.Append($"Channel: {module.EnabledChannels.Contains(e.Channel), -5}");
                             builder.AppendLine("`");
                         }
-
+                        
                         await e.Channel.SendMessage(builder.ToString());
                     });
             });
+
+            manager.JoinedServer += async (s, e) =>
+            {
+                foreach (string moduleName in DefaultModules)
+                {
+                    ModuleManager module = await VerifyFindModule(moduleName, null, false);
+                    if (module == null) return;
+
+                    if (!module.FilterType.HasFlag(ModuleFilter.ServerWhitelist))
+                        throw new InvalidOperationException();
+
+                    Server server = e.Server;
+
+                    module.EnableServer(server);
+                    _serverModulesDictionary.AddModuleToSave(module.Id, server.Id);
+                }
+            };
         }
 
-        private async Task<ModuleManager> VerifyFindModule(string id, Channel callback)
+        private async Task<ModuleManager> VerifyFindModule(string id, Channel callback, bool useCallback = true)
         {
             ModuleManager module = GetModule(id);
             if (module == null)
             {
-                await callback.SendMessage("Unknown module");
+                if (useCallback)
+                    await callback.SendMessage("Unknown module");
                 return null;
             }
             if (module.FilterType == ModuleFilter.None ||
                 module.FilterType == ModuleFilter.AlwaysAllowPrivate)
             {
-                await callback.SendMessage("This module is global and cannot be enabled/disabled.");
+                if (useCallback)
+                    await callback.SendMessage("This module is global and cannot be enabled/disabled.");
                 return null;
             }
             return module;

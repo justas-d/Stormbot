@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
@@ -9,6 +10,8 @@ using Discord.Modules;
 using Newtonsoft.Json;
 using OpenTerrariaClient;
 using OpenTerrariaClient.Client;
+using OpenTerrariaClient.Model;
+using OpenTerrariaClient.Model.ID;
 using Stormbot.Bot.Core.Services;
 
 namespace Stormbot.Bot.Core.Modules.Relay
@@ -83,7 +86,6 @@ namespace Stormbot.Bot.Core.Modules.Relay
                     /*
                       todo : add a command to check traveling merchant items
                       todo : command for getting player info
-                      todo : command for getting world info
                     */
 
                     connectedGroup.CreateCommand("info")
@@ -101,10 +103,53 @@ namespace Stormbot.Bot.Core.Modules.Relay
                         .Description("Disconnects from the terraria server connected to this channel.")
                         .Do(e =>
                         {
-                            TerrChannelRelay relay = _relays.FirstOrDefault(r => r.ChannelId == e.Channel.Id);
+                            TerrChannelRelay relay = GetRelay(e.Channel);
                             CleanRelay(relay);
                         });
 
+                    connectedGroup.CreateCommand("world")
+                        .Description("Displays information about the servers world.")
+                        .Do(async e =>
+                        {
+                            TerrChannelRelay relay = GetRelay(e.Channel);
+                            StringBuilder builder = new StringBuilder($"**World data on {relay.Host}:{relay.Port}:**```");
+                            builder.AppendLine($"- Name: {relay.Client.World.WorldName}");
+                            builder.AppendLine($"- Time: {relay.Client.World.Time}");
+                            builder.AppendLine($"- Is Raining: {relay.Client.World.Rain > 0}");
+                            builder.AppendLine($"- Is Expert Mode: {relay.Client.World.IsExpertMode}");
+                            builder.AppendLine($"- Is Hardmode: {relay.Client.World.IsHardmode}");
+                            builder.AppendLine($"- Is Crimson: {relay.Client.World.IsCrimson}");
+                            await e.Channel.SendMessage($"{builder}```");
+                        });
+
+                    connectedGroup.CreateCommand("travmerch")
+                        .Description(
+                            "Displays what the travelling merchant has in stock if they are currently present in the world.")
+                        .Do(async e =>
+                        {
+                            TerrChannelRelay relay = GetRelay(e.Channel);
+                            Npc travelingMerchant =
+                                relay.Client.Npcs.FirstOrDefault(n => n.NpcId == NpcId.TravellingMerchant);
+
+                            if (travelingMerchant == null)
+                            {
+                                await
+                                    e.Channel.SendMessage(
+                                        "The travelling merchant is not currently present in the world.");
+                                return;
+                            }
+
+                            StringBuilder builder = new StringBuilder("**Travelling merchant stock:**```");
+
+                            int index = 1;
+                            foreach (GameItem item in travelingMerchant.Shop)
+                            {
+                                builder.AppendLine($"{index}: {item.Name()}");
+                                index++;
+                            }
+
+                            await e.Channel.SendMessage($"{builder}```");
+                        });
                 });
 
                 // commands which can only be used when caller channel is not connected to a terraria server.
@@ -145,7 +190,6 @@ namespace Stormbot.Bot.Core.Modules.Relay
                         cfg.Password(relay.Password);
 
                     cfg.TrackItems(false);
-                    cfg.TrackNpcs(false);
                     cfg.TrackProjectiles(false);
 
                     cfg.Player(player =>

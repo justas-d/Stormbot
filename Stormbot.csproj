@@ -158,7 +158,7 @@
     <Compile Include="Bot.Core\PermissionLevel.cs" />
     <Compile Include="Bot.Core\Services\DataIoService.cs" />
     <Compile Include="Bot.Core\Services\HttpService.cs" />
-    <Compile Include="Bot.Core\Modules\Twitch\TwitchEmoteService.cs" />
+    <Compile Include="Bot.Core\Modules\Twitch\TwitchEmoteModule.cs" />
     <Compile Include="Bot.Core\StormBot.cs" />
     <Compile Include="Helpers\Constants.cs" />
     <Compile Include="Program.cs" />

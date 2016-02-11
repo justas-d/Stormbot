@@ -51,7 +51,7 @@ namespace Stormbot.Bot.Core.Modules.Game
                         .Do(async e =>
                         {
                             GamePlayer player = GameSesh.GetPlayer(e.User);
-                            await e.Channel.SendMessage(player.ToString());
+                            await e.Channel.SafeSendMessage(player.ToString());
                         });
                 });
 
@@ -70,11 +70,11 @@ namespace Stormbot.Bot.Core.Modules.Game
                             if (!player.Inventory.AddItem(add))
                             {
                                 await
-                                    e.Channel.SendMessage(
+                                    e.Channel.SafeSendMessage(
                                         "Couldn't fully add all the requested items to your inventory.");
                                 return;
                             }
-                            await e.Channel.SendMessage($"Added {add.ItemDef.Name} x{add.Amount} to your inventory.");
+                            await e.Channel.SafeSendMessage($"Added {add.ItemDef.Name} x{add.Amount} to your inventory.");
                         });
 
                     invG.CreateCommand("show")
@@ -108,12 +108,12 @@ namespace Stormbot.Bot.Core.Modules.Game
                             {
                                 page--; // convert to zero based.
                                 await
-                                    e.Channel.SendMessage(
+                                    e.Channel.SafeSendMessage(
                                         $"**{e.User}'s bank page {page + 1}:**\r\n`{player.Bank.GetPageData(page)}`");
                             }
                             else
                             {
-                                await e.Channel.SendMessage($"Available bank pages: {Bank.Pages}");
+                                await e.Channel.SafeSendMessage($"Available bank pages: {Bank.Pages}");
                             }
                         });
 
@@ -134,17 +134,17 @@ namespace Stormbot.Bot.Core.Modules.Game
 
                             if (takeItem == null)
                             {
-                                await e.Channel.SendMessage("You cannot take nothing from your bank!");
+                                await e.Channel.SafeSendMessage("You cannot take nothing from your bank!");
                                 return;
                             }
                             if (player.Inventory.AddItem(takeItem))
                             {
                                 await
-                                    e.Channel.SendMessage(
+                                    e.Channel.SafeSendMessage(
                                         $"You took `{takeItem.ItemDef.Name}` from your bank and put it in your inventory.");
                                 return;
                             }
-                            await e.Channel.SendMessage($"Failed takinng `{takeItem.ItemDef.Name}` from your bank.");
+                            await e.Channel.SafeSendMessage($"Failed takinng `{takeItem.ItemDef.Name}` from your bank.");
                         });
 
                     bankG.CreateCommand("deposit") // todo : optional amount argument
@@ -167,13 +167,13 @@ namespace Stormbot.Bot.Core.Modules.Game
 
                             if (depositItem == null) // check if we are trying to depost an existing item.
                             {
-                                await e.Channel.SendMessage("You cannot deposit nothing into your bank!");
+                                await e.Channel.SafeSendMessage("You cannot deposit nothing into your bank!");
                                 return;
                             }
                             if (!player.Bank.CanHoldItem(depositItem)) // check if the bank can hold the item.
                             {
                                 await
-                                    e.Channel.SendMessage(
+                                    e.Channel.SafeSendMessage(
                                         $"Your bank doesn't have enough space to hold `{depositItem.ItemDef.Name}`");
                                 return;
                             }
@@ -199,12 +199,12 @@ namespace Stormbot.Bot.Core.Modules.Game
                             //as close to local functions as we can get right now, i suppose.
                             deposit:
                             await
-                                e.Channel.SendMessage($"You deposit `{depositItem.ItemDef.Name}` into your bank.");
+                                e.Channel.SafeSendMessage($"You deposit `{depositItem.ItemDef.Name}` into your bank.");
                             return;
 
                             failed:
                             await
-                                e.Channel.SendMessage(
+                                e.Channel.SafeSendMessage(
                                     $"Couldn't fully deposit `{depositItem.ItemDef.Name}` to your bank.");
                             return;
                         });
@@ -218,7 +218,7 @@ namespace Stormbot.Bot.Core.Modules.Game
                         .Do(async e =>
                         {
                             GamePlayer player = GameSesh.GetPlayer(e.User);
-                            await e.Channel.SendMessage($"**Nearby locations:**\r\n{player.Location.ToStringNearby()}");
+                            await e.Channel.SafeSendMessage($"**Nearby locations:**\r\n{player.Location.ToStringNearby()}");
                         });
 
                     locG.CreateCommand("interact")
@@ -236,11 +236,11 @@ namespace Stormbot.Bot.Core.Modules.Game
                             if (obj == null)
                             {
                                 await
-                                    e.Channel.SendMessage(
+                                    e.Channel.SafeSendMessage(
                                         $"Could not find object `{objName}` in current location (`{player.Location.Name}`)");
                                 return;
                             }
-                            await e.Channel.SendMessage($"You interact with `{objName}`");
+                            await e.Channel.SafeSendMessage($"You interact with `{objName}`");
                             await obj.OnInteract(player);
                         });
 
@@ -257,18 +257,18 @@ namespace Stormbot.Bot.Core.Modules.Game
 
                             if (loc == null)
                             {
-                                await e.Channel.SendMessage($"Location {name} wasn't found or isn't nearby.");
+                                await e.Channel.SafeSendMessage($"Location {name} wasn't found or isn't nearby.");
                                 return;
                             }
 
                             if (!loc.Enter(player))
                             {
-                                await e.Channel.SendMessage($"Couldn't enter nearby location {name}.");
+                                await e.Channel.SafeSendMessage($"Couldn't enter nearby location {name}.");
                                 return;
                             }
 
                             await
-                                e.Channel.SendMessage(
+                                e.Channel.SafeSendMessage(
                                     $"**You have entered {player.Location.Name}.**\r\n```{player.Location}```");
                         });
 
@@ -277,7 +277,7 @@ namespace Stormbot.Bot.Core.Modules.Game
                         .Do(async e =>
                         {
                             GamePlayer player = GameSesh.GetPlayer(e.User);
-                            await e.Channel.SendMessage($"**{player.Location}:**\r\n{player.Location.ToString()}");
+                            await e.Channel.SafeSendMessage($"**{player.Location}:**\r\n{player.Location.ToString()}");
                         });
 
                     locG.CreateCommand("enterany")
@@ -290,10 +290,10 @@ namespace Stormbot.Bot.Core.Modules.Game
                             Location loc = Location.Get(uint.Parse(e.GetArg("id")));
                             if (loc.Enter(player))
                             {
-                                await e.Channel.SendMessage($"You have entered location {player.Location.Name}");
+                                await e.Channel.SafeSendMessage($"You have entered location {player.Location.Name}");
                                 return;
                             }
-                            await e.Channel.SendMessage($"Couldn't enter locaton {loc.Name}");
+                            await e.Channel.SafeSendMessage($"Couldn't enter locaton {loc.Name}");
                         });
 
                     locG.CreateCommand("set")
@@ -306,7 +306,7 @@ namespace Stormbot.Bot.Core.Modules.Game
                             Location loc = Location.Get(uint.Parse(e.GetArg("id")));
 
                             player.Location = loc;
-                            await e.Channel.SendMessage($"You have entered location {loc.Name}");
+                            await e.Channel.SafeSendMessage($"You have entered location {loc.Name}");
                         });
                 });
             });
@@ -328,7 +328,7 @@ namespace Stormbot.Bot.Core.Modules.Game
                         GamePlayer player = GameSesh.GetPlayer(e.User.Id);
 
                         player.CreateState.Name = e.GetArg("name");
-                        await e.Channel.SendMessage($"Name set to {player.CreateState.Name}");
+                        await e.Channel.SafeSendMessage($"Name set to {player.CreateState.Name}");
                         await CheckForCanFinish(e.User);
                     });
 
@@ -340,7 +340,7 @@ namespace Stormbot.Bot.Core.Modules.Game
                         GamePlayer player = GameSesh.GetPlayer(e.User);
 
                         player.CreateState.Gender = Utils.EnumParse<GamePlayer.GenderType>(e.GetArg("gender"));
-                        await e.Channel.SendMessage($"Gender set to {player.CreateState.Gender}");
+                        await e.Channel.SafeSendMessage($"Gender set to {player.CreateState.Gender}");
                         await CheckForCanFinish(e.User);
                     });
 
@@ -349,7 +349,7 @@ namespace Stormbot.Bot.Core.Modules.Game
                     .Do(async e =>
                     {
                         GamePlayer player = GameSesh.GetPlayer(e.User);
-                        await e.Channel.SendMessage(player.CreateState.ToString());
+                        await e.Channel.SafeSendMessage(player.CreateState.ToString());
                     });
 
                 group.CreateCommand("finish")
@@ -368,7 +368,7 @@ namespace Stormbot.Bot.Core.Modules.Game
 
                         player.FinishPlayerCreate();
                         await
-                            e.Channel.SendMessage(
+                            e.Channel.SafeSendMessage(
                                 $"Player creation done.\r\nName {Format.Code(player.Name)} Gender: {Format.Code(player.Gender.ToString())}");
                     });
             });

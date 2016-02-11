@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
@@ -60,5 +61,64 @@ namespace Stormbot.Bot.Core
         /// </summary>
         public static Channel GetChannel(this CommandEventArgs e)
             => e.Server.GetChannel(ulong.Parse(e.GetArg(Constants.ChannelIdArg)));
+
+        public static bool CanJoinChannel(this Channel voiceChannel, User user)
+        {
+            if (voiceChannel.Type != ChannelType.Voice) throw new ArgumentException(nameof(voiceChannel));
+            return user.GetPermissions(voiceChannel).Connect;
+        }
+
+        /// <summary>
+        /// Attempts to send a message to the given channel.
+        /// </summary>
+        /// <returns>Sent message if sent successfuly, null if we don't have permissions.</returns>
+        public static async Task<Message> SafeSendMessage(this Channel textChannel, string msg)
+        {
+            if(textChannel.Type != ChannelType.Text) throw new ArgumentException(nameof(textChannel));
+            if (!textChannel.Server.CurrentUser.GetPermissions(textChannel).SendMessages) return null;
+           
+            return await textChannel.SendMessage(msg);
+        }
+
+        public static async Task<Message> SafeSendFile(this Channel textChannel, string path)
+        {
+            if (textChannel.Type != ChannelType.Text) throw new ArgumentException(nameof(textChannel));
+            if (!textChannel.Server.CurrentUser.GetPermissions(textChannel).AttachFiles) return null;
+
+            return await textChannel.SendFile(path);
+        }
+
+        public static async Task SafeAddRoles(this User user, User caller, params Role[] roles)
+        {
+            if (caller.ServerPermissions.ManageRoles)
+                await user.AddRoles(roles);
+        }
+
+        /// <summary>
+        /// Attempts to join a voice channel.
+        /// </summary>
+        /// <param name="textCallback">Text callback channel to which we will write when we failed joining the audio channel.</param>
+        /// <returns>Null if failed joining.</returns>
+        public static async Task<IAudioClient> SafeJoin(this AudioService audio, Channel voiceChannel,
+            Channel textCallback)
+        {
+            if (voiceChannel.Type != ChannelType.Voice) throw new ArgumentException(nameof(voiceChannel));
+            if (textCallback.Type != ChannelType.Text) throw new ArgumentException(nameof(textCallback));
+
+            if (voiceChannel.CanJoinChannel(voiceChannel.Server.CurrentUser))
+            {
+                try
+                {
+                    return await audio.Join(voiceChannel);
+                }
+                catch
+                {
+                    await textCallback.SafeSendMessage($"Failed joining voice channel `{voiceChannel.Name}`.");
+                }
+            }
+
+            await textCallback.SafeSendMessage($"I don't have permission to join `{voiceChannel.Name}`.");
+            return null;
+        }
     }
 }

@@ -26,7 +26,7 @@ namespace Stormbot.Bot.Core.Modules
                         StringBuilder builder = new StringBuilder();
                         builder.AppendLine("**Listing text channels in server:**");
                         CreateNameIdList(builder, e.Server.TextChannels);
-                        await e.Channel.SendMessage(builder.ToString());
+                        await e.Channel.SafeSendMessage(builder.ToString());
                     });
 
                 group.CreateCommand("list voice")
@@ -36,10 +36,15 @@ namespace Stormbot.Bot.Core.Modules
                         StringBuilder builder = new StringBuilder();
                         builder.AppendLine("**Listing voice channels in server:**");
                         CreateNameIdList(builder, e.Server.VoiceChannels);
-                        await e.Channel.SendMessage(builder.ToString());
+                        await e.Channel.SafeSendMessage(builder.ToString());
                     });
 
                 group.CreateCommand("desc")
+                    .AddCheck((cmd, usr, chnl) =>
+                    {
+                        return chnl.Server.CurrentUser.ServerPermissions.ManageChannels ||
+                               chnl.Server.CurrentUser.GetPermissions(chnl).ManageChannel;
+                    })
                     .AddCheck((cmd, usr, chnl) => chnl.Server.CurrentUser.GetPermissions(chnl).ManageChannel)
                     .Description("Sets the channel description.")
                     .Parameter(Constants.ChannelIdArg)
@@ -49,7 +54,11 @@ namespace Stormbot.Bot.Core.Modules
                         await e.GetChannel().Edit(null, e.GetArg("desc"));
                     });
                 group.CreateCommand("name")
-                    .AddCheck((cmd, usr, chnl) => chnl.Server.CurrentUser.GetPermissions(chnl).ManageChannel)
+                    .AddCheck((cmd, usr, chnl) =>
+                    {
+                        return chnl.Server.CurrentUser.ServerPermissions.ManageChannels ||
+                               chnl.Server.CurrentUser.GetPermissions(chnl).ManageChannel;
+                    })
                     .Description("Sets the channel name.")
                     .Parameter(Constants.ChannelIdArg)
                     .Parameter("value", ParameterType.Unparsed)
@@ -70,12 +79,10 @@ namespace Stormbot.Bot.Core.Modules
                         StringBuilder builder = new StringBuilder();
                         builder.AppendLine("**Listing roles server:**");
                         CreateNameIdList(builder, e.Server.Roles);
-                        await e.Channel.SendMessage(builder.ToString());
+                        await e.Channel.SafeSendMessage(builder.ToString());
                     });
                 group.CreateCommand("add")
-                    .AddCheck(
-                        (cmd, usr, chnl) =>
-                            chnl.Server.CurrentUser.Roles.FirstOrDefault(r => r.Permissions.ManageRoles) != null)
+                    .AddCheck((cmd, usr, chnl) => chnl.Server.CurrentUser.ServerPermissions.ManageRoles)
                     .Description("Adds a role with the given name if it doesn't exist.")
                     .Parameter("name", ParameterType.Unparsed)
                     .Do(async e =>
@@ -85,12 +92,10 @@ namespace Stormbot.Bot.Core.Modules
                         if (role != null) return;
 
                         await e.Server.CreateRole(name);
-                        await e.Channel.SendMessage($"Created role `{name}`");
+                        await e.Channel.SafeSendMessage($"Created role `{name}`");
                     });
                 group.CreateCommand("rem")
-                    .AddCheck(
-                        (cmd, usr, chnl) =>
-                            chnl.Server.CurrentUser.Roles.FirstOrDefault(r => r.Permissions.ManageRoles) != null)
+                    .AddCheck((cmd, usr, chnl) => chnl.Server.CurrentUser.ServerPermissions.ManageRoles)
                     .Description("Removes a role with the given id if it exists.")
                     .Parameter(Constants.RoleIdArg)
                     .Do(async e =>
@@ -99,7 +104,7 @@ namespace Stormbot.Bot.Core.Modules
                         if (role == null || role.IsManaged || role.IsEveryone) return;
 
                         await role.Delete();
-                        await e.Channel.SendMessage($"Removed role `{role.Name}`");
+                        await e.Channel.SafeSendMessage($"Removed role `{role.Name}`");
                     });
 
                 group.CreateCommand("listperm")
@@ -110,7 +115,7 @@ namespace Stormbot.Bot.Core.Modules
                         Role role = e.GetRole();
                         ServerPermissions perms = role.Permissions;
                         await
-                            e.Channel.SendMessage($"**Listing permissions for `{role.Name}`**{Environment.NewLine}` +" +
+                            e.Channel.SafeSendMessage($"**Listing permissions for `{role.Name}`**{Environment.NewLine}` +" +
                                                   $"{"CreateInstantInvite",-25}: {perms.CreateInstantInvite}{Environment.NewLine}" +
                                                   $"{"KickMembers",-25}: {perms.KickMembers}{Environment.NewLine}" +
                                                   $"{"BanMembers",-25}: {perms.BanMembers}{Environment.NewLine}" +
@@ -118,7 +123,7 @@ namespace Stormbot.Bot.Core.Modules
                                                   $"{"ManageChannels",-25}: {perms.ManageChannels}{Environment.NewLine}" +
                                                   $"{"ManageServer",-25}: {perms.ManageServer}{Environment.NewLine}" +
                                                   $"{"ReadMessages",-25}: {perms.ReadMessages}{Environment.NewLine}" +
-                                                  $"{"SendMessages",-25}: {perms.SendMessages}{Environment.NewLine}" +
+                                                  $"{"SafeSendMessages",-25}: {perms.SendMessages}{Environment.NewLine}" +
                                                   $"{"SendTTSMessages",-25}: {perms.SendTTSMessages}{Environment.NewLine}" +
                                                   $"{"ManageMessages",-25}: {perms.ManageMessages}{Environment.NewLine}" +
                                                   $"{"EmbedLinks",-25}: {perms.EmbedLinks}{Environment.NewLine}" +
@@ -132,13 +137,10 @@ namespace Stormbot.Bot.Core.Modules
                                                   $"{"MoveMembers",-25}: {perms.MoveMembers}{Environment.NewLine}" +
                                                   $"{"UseVoiceActivation",-25}: {perms.UseVoiceActivation}`"
                                 );
-
                     });
 
                 group.CreateCommand("edit perm")
-                    .AddCheck(
-                        (cmd, usr, chnl) =>
-                            chnl.Server.CurrentUser.Roles.FirstOrDefault(r => r.Permissions.ManageRoles) != null)
+                    .AddCheck((cmd, usr, chnl) => chnl.Server.CurrentUser.ServerPermissions.ManageRoles)
                     .Description("Edits permissions for a given role, found by id, if it exists.")
                     .Parameter(Constants.RoleIdArg)
                     .Parameter("permission")
@@ -154,14 +156,12 @@ namespace Stormbot.Bot.Core.Modules
 
                         await role.Edit(permissions: edited);
                         await
-                            e.Channel.SendMessage(
+                            e.Channel.SafeSendMessage(
                                 $"Set permission `{prop.Name}` in `{role.Name}` to `{value}`");
 
                     });
                 group.CreateCommand("edit color")
-                    .AddCheck(
-                        (cmd, usr, chnl) =>
-                            chnl.Server.CurrentUser.Roles.FirstOrDefault(r => r.Permissions.ManageRoles) != null)
+                     .AddCheck((cmd, usr, chnl) => chnl.Server.CurrentUser.ServerPermissions.ManageRoles)
                     .Description("Edits the color (RRGGBB) for a given role, found by id, if it exists. ")
                     .Parameter(Constants.RoleIdArg)
                     .Parameter("hex")
@@ -182,13 +182,11 @@ namespace Stormbot.Bot.Core.Modules
                         StringBuilder builder = new StringBuilder();
                         builder.AppendLine("**Listing users in server:**");
                         CreateNameIdList(builder, e.Server.Users);
-                        await e.Channel.SendMessage(builder.ToString());
+                        await e.Channel.SafeSendMessage(builder.ToString());
                     });
 
                 group.CreateCommand("mute")
-                    .AddCheck(
-                        (cmd, usr, chnl) =>
-                            chnl.Server.CurrentUser.Roles.FirstOrDefault(r => r.Permissions.MuteMembers) != null)
+                    .AddCheck((cmd, usr, chnl) => chnl.Server.CurrentUser.ServerPermissions.MuteMembers)
                     .Description("Mutes(true)/unmutes(false) the userid")
                     .Parameter(Constants.UserIdArg)
                     .Parameter("val")
@@ -196,12 +194,10 @@ namespace Stormbot.Bot.Core.Modules
                     {
                         User user = e.GetUser();
                         await user.Edit(bool.Parse(e.GetArg("val")));
-                        await e.Channel.SendMessage($"Muted `{user.Name}`");
+                        await e.Channel.SafeSendMessage($"Muted `{user.Name}`");
                     });
                 group.CreateCommand("deaf")
-                    .AddCheck(
-                        (cmd, usr, chnl) =>
-                            chnl.Server.CurrentUser.Roles.FirstOrDefault(r => r.Permissions.DeafenMembers) != null)
+                    .AddCheck((cmd, usr, chnl) => chnl.Server.CurrentUser.ServerPermissions.DeafenMembers)
                     .Description("Deafens(true)/Undeafens(false) the current edit user.")
                     .Parameter(Constants.UserIdArg)
                     .Parameter("val")
@@ -209,12 +205,10 @@ namespace Stormbot.Bot.Core.Modules
                     {
                         User user = e.GetUser();
                         await user.Edit(isDeafened: bool.Parse(e.GetArg("val")));
-                        await e.Channel.SendMessage($"Deafened `{user.Name}`");
+                        await e.Channel.SafeSendMessage($"Deafened `{user.Name}`");
                     });
                 group.CreateCommand("move")
-                    .AddCheck(
-                        (cmd, usr, chnl) =>
-                            chnl.Server.CurrentUser.Roles.FirstOrDefault(r => r.Permissions.MoveMembers) != null)
+                    .AddCheck((cmd, usr, chnl) => chnl.Server.CurrentUser.ServerPermissions.MoveMembers)
                     .Description("Moves the current edit user to a given voice channel")
                     .Parameter(Constants.UserIdArg)
                     .Parameter("channelid", ParameterType.Unparsed)
@@ -223,12 +217,10 @@ namespace Stormbot.Bot.Core.Modules
                         User user = e.GetUser();
                         Channel moveChnl = e.Server.GetChannel(ulong.Parse(e.GetArg("channelid")));
                         await user.Edit(voiceChannel: moveChnl);
-                        await e.Channel.SendMessage($"Moved `{user.Name}` to `{moveChnl.Name}`");
+                        await e.Channel.SafeSendMessage($"Moved `{user.Name}` to `{moveChnl.Name}`");
                     });
                 group.CreateCommand("role add")
-                    .AddCheck(
-                        (cmd, usr, chnl) =>
-                            chnl.Server.CurrentUser.Roles.FirstOrDefault(r => r.Permissions.ManageRoles) != null)
+                    .AddCheck((cmd, usr, chnl) => chnl.Server.CurrentUser.ServerPermissions.ManageRoles)
                     .Description("Adds a role, found by id, to the current edit user if it doesn't already have it.")
                     .Parameter(Constants.UserIdArg)
                     .Parameter(Constants.RoleIdArg)
@@ -240,7 +232,7 @@ namespace Stormbot.Bot.Core.Modules
                         if (!user.HasRole(role) && role.CanEdit())
                         {
                             await user.Edit(roles: user.Roles.Concat(new[] {role}));
-                            await e.Channel.SendMessage($"Given role `{role.Name}` to `{user.Name}`");
+                            await e.Channel.SafeSendMessage($"Given role `{role.Name}` to `{user.Name}`");
                         }
                     });
 
@@ -253,12 +245,10 @@ namespace Stormbot.Bot.Core.Modules
                         User user = e.GetUser();
                         builder.AppendLine($"**Listing roles for {user.Name}:**");
                         CreateNameIdList(builder, e.Server.Roles);
-                        await e.Channel.SendMessage(builder.ToString());
+                        await e.Channel.SafeSendMessage(builder.ToString());
                     });
                 group.CreateCommand("role rem")
-                    .AddCheck(
-                        (cmd, usr, chnl) =>
-                            chnl.Server.CurrentUser.Roles.FirstOrDefault(r => r.Permissions.ManageRoles) != null)
+                    .AddCheck((cmd, usr, chnl) => chnl.Server.CurrentUser.ServerPermissions.ManageRoles)
                     .Description("Removes a roleid from the userid if it has it.")
                     .Parameter(Constants.UserIdArg)
                     .Parameter(Constants.RoleIdArg)
@@ -269,7 +259,7 @@ namespace Stormbot.Bot.Core.Modules
                         if (user.HasRole(role) && role.CanEdit())
                         {
                             await user.RemoveRoles(role);
-                            await e.Channel.SendMessage($"Removed role `{role.Name}` from `{user.Name}`.");
+                            await e.Channel.SafeSendMessage($"Removed role `{role.Name}` from `{user.Name}`.");
                         }
                     });
             });

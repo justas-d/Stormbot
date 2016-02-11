@@ -37,18 +37,18 @@ namespace Stormbot.Bot.Core.Modules
                         Invite invite = await _client.GetInvite(e.GetArg("invite"));
                         if (invite == null)
                         {
-                            await e.Channel.SendMessage("Invite not found.");
+                            await e.Channel.SafeSendMessage("Invite not found.");
                             return;
                         }
-                        else if (invite.IsRevoked)
+                        if (invite.IsRevoked)
                         {
                             await
-                                e.Channel.SendMessage("This invite has expired or the bot is banned from that server.");
+                                e.Channel.SafeSendMessage("This invite has expired or the bot is banned from that server.");
                             return;
                         }
 
                         await invite.Accept();
-                        await e.Channel.SendMessage("Joined server.");
+                        await e.Channel.SafeSendMessage("Joined server.");
                     });
 
                 group.CreateCommand("leave")
@@ -144,13 +144,13 @@ namespace Stormbot.Bot.Core.Modules
             double memoryBefore = GetMemoryUsage();
             GC.Collect();
             await
-                e.Channel.SendMessage(
+                e.Channel.SafeSendMessage(
                     $"Collected `{memoryBefore - GetMemoryUsage()} mb` of trash.");
         }
 
         private async Task GetMemUsage(CommandEventArgs e)
         {
-            await e.Channel.SendMessage($"Memory usage: `{GetMemoryUsage()} mb`");
+            await e.Channel.SafeSendMessage($"Memory usage: `{GetMemoryUsage()} mb`");
 
         }
 

@@ -9,6 +9,7 @@ using Discord.Commands;
 using Discord.Commands.Permissions.Levels;
 using Discord.Modules;
 using Stormbot.Bot.Core.Services;
+using Stormbot.Helpers;
 
 namespace Stormbot.Bot.Core.Modules
 {
@@ -34,11 +35,15 @@ namespace Stormbot.Bot.Core.Modules
         private HashSet<string> DefaultModules => new HashSet<string>
         {
             "Bot",
-            "Audio",
             "QoL",
             "Information",
             "Annoucements",
             "Execute"
+        };
+
+        private HashSet<string> PrivateModules => new HashSet<string>()
+        {
+            "Audio"
         };
 
         public void Install(ModuleManager manager)
@@ -60,7 +65,15 @@ namespace Stormbot.Bot.Core.Modules
 
                         if (!module.FilterType.HasFlag(ModuleFilter.ChannelWhitelist))
                         {
-                            await e.Channel.SendMessage("This module doesn't support being enabled for channel.");
+                            await e.Channel.SafeSendMessage("This module doesn't support being enabled for channel.");
+                            return;
+                        }
+
+                        if (PrivateModules.FirstOrDefault(m => m.ToLowerInvariant() == module.Id) != null &&
+                            e.User.Id != Constants.UserOwner)
+                        {
+                            await
+                                e.Channel.SafeSendMessage("This module is private. Use }contact for more information.");
                             return;
                         }
 
@@ -69,12 +82,12 @@ namespace Stormbot.Bot.Core.Modules
                         if (!module.EnableChannel(channel))
                         {
                             await
-                                e.Channel.SendMessage(
+                                e.Channel.SafeSendMessage(
                                     $"Module `{module.Id}` was already enabled for channel `{channel.Name}`.");
                             return;
                         }
                         _channelModulesDictionary.AddModuleToSave(module.Id, e.Channel.Id);
-                        await e.Channel.SendMessage($"Module `{module.Id}` was enabled for channel `{channel.Name}`.");
+                        await e.Channel.SafeSendMessage($"Module `{module.Id}` was enabled for channel `{channel.Name}`.");
                     });
 
                 group.CreateCommand("channel disable")
@@ -87,7 +100,7 @@ namespace Stormbot.Bot.Core.Modules
 
                         if (!module.FilterType.HasFlag(ModuleFilter.ChannelWhitelist))
                         {
-                            await e.Channel.SendMessage("This module doesn't support being enabled for channel.");
+                            await e.Channel.SafeSendMessage("This module doesn't support being enabled for channel.");
                             return;
                         }
 
@@ -96,12 +109,12 @@ namespace Stormbot.Bot.Core.Modules
                         if (!module.DisableChannel(channel))
                         {
                             await
-                                e.Channel.SendMessage(
+                                e.Channel.SafeSendMessage(
                                     $"Module `{module.Id}` was not enabled for channel `{channel.Name}`.");
                             return;
                         }
                         _channelModulesDictionary.DeleteModuleFromSave(module.Id, e.Channel.Id);
-                        await e.Channel.SendMessage($"Module `{module.Id}` was disabled for channel `{channel.Name}`.");
+                        await e.Channel.SafeSendMessage($"Module `{module.Id}` was disabled for channel `{channel.Name}`.");
                     });
 
                 group.CreateCommand("server enable")
@@ -114,7 +127,15 @@ namespace Stormbot.Bot.Core.Modules
 
                         if (!module.FilterType.HasFlag(ModuleFilter.ServerWhitelist))
                         {
-                            await e.Channel.SendMessage("This module doesn't support being enabled for servers.");
+                            await e.Channel.SafeSendMessage("This module doesn't support being enabled for servers.");
+                            return;
+                        }
+
+                        if (PrivateModules.FirstOrDefault(m => m.ToLowerInvariant() == module.Id) != null &&
+                            e.User.Id != Constants.UserOwner)
+                        {
+                            await
+                                e.Channel.SafeSendMessage("This module is private. Use }contact for more information.");
                             return;
                         }
 
@@ -123,12 +144,12 @@ namespace Stormbot.Bot.Core.Modules
                         if (!module.EnableServer(server))
                         {
                             await
-                                e.Channel.SendMessage(
+                                e.Channel.SafeSendMessage(
                                     $"Module `{module.Id}` was already enabled for server `{server.Name}`.");
                             return;
                         }
                         _serverModulesDictionary.AddModuleToSave(module.Id, e.Server.Id);
-                        await e.Channel.SendMessage($"Module `{module.Id}` was enabled for server `{server.Name}`.");
+                        await e.Channel.SafeSendMessage($"Module `{module.Id}` was enabled for server `{server.Name}`.");
 
                     });
                 group.CreateCommand("server disable")
@@ -141,7 +162,7 @@ namespace Stormbot.Bot.Core.Modules
 
                         if (!module.FilterType.HasFlag(ModuleFilter.ServerWhitelist))
                         {
-                            await e.Channel.SendMessage("This module doesn't support being enabled for servers.");
+                            await e.Channel.SafeSendMessage("This module doesn't support being enabled for servers.");
                             return;
                         }
 
@@ -150,12 +171,12 @@ namespace Stormbot.Bot.Core.Modules
                         if (!module.DisableServer(server))
                         {
                             await
-                                e.Channel.SendMessage(
+                                e.Channel.SafeSendMessage(
                                     $"Module `{module.Id}` was not enabled for server `{server.Name}`.");
                             return;
                         }
                         _serverModulesDictionary.DeleteModuleFromSave(module.Id, e.Server.Id);
-                        await e.Channel.SendMessage($"Module `{module.Id}` was disabled for server `{server.Name}`.");
+                        await e.Channel.SafeSendMessage($"Module `{module.Id}` was disabled for server `{server.Name}`.");
                     });
                 group.CreateCommand("list")
                     .Do(async e =>
@@ -173,7 +194,7 @@ namespace Stormbot.Bot.Core.Modules
                             builder.AppendLine("`");
                         }
                         
-                        await e.Channel.SendMessage(builder.ToString());
+                        await e.Channel.SafeSendMessage(builder.ToString());
                     });
             });
 
@@ -201,14 +222,14 @@ namespace Stormbot.Bot.Core.Modules
             if (module == null)
             {
                 if (useCallback)
-                    await callback.SendMessage("Unknown module");
+                    await callback.SafeSendMessage("Unknown module");
                 return null;
             }
             if (module.FilterType == ModuleFilter.None ||
                 module.FilterType == ModuleFilter.AlwaysAllowPrivate)
             {
                 if (useCallback)
-                    await callback.SendMessage("This module is global and cannot be enabled/disabled.");
+                    await callback.SafeSendMessage("This module is global and cannot be enabled/disabled.");
                 return null;
             }
             return module;

@@ -133,17 +133,26 @@ namespace Stormbot.Bot.Core.Modules.Audio
 
                 if (PlaybackChannel == null)
                 {
-                    await ChatChannel.SendMessage("Audio playback channel has not been set.");
+                    await ChatChannel.SafeSendMessage("Audio playback channel has not been set.");
                     return;
                 }
 
                 if (PlaybackChannel.Type != ChannelType.Voice)
                 {
-                    await ChatChannel.SendMessage("Audio playback channel type is not voice.");
+                    await ChatChannel.SafeSendMessage("Audio playback channel type is not voice.");
                     return;
                 }
 
-                _voiceClient = await _client.Audio().Join(PlaybackChannel);
+                // check if we have talk permission in channel.
+                if (!PlaybackChannel.Server.CurrentUser.GetPermissions(PlaybackChannel).Speak)
+                {
+                    await ChatChannel.SafeSendMessage($"I don't have permission to speak in `{PlaybackChannel.Name}`.");
+                    return;
+                }
+
+                _voiceClient = await _client.Audio().SafeJoin(PlaybackChannel, ChatChannel);
+                if (_voiceClient == null) return;
+
 
                 while (true)
                 {
@@ -176,7 +185,7 @@ namespace Stormbot.Bot.Core.Modules.Audio
             {
                 if (!Playlist.Any())
                 {
-                    await ChatChannel.SendMessage("No tracks in playlist.");
+                    await ChatChannel.SafeSendMessage("No tracks in playlist.");
                     return true;
                 }
                 return false;
@@ -188,13 +197,13 @@ namespace Stormbot.Bot.Core.Modules.Audio
 
                 if (PlaybackChannel == null)
                 {
-                    await ChatChannel.SendMessage("Playback channel wasn't set when attempting to start track playback.");
+                    await ChatChannel.SafeSendMessage("Playback channel wasn't set when attempting to start track playback.");
                     return;
                 }
 
                 if (_voiceClient == null)
                 {
-                    await ChatChannel.SendMessage("Voice client wasn't set when attempting to start track playback.");
+                    await ChatChannel.SafeSendMessage("Voice client wasn't set when attempting to start track playback.");
                     return;
                 }
 
@@ -295,15 +304,15 @@ namespace Stormbot.Bot.Core.Modules.Audio
                 {
                     if (CurrentTrack != null)
                         await
-                            ChatChannel.SendMessage(
+                            ChatChannel.SafeSendMessage(
                                 $"Currently playing: `{CurrentTrack.Name}` [`{CurrentTrack.Length}`]");
                     else
-                        await ChatChannel.SendMessage("No track playing");
+                        await ChatChannel.SafeSendMessage("No track playing");
                 }
                 catch (IndexOutOfRangeException)
                 {
                     await
-                        ChatChannel.SendMessage(
+                        ChatChannel.SafeSendMessage(
                             $"Welp something went wrong with the Track index, which has been reset so try again. \r\n Debug: index {TrackIndex} size {Playlist.Count}");
                     TrackIndex = 0;
                 }
@@ -387,7 +396,7 @@ namespace Stormbot.Bot.Core.Modules.Audio
                                 if (voiceChannel == null)
                                 {
                                     await
-                                        e.Channel.SendMessage(
+                                        e.Channel.SafeSendMessage(
                                             $"Voice channel with the name of {channelQuery} was not found.");
                                     return;
                                 }
@@ -396,7 +405,7 @@ namespace Stormbot.Bot.Core.Modules.Audio
 
                             if (audio.PlaybackChannel == null)
                             {
-                                await e.Channel.SendMessage("Playback channel not set.");
+                                await e.Channel.SafeSendMessage("Playback channel not set.");
                                 return;
                             }
 
@@ -417,7 +426,7 @@ namespace Stormbot.Bot.Core.Modules.Audio
 
                             if (audio.PlaybackChannel != null)
                                 await
-                                    e.Channel.SendMessage($"Set playback channel to \"`{audio.PlaybackChannel.Name}`\"");
+                                    e.Channel.SafeSendMessage($"Set playback channel to \"`{audio.PlaybackChannel.Name}`\"");
                         });
                     // todo : move to channel command
                 });
@@ -433,12 +442,12 @@ namespace Stormbot.Bot.Core.Modules.Audio
 
                         if (result == null)
                         {
-                            await e.Channel.SendMessage($"Failed getting the stream url for `{loc}.");
+                            await e.Channel.SafeSendMessage($"Failed getting the stream url for `{loc}.");
                             return;
                         }
 
                         GetAudio(e.Channel).Playlist.Add(result);
-                        await e.Channel.SendMessage($"Added `{result.Name}` to the playlist.");
+                        await e.Channel.SafeSendMessage($"Added `{result.Name}` to the playlist.");
                     });
 
                 group.CreateCommand("setpos")
@@ -460,7 +469,7 @@ namespace Stormbot.Bot.Core.Modules.Audio
                         TrackData remData = audio.Playlist[remIndex];
                         audio.Playlist.RemoveAt(remIndex);
 
-                        await e.Channel.SendMessage($"Removed track `{remData.Name}` from the playlist.");
+                        await e.Channel.SafeSendMessage($"Removed track `{remData.Name}` from the playlist.");
                     });
                 group.CreateCommand("list")
                     .Description("List the songs in the current playlist.")
@@ -470,7 +479,7 @@ namespace Stormbot.Bot.Core.Modules.Audio
 
                         if (!audio.Playlist.Any())
                         {
-                            await e.Channel.SendMessage("Playlist is empty.");
+                            await e.Channel.SafeSendMessage("Playlist is empty.");
                             return;
                         }
                         StringBuilder builder = new StringBuilder();
@@ -483,7 +492,7 @@ namespace Stormbot.Bot.Core.Modules.Audio
                             builder.AppendLine($"`{i + 1}: {audio.Playlist[i].Name}`");
                         }
 
-                        await e.Channel.SendMessage(builder.ToString());
+                        await e.Channel.SafeSendMessage(builder.ToString());
                     });
                 group.CreateCommand("clear")
                     .Description("Stops music and clears the playlist.")

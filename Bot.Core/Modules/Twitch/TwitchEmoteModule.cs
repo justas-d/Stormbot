@@ -10,7 +10,7 @@ using StrmyCore;
 
 namespace Stormbot.Bot.Core.Modules.Twitch
 {
-    public class TwitchEmoteService : IDataModule
+    public class TwitchEmoteModule : IDataModule
     {
         private HttpService _http;
         private DiscordClient _client;
@@ -56,7 +56,7 @@ namespace Stormbot.Bot.Core.Modules.Twitch
                 string emotePath = await ResolveEmoteDir(emote);
                 if (!File.Exists(emotePath)) return; // todo : lower case == upper case in this case. KAPPA = Kappa
 
-                await args.Channel.SendFile(emotePath);
+                await args.Channel.SafeSendFile(emotePath);
             };
         }
 

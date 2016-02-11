@@ -50,11 +50,11 @@ namespace Stormbot.Bot.Core.Modules.Relay
                                 await Subscribe(channel, e.Channel);
                             else
                                 await
-                                    e.Channel.SendMessage(
+                                    e.Channel.SafeSendMessage(
                                         $"{channel}'s view count ({viewers}) is currently over the view barrier ({MaxViewsPerChannel}), therefore, for the sake of not getting a cooldown for spamming Discord, we cannot connect to this channel.");
                         }
                         else
-                            await e.Channel.SendMessage($"{channel} channel is currently offline.");
+                            await e.Channel.SafeSendMessage($"{channel} channel is currently offline.");
                     });
 
                 group.CreateCommand("disconnect")
@@ -73,7 +73,7 @@ namespace Stormbot.Bot.Core.Modules.Relay
 
                         if (!twitchSub.Any())
                         {
-                            await e.Channel.SendMessage("This channel isin't subscribed to any twitch channels.");
+                            await e.Channel.SafeSendMessage("This channel isin't subscribed to any twitch channels.");
                             return;
                         }
 
@@ -81,7 +81,7 @@ namespace Stormbot.Bot.Core.Modules.Relay
                         foreach (string twitchChannel in twitchSub)
                             builder.AppendLine($"* {twitchChannel}");
 
-                        await e.Channel.SendMessage($"{builder.ToString()}```");
+                        await e.Channel.SafeSendMessage($"{builder.ToString()}```");
                     });
             });
 
@@ -112,7 +112,7 @@ namespace Stormbot.Bot.Core.Modules.Relay
                 if (e.Message.Text.StartsWith(EscapePrefix)) return;
 
                 foreach (Channel relay in _relays[e.Message.Channel])
-                    await relay.SendMessage($"**Twitch**: `<{e.Message.Username}> {e.Message.Text}`");
+                    await relay.SafeSendMessage($"**Twitch**: `<{e.Message.Username}> {e.Message.Text}`");
             };
 
             _twitch.ChannelLeave += (s, e) =>
@@ -164,7 +164,7 @@ namespace Stormbot.Bot.Core.Modules.Relay
             if (!_relays[twitchChannel].Any())
                 _twitch.PartChannel(twitchChannel);
 
-            await discordChannel.SendMessage($"Unsubscribed from twitch chat: {twitchChannel}");
+            await discordChannel.SafeSendMessage($"Unsubscribed from twitch chat: {twitchChannel}");
         }
 
         private async Task Subscribe(string twitchChannel, Channel discordChannel)
@@ -196,7 +196,7 @@ namespace Stormbot.Bot.Core.Modules.Relay
             subRef.Add(discordChannel);
             _serializeRelays[twitchChannel].Add(discordChannel.Id); // add it to the serialize data.
 
-            await discordChannel.SendMessage($"Subscribed to twitch chat: {twitchChannel}");
+            await discordChannel.SafeSendMessage($"Subscribed to twitch chat: {twitchChannel}");
         }
 
         #region TwitchApiWrap
@@ -205,7 +205,6 @@ namespace Stormbot.Bot.Core.Modules.Relay
         private async Task<dynamic> GetChannelData(string channel)
         {
             string callback = await Utils.AsyncDownloadRaw($"https://api.twitch.tv/kraken/streams/{channel}");
-
             return string.IsNullOrEmpty(callback) ? null : JObject.Parse(callback);
         }
 

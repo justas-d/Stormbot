@@ -43,7 +43,7 @@ namespace Stormbot.Bot.Core.Modules
                         builder.AppendLine($"- Position: {channel.Position}");
                         builder.AppendLine($"- Parent server id: {channel.Server.Id}");
 
-                        await e.Channel.SendMessage($"{builder}```");
+                        await e.Channel.SafeSendMessage($"{builder}```");
                     });
                 group.CreateCommand("info")
                     .Description("Displays information about the bot.")
@@ -57,7 +57,7 @@ namespace Stormbot.Bot.Core.Modules
                         builder.AppendLine($"- Memory Usage: {Math.Round(GC.GetTotalMemory(false)/(1024.0*1024.0), 2)} MB");
                         builder.AppendLine($"- Ffmpeg Process count: {Constants.FfmpegProcessCount}");
 
-                        await e.Channel.SendMessage($"{builder}```");
+                        await e.Channel.SafeSendMessage($"{builder}```");
                     });
 
                 group.CreateCommand("contact")
@@ -65,7 +65,7 @@ namespace Stormbot.Bot.Core.Modules
                     .Do(async e =>
                     {
                         await
-                            e.Channel.SendMessage(
+                            e.Channel.SafeSendMessage(
                                 $"**Reach me at**:\r\n```- Steam http://steamcommunity.com/id/SSStormy/```");
                     });
             });
@@ -75,7 +75,7 @@ namespace Stormbot.Bot.Core.Modules
         {
             if (user == null)
             {
-                await textChannel.SendMessage("User not found.");
+                await textChannel.SafeSendMessage("User not found.");
                 return;
             }
 
@@ -84,7 +84,7 @@ namespace Stormbot.Bot.Core.Modules
             builder.AppendLine($"- Id: {user.Id}");
             builder.AppendLine($"- Avatar: {user.AvatarUrl}");
             builder.AppendLine($"- Joined: {user.JoinedAt} ");
-            await textChannel.SendMessage($"{builder}```");
+            await textChannel.SafeSendMessage($"{builder}```");
         }
     }
 }

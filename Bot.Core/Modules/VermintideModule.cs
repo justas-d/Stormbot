@@ -48,7 +48,7 @@ namespace Stormbot.Bot.Core.Modules
                         if (string.IsNullOrEmpty(diff))
                             diff = _difficulties.PickRandom();
 
-                        await e.Channel.SendMessage($"{_missions.PickRandom()} on {diff}");
+                        await e.Channel.SafeSendMessage($"{_missions.PickRandom()} on {diff}");
                     });
             });
         }

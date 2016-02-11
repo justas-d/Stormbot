@@ -82,24 +82,27 @@ namespace Stormbot.Bot.Core
 
             Client.UsingPermissionLevels((u, c) =>
             {
-                if (u.Id == Constants.UserOwner)
-                    return (int)PermissionLevel.BotOwner;
-
                 if (u.Server != null)
                 {
                     if (Equals(u, c.Server.Owner))
                         return (int)PermissionLevel.ServerOwner;
+
                     ServerPermissions serverPerms = u.ServerPermissions;
                     if (serverPerms.ManageRoles)
                         return (int)PermissionLevel.ServerAdmin;
                     if (serverPerms.ManageMessages && serverPerms.KickMembers && serverPerms.BanMembers)
                         return (int)PermissionLevel.ServerModerator;
+
                     ChannelPermissions channelPerms = u.GetPermissions(c);
                     if (channelPerms.ManagePermissions)
                         return (int)PermissionLevel.ChannelAdmin;
                     if (channelPerms.ManageMessages)
                         return (int)PermissionLevel.ChannelModerator;
                 }
+
+                if (u.Id == Constants.UserOwner)
+                    return (int)PermissionLevel.BotOwner;
+
                 return (int)PermissionLevel.User;
             });
 
@@ -118,7 +121,7 @@ namespace Stormbot.Bot.Core
             Client.AddModule<ExecuteModule>("Execute", ModuleFilter.ServerWhitelist | ModuleFilter.ChannelWhitelist);
             Client.AddModule<TerrariaRelayModule>("Terraria Relay", ModuleFilter.ChannelWhitelist | ModuleFilter.ServerWhitelist);
             Client.AddModule<TwitchRelayModule>("Twitch Relay", ModuleFilter.ChannelWhitelist | ModuleFilter.ServerWhitelist);
-            Client.AddModule<TwitchEmoteService>("Twitch Emotes", ModuleFilter.ServerWhitelist | ModuleFilter.ChannelWhitelist);
+            Client.AddModule<TwitchEmoteModule>("Twitch Emotes", ModuleFilter.ServerWhitelist | ModuleFilter.ChannelWhitelist);
             Client.AddModule<AnnouncementModule>("Annoucements", ModuleFilter.ServerWhitelist);
             Client.AddModule<VermintideModule>("Vermintide", ModuleFilter.ServerWhitelist | ModuleFilter.ChannelWhitelist);
 #if DEBUG_DEV

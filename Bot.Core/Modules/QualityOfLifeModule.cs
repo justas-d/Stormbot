@@ -67,7 +67,7 @@ namespace Stormbot.Bot.Core.Modules
                         List<ReminderData> userRem = _reminders.Where(r => r.User == e.User.Id).ToList();
                         if (!userRem.Any())
                         {
-                            await e.Channel.SendMessage($"I have no reminders set for `{e.User.Name}`");
+                            await e.Channel.SafeSendMessage($"I have no reminders set for `{e.User.Name}`");
                             return;
                         }
 
@@ -78,7 +78,7 @@ namespace Stormbot.Bot.Core.Modules
                             builder.AppendLine(
                                 $"`{rem.EndTime,-20}` Remaining time: `{(rem.EndTime - DateTime.Now).ToString(@"hh\:mm\:ss")}`");
 
-                        await e.Channel.SendMessage(builder.ToString());
+                        await e.Channel.SafeSendMessage(builder.ToString());
                     });
 
                 // todo : move twink to personal module
@@ -101,35 +101,32 @@ namespace Stormbot.Bot.Core.Modules
                     {
                         string rawSpan = e.GetArg("timespan");
                         _reminders.Add(new ReminderData(e.User.Id, TimeSpan.Parse(rawSpan), e.GetArg("reason")));
-                        await e.Channel.SendMessage($"Reminding `{e.User.Name}` in `{rawSpan}`");
+                        await e.Channel.SafeSendMessage($"Reminding `{e.User.Name}` in `{rawSpan}`");
                     });
                 group.CreateCommand("google")
-                    .MinPermissions((int) PermissionLevel.User)
                     .Description("Lmgtfy")
                     .Parameter("query", ParameterType.Unparsed)
                     .Do(async e =>
                     {
                         string query = e.GetArg("query");
                         if (string.IsNullOrEmpty(query)) return;
-                        await e.Channel.SendMessage($"http://lmgtfy.com/?q={HttpUtility.UrlEncode(query)}");
+                        await e.Channel.SafeSendMessage($"http://lmgtfy.com/?q={HttpUtility.UrlEncode(query)}");
                     });
 
                 group.CreateCommand("quote")
-                    .MinPermissions((int) PermissionLevel.User)
                     .Description("Prints a quote out from your servers' quote list.")
                     .Do(async e =>
                     {
                         string quote = GetQuotes(e.Server).PickRandom();
                         if (quote == null)
                         {
-                            await e.Channel.SendMessage($"Server quote list is empty.");
+                            await e.Channel.SafeSendMessage($"Server quote list is empty.");
                             return;
                         }
-                        await e.Channel.SendMessage($"`{quote}`");
+                        await e.Channel.SafeSendMessage($"`{quote}`");
                     });
 
                 group.CreateCommand("addquote")
-                    .MinPermissions((int) PermissionLevel.User)
                     .Description("Adds a quote to your servers' quote list.")
                     .Parameter("quote", ParameterType.Unparsed)
                     .Do(async e =>
@@ -137,11 +134,11 @@ namespace Stormbot.Bot.Core.Modules
                         string input = e.GetArg("quote");
                         if (string.IsNullOrEmpty(input))
                         {
-                            await e.Channel.SendMessage("Input cannot be empty.");
+                            await e.Channel.SafeSendMessage("Input cannot be empty.");
                             return;
                         }
                         GetQuotes(e.Server).Add(input);
-                        await e.Channel.SendMessage("Added quote.");
+                        await e.Channel.SafeSendMessage("Added quote.");
                     });
 
                 // todo : move qupte to personal module
@@ -159,6 +156,9 @@ namespace Stormbot.Bot.Core.Modules
 
             manager.CreateCommands("color", group =>
             {
+                // make sure we have permission to manage roles
+                group.AddCheck((cmd, usr, chnl) => chnl.Server.CurrentUser.ServerPermissions.ManageRoles);
+
                 group.CreateCommand("set")
                     .Description("Sets your username to a hex color. Format: RRGGBB")
                     .Parameter("hex")
@@ -185,10 +185,7 @@ namespace Stormbot.Bot.Core.Modules
                 group.CreateCommand("clean")
                     .MinPermissions((int) PermissionLevel.ServerModerator)
                     .Description("Removes unused color roles. Gets automatically called whenever a color is set.")
-                    .Do(async e =>
-                    {
-                        await CleanColorRoles(e.Server);
-                    });
+                    .Do(async e => await CleanColorRoles(e.Server));
             });
 
             if (!_isReminderTimerRunning)
@@ -236,7 +233,7 @@ namespace Stormbot.Bot.Core.Modules
                         User user = _client.GetUser(_reminders[i].User);
 
                         if (user.PrivateChannel == null) await user.CreatePMChannel();
-                        await user.PrivateChannel.SendMessage(
+                        await user.PrivateChannel.SafeSendMessage(
                             $"Paging you about the reminder you've set at `{_reminders[i].CreateTime}` for \"{_reminders[i].Reason}\"");
                         _reminders.RemoveAt(i);
                     }

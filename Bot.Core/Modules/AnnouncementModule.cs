@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
+using Discord.Commands.Permissions.Levels;
 using Discord.Modules;
 using Newtonsoft.Json;
 using Stormbot.Bot.Core.Services;
@@ -71,6 +72,8 @@ namespace Stormbot.Bot.Core.Modules
 
             manager.CreateCommands("autorole", group =>
             {
+                group.MinPermissions((int) PermissionLevel.ServerAdmin);
+
                 // commands that are available when the server doesnt have an auto role set on join.
                 group.CreateGroup("", noSubGroup =>
                 {
@@ -86,14 +89,14 @@ namespace Stormbot.Bot.Core.Modules
 
                             if (role == null)
                             {
-                                await e.Channel.SendMessage($"A role with the name of `{roleQuery}` was not found.");
+                                await e.Channel.SafeSendMessage($"A role with the name of `{roleQuery}` was not found.");
                                 return;
                             }
 
                             _joinedRoleSubs.TryAdd(e.Server.Id, role.Id);
 
                             await
-                                e.Channel.SendMessage($"Created an auto role asigned for new users. Role: {role.Name}");
+                                e.Channel.SafeSendMessage($"Created an auto role asigned for new users. Role: {role.Name}");
                         });
                 });
 
@@ -116,18 +119,20 @@ namespace Stormbot.Bot.Core.Modules
 
                             if (role == null)
                             {
-                                await e.Channel.SendMessage($"A role with the name of `{roleQuery}` was not found.");
+                                await e.Channel.SafeSendMessage($"A role with the name of `{roleQuery}` was not found.");
                                 return;
                             }
                             _joinedRoleSubs[e.Server.Id] = role.Id;
 
-                            await e.Channel.SendMessage($"Set the auto role assigner role to `{role.Name}`.");
+                            await e.Channel.SafeSendMessage($"Set the auto role assigner role to `{role.Name}`.");
                         });
                 });
             });
 
             manager.CreateCommands("announce", group =>
             {
+                group.MinPermissions((int) PermissionLevel.ServerModerator);
+
                 group.CreateGroup("join", joinGroup =>
                 {
                     // joinGroup callback exists commands
@@ -148,7 +153,7 @@ namespace Stormbot.Bot.Core.Modules
                             {
                                 string msg = e.GetArg("message");
                                 _userJoinedSubs[e.Server.Id].Message = msg;
-                                await e.Channel.SendMessage($"Set join message to {msg}");
+                                await e.Channel.SafeSendMessage($"Set join message to {msg}");
                             });
                         existsJoin.CreateCommand("channel")
                             .Description("Sets the callback channel for this servers join announcements.")
@@ -161,12 +166,12 @@ namespace Stormbot.Bot.Core.Modules
 
                                 if (channel == null)
                                 {
-                                    await e.Channel.SendMessage($"Channel with the name {channelName} was not found.");
+                                    await e.Channel.SafeSendMessage($"Channel with the name {channelName} was not found.");
                                     return;
                                 }
 
                                 _userJoinedSubs[e.Server.Id].Channel = channel;
-                                await e.Channel.SendMessage($"Set join callback to channel {channel.Name}");
+                                await e.Channel.SafeSendMessage($"Set join callback to channel {channel.Name}");
                             });
                         existsJoin.CreateCommand("destroy")
                             .Description("Stops announcing when new users have joined this server.")
@@ -174,7 +179,7 @@ namespace Stormbot.Bot.Core.Modules
                             {
                                 _userJoinedSubs[e.Server.Id].IsEnabled = false;
                                 await
-                                    e.Channel.SendMessage(
+                                    e.Channel.SafeSendMessage(
                                         "Disabled user join messages. You can re-enable them at any time.");
                             });
                     });
@@ -199,7 +204,7 @@ namespace Stormbot.Bot.Core.Modules
                                     _userJoinedSubs.TryAdd(e.Server.Id, new UserEventCallback(e.Channel, DefaultMessage));
 
                                 await
-                                    e.Channel.SendMessage(
+                                    e.Channel.SafeSendMessage(
                                         "Enabled user join messages.\r\nYou can now change the channel and the message by typing !help announce join.");
                             });
                     });
@@ -225,7 +230,7 @@ namespace Stormbot.Bot.Core.Modules
                             {
                                 string msg = e.GetArg("message");
                                 _userLeftSubs[e.Server.Id].Message = msg;
-                                await e.Channel.SendMessage($"Set leave message to {msg}");
+                                await e.Channel.SafeSendMessage($"Set leave message to {msg}");
                             });
                         existsLeave.CreateCommand("channel")
                             .Description("Sets the callback channel for this servers leave announcements.")
@@ -238,12 +243,12 @@ namespace Stormbot.Bot.Core.Modules
 
                                 if (channel == null)
                                 {
-                                    await e.Channel.SendMessage($"Channel with the name {channelName} was not found.");
+                                    await e.Channel.SafeSendMessage($"Channel with the name {channelName} was not found.");
                                     return;
                                 }
 
                                 _userLeftSubs[e.Server.Id].Channel = channel;
-                                await e.Channel.SendMessage($"Set leave callback to channel {channel.Name}");
+                                await e.Channel.SafeSendMessage($"Set leave callback to channel {channel.Name}");
                             });
                         existsLeave.CreateCommand("destroy")
                             .Description("Stops announcing when users have left joined this server.")
@@ -251,7 +256,7 @@ namespace Stormbot.Bot.Core.Modules
                             {
                                 _userLeftSubs[e.Server.Id].IsEnabled = false;
                                 await
-                                    e.Channel.SendMessage(
+                                    e.Channel.SafeSendMessage(
                                         "Disabled user join messages. You can re-enable them at any time.");
                             });
                     });
@@ -276,7 +281,7 @@ namespace Stormbot.Bot.Core.Modules
                                     _userLeftSubs.TryAdd(e.Server.Id, new UserEventCallback(e.Channel, DefaultMessage));
 
                                 await
-                                    e.Channel.SendMessage(
+                                    e.Channel.SafeSendMessage(
                                         "Enabled user leave messages.\r\nYou can now change the channel and the message by typing !help announce leave.");
                             });
                     });
@@ -289,7 +294,7 @@ namespace Stormbot.Bot.Core.Modules
                 {
                     UserEventCallback callback = _userJoinedSubs[e.Server.Id];
                     if (callback.IsEnabled)
-                        await callback.Channel.SendMessage(ParseString(callback.Message, e.User, e.Server));
+                        await callback.Channel.SafeSendMessage(ParseString(callback.Message, e.User, e.Server));
                 }
 
                 if (_joinedRoleSubs.ContainsKey(e.Server.Id))
@@ -303,12 +308,12 @@ namespace Stormbot.Bot.Core.Modules
 
                         Channel callback = e.Server.TextChannels.FirstOrDefault();
                         if (callback != null)
-                            await callback.SendMessage("Auto role assigner was given a non existant role. Removing.");
+                            await callback.SafeSendMessage("Auto role assigner was given a non existant role. Removing.");
 
                         return;
                     }
 
-                    await e.User.AddRoles(role);
+                    await e.User.SafeAddRoles(e.Server.CurrentUser, role);
                 }
             };
 
@@ -319,7 +324,7 @@ namespace Stormbot.Bot.Core.Modules
 
                 UserEventCallback callback = _userLeftSubs[e.Server.Id];
                 if (callback.IsEnabled)
-                    await callback.Channel.SendMessage(ParseString(callback.Message, e.User, e.Server));
+                    await callback.Channel.SafeSendMessage(ParseString(callback.Message, e.User, e.Server));
             };
         }
 
@@ -329,7 +334,7 @@ namespace Stormbot.Bot.Core.Modules
             _joinedRoleSubs.TryRemove(serverId, out ignored);
 
             if (shouldCallback)
-                await callback.SendMessage("Removed auto role assigner for this server.");
+                await callback.SafeSendMessage("Removed auto role assigner for this server.");
         }
 
         public void OnDataLoad()

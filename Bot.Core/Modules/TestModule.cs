@@ -17,7 +17,7 @@ namespace Stormbot.Bot.Core.Modules
                     .Do(async e =>
                     {
                         await e.Message.Delete();
-                        await e.Channel.SendMessage(e.GetArg("value"));
+                        await e.Channel.SafeSendMessage(e.GetArg("value"));
                     });
             });
         }

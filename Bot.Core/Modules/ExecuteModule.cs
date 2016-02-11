@@ -58,13 +58,13 @@ namespace Stormbot.Bot.Core.Modules
                                 await CSharpScript.EvaluateAsync(e.GetArg("query"), globals: new Globals(e, _client));
 
                             if (output == null || (output as Task) != null || (output as string) == string.Empty)
-                                await e.Channel.SendMessage("Output was empty or null.");
+                                await e.Channel.SafeSendMessage("Output was empty or null.");
                             else
-                                await e.Channel.SendMessage(Format.Code(output.ToString()));
+                                await e.Channel.SafeSendMessage(output.ToString());
                         }
                         catch (CompilationErrorException ex)
                         {
-                            await e.Channel.SendMessage($"Compilation failed: {Format.Code(ex.Message)}");
+                            await e.Channel.SafeSendMessage($"Compilation failed: {Format.Code(ex.Message)}");
                         }
                         GC.Collect();
                     });

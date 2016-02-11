@@ -13,6 +13,7 @@ using OpenTerrariaClient.Client;
 using OpenTerrariaClient.Model;
 using OpenTerrariaClient.Model.ID;
 using Stormbot.Bot.Core.Services;
+using StrmyCore;
 
 namespace Stormbot.Bot.Core.Modules.Relay
 {
@@ -94,7 +95,7 @@ namespace Stormbot.Bot.Core.Modules.Relay
                         {
                             TerrChannelRelay relay = GetRelay(e.Channel);
                             await
-                                e.Channel.SendMessage(
+                                e.Channel.SafeSendMessage(
                                     $"This channel is connected to:\r\n```* Ip: {relay.Host}\r\n* Port:{relay.Port}\r\n* World: {relay.Client.World.WorldName}\r\n* Players: {relay.Client.Players.Count()}```");
                         });
 
@@ -119,7 +120,7 @@ namespace Stormbot.Bot.Core.Modules.Relay
                             builder.AppendLine($"- Is Expert Mode: {relay.Client.World.IsExpertMode}");
                             builder.AppendLine($"- Is Hardmode: {relay.Client.World.IsHardmode}");
                             builder.AppendLine($"- Is Crimson: {relay.Client.World.IsCrimson}");
-                            await e.Channel.SendMessage($"{builder}```");
+                            await e.Channel.SafeSendMessage($"{builder}```");
                         });
 
                     connectedGroup.CreateCommand("travmerch")
@@ -134,7 +135,7 @@ namespace Stormbot.Bot.Core.Modules.Relay
                             if (travelingMerchant == null)
                             {
                                 await
-                                    e.Channel.SendMessage(
+                                    e.Channel.SafeSendMessage(
                                         "The travelling merchant is not currently present in the world.");
                                 return;
                             }
@@ -148,7 +149,7 @@ namespace Stormbot.Bot.Core.Modules.Relay
                                 index++;
                             }
 
-                            await e.Channel.SendMessage($"{builder}```");
+                            await e.Channel.SafeSendMessage($"{builder}```");
                         });
                 });
 
@@ -195,7 +196,7 @@ namespace Stormbot.Bot.Core.Modules.Relay
                     cfg.Player(player =>
                     {
                         player.Appearance(appear => appear.Name(relay.Channel.Name));
-                        player.Buffs(buffs => buffs.Add(10)); // invis
+                        player.Buffs(buffs => buffs.Add(BuffId.Invisibility));
                     });
                 });
 
@@ -204,11 +205,11 @@ namespace Stormbot.Bot.Core.Modules.Relay
                 {
                     if (e.Message.Text.StartsWith(EscapePrefix)) return;
 
-                    await relay.Channel.SendMessage($"**Terraria**: `<{e.Player.Appearance.Name}> {e.Message.Text}`");
+                    await relay.Channel.SafeSendMessage($"**Terraria**: `<{e.Player.Appearance.Name}> {e.Message.Text}`");
                 };
                 relay.TerrariaDisconnectedEvent = async (s, e) =>
                 {
-                    await relay.Channel.SendMessage($"Disconnected from terraria server: `{e.Reason}`");
+                    await relay.Channel.SafeSendMessage($"Disconnected from terraria server: `{e.Reason}`");
                     CleanRelay(relay);
                 };
                 relay.DiscordMessageReceivedEvent = (s, e) =>
@@ -238,11 +239,11 @@ namespace Stormbot.Bot.Core.Modules.Relay
 
                 relay.Client.ConnectAndLogin(relay.Host, relay.Port);
 
-                await relay.Channel.SendMessage($"Connected to `{relay.Host}:{relay.Port}`");
+                await relay.Channel.SafeSendMessage($"Connected to `{relay.Host}:{relay.Port}`");
             }
             catch (Exception ex)
             {
-                await relay.Channel.SendMessage(
+                await relay.Channel.SafeSendMessage(
                     $"Couldn't relay terraria server at {relay.Host}:{relay.Port}. Exception:\r\n`{ex.Message}`");
                 CleanRelay(relay);
             }
@@ -252,7 +253,7 @@ namespace Stormbot.Bot.Core.Modules.Relay
         {
             if (!_relays.Contains(relay))
             {
-                Console.WriteLine($"CleanRelay treid to clean unregisted relay.");
+                Logger.FormattedWrite("TerrariaRelay", $"CleanRelay tried to clean unregisted relay.", ConsoleColor.Red);
                 return;
             }
 

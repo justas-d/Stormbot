@@ -128,6 +128,15 @@ namespace Stormbot.Bot.Core.Modules
                         GetQuotes(e.Server).Add(input);
                         await e.Channel.SafeSendMessage("Added quote.");
                     });
+
+                group.CreateCommand("coin")
+                    .Description("Flips a coin.")
+                    .Do(async e =>
+                    {
+                        StringBuilder builder = new StringBuilder("**Coin flip**: ");
+                        builder.Append(StaticRandom.Bool() ? "Heads!" : "Tails!");
+                        await e.Channel.SafeSendMessage(builder.ToString());
+                    });
             });
 
             manager.CreateCommands("color", group =>

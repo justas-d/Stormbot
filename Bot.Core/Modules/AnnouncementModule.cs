@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
@@ -53,6 +54,7 @@ namespace Stormbot.Bot.Core.Modules
         [DataSave, DataLoad] private ConcurrentDictionary<ulong, UserEventCallback> _userJoinedSubs;
         [DataSave, DataLoad] private ConcurrentDictionary<ulong, UserEventCallback> _userLeftSubs;
         [DataSave, DataLoad] private ConcurrentDictionary<ulong, ulong> _joinedRoleSubs;
+        [DataSave, DataLoad] private ConcurrentDictionary<ulong, JosnChannel> _defaultAnnounceChannels;
 
         private const string UserNameKeyword = "|userName|";
         private const string LocationKeyword = "|location|";
@@ -69,6 +71,61 @@ namespace Stormbot.Bot.Core.Modules
         public void Install(ModuleManager manager)
         {
             _client = manager.Client;
+
+            manager.CreateCommands("announce", group =>
+            {
+                group.CreateCommand("channel")
+                    .Description("Sets the default channel of any announcements from the bot's owner.")
+                    .Parameter("channelname", ParameterType.Unparsed)
+                    .MinPermissions((int) PermissionLevel.ServerModerator)
+                    .Do(async e =>
+                    {
+                        string channelQuery = e.GetArg("channelname").ToLowerInvariant();
+                        Channel channel =
+                            e.Server.TextChannels.FirstOrDefault(c => c.Name.ToLowerInvariant() == channelQuery);
+
+                        if (channel == null)
+                        {
+                            await e.Channel.SafeSendMessage($"Channel with the name of `{channelQuery}` wasn't found.");
+                            return;
+                        }
+
+                        JosnChannel newVal = new JosnChannel(channel);
+                        _defaultAnnounceChannels.AddOrUpdate(e.Server.Id, newVal, (k, v) => newVal);
+
+                        await e.Channel.SendMessage($"Set annoucement channel to `{channel.Name}`");
+                    });
+
+                group.CreateCommand("current")
+                    .Description("Returns the current announcement channel.")
+                    .Do(async e =>
+                    {
+                        StringBuilder builder = new StringBuilder("**Announcement channel**: ");
+
+                        if (!_defaultAnnounceChannels.ContainsKey(e.Server.Id))
+                            builder.Append(e.Server.DefaultChannel);
+                        else
+                            builder.Append(_defaultAnnounceChannels[e.Server.Id].Channel.Name);
+
+                        await e.Channel.SafeSendMessage(builder.ToString());
+                    });
+
+                group.CreateCommand("message")
+                    .MinPermissions((int) PermissionLevel.BotOwner)
+                    .Parameter("msg", ParameterType.Unparsed)
+                    .Do(async e =>
+                    {
+                        string message = e.GetArg("msg");
+
+                        foreach (Server server in _client.Servers)
+                        {
+                            if (!_defaultAnnounceChannels.ContainsKey(server.Id))
+                                await server.DefaultChannel.SafeSendMessage(message);
+                            else
+                                await _defaultAnnounceChannels[server.Id].Channel.SafeSendMessage(message);
+                        }
+                    });
+            });
 
             manager.CreateCommands("autorole", group =>
             {
@@ -129,7 +186,7 @@ namespace Stormbot.Bot.Core.Modules
                 });
             });
 
-            manager.CreateCommands("announce", group =>
+            manager.CreateCommands("newuser", group =>
             {
                 group.MinPermissions((int) PermissionLevel.ServerModerator);
 
@@ -345,9 +402,14 @@ namespace Stormbot.Bot.Core.Modules
                 _userLeftSubs = new ConcurrentDictionary<ulong, UserEventCallback>();
             if (_joinedRoleSubs == null)
                 _joinedRoleSubs = new ConcurrentDictionary<ulong, ulong>();
+            if(_defaultAnnounceChannels == null)
+                _defaultAnnounceChannels = new ConcurrentDictionary<ulong, JosnChannel>();
 
             LoadChannels(_userJoinedSubs);
             LoadChannels(_userLeftSubs);
+
+            foreach (var pair in _defaultAnnounceChannels)
+                pair.Value.FinishLoading(_client);
         }
 
         private void LoadChannels(ConcurrentDictionary<ulong, UserEventCallback> dict)

@@ -82,6 +82,9 @@ namespace Stormbot.Bot.Core
 
             Client.UsingPermissionLevels((u, c) =>
             {
+                if (u.Id == Constants.UserOwner)
+                    return (int)PermissionLevel.BotOwner;
+
                 if (u.Server != null)
                 {
                     if (Equals(u, c.Server.Owner))
@@ -99,9 +102,6 @@ namespace Stormbot.Bot.Core
                     if (channelPerms.ManageMessages)
                         return (int)PermissionLevel.ChannelModerator;
                 }
-
-                if (u.Id == Constants.UserOwner)
-                    return (int)PermissionLevel.BotOwner;
 
                 return (int)PermissionLevel.User;
             });

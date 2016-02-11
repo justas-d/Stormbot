@@ -66,7 +66,7 @@ namespace Stormbot.Bot.Core.Modules
                     {
                         await
                             e.Channel.SafeSendMessage(
-                                $"**Reach me at**:\r\n```- Steam http://steamcommunity.com/id/SSStormy/```");
+                                $"**Reach me at**:\r\n`- Steam http://steamcommunity.com/id/SSStormy/`");
                     });
             });
         }

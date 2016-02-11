@@ -10,7 +10,6 @@
 #endif
         internal const string TwitchEmoteFolderDir = DataFolderDir + @"emotes\";
 
-       // internal const long RoleTrusted = 131446561547878400;
         internal const long UserOwner = 131467025456300032;
 
         internal const string RoleIdArg = "roleid";
@@ -28,6 +27,5 @@
 
         internal static int FfmpegProcessCount = 0;
 
-        //  internal const ulong TwinkChannelId = 131490784544292865;
     }
 }

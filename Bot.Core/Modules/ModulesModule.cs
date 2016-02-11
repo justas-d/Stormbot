@@ -43,7 +43,8 @@ namespace Stormbot.Bot.Core.Modules
 
         private HashSet<string> PrivateModules => new HashSet<string>()
         {
-            "Audio"
+            "Audio",
+            "Personal"
         };
 
         public void Install(ModuleManager manager)

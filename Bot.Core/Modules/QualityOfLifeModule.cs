@@ -81,18 +81,6 @@ namespace Stormbot.Bot.Core.Modules
                         await e.Channel.SafeSendMessage(builder.ToString());
                     });
 
-                // todo : move twink to personal module
-                //group.CreateCommand("twink")
-                //    .MinPermissions((int) PermissionLevel.Trusted)
-                //    .Description("Moves Rebbit and Crixius to the Portuguese Twink Containment Zone TM (R) (c)")
-                //    .Do(async e =>
-                //    {
-                //        Channel channel = e.Server.GetChannel(Constants.TwinkChannelId);
-                //        await MoveToVoice(channel,
-                //            e.Server.GetUser(Constants.CrixiusId),
-                //            e.Server.GetUser(Constants.RebbitId));
-                //    });
-
                 group.CreateCommand("remind")
                     .Description("Reminds you about something after the given time span has passed.")
                     .Parameter("timespan")
@@ -140,18 +128,6 @@ namespace Stormbot.Bot.Core.Modules
                         GetQuotes(e.Server).Add(input);
                         await e.Channel.SafeSendMessage("Added quote.");
                     });
-
-                // todo : move qupte to personal module
-                //group.CreateCommand("qupte")
-                //    .Description("Ruby for fucks sake...")
-                //    .MinPermissions((int) PermissionLevel.User)
-                //    .Do(async e =>
-                //    {
-                //        const string quptePoolDir = Constants.DataFolderDir + @"12\";
-                //        if (!Directory.Exists(quptePoolDir)) return;
-
-                //        await e.Channel.SendFile(Directory.GetFiles(quptePoolDir).PickRandom());
-                //    });
             });
 
             manager.CreateCommands("color", group =>
@@ -244,15 +220,6 @@ namespace Stormbot.Bot.Core.Modules
             {
             } //expected
             Logger.Writeline("Stopped reminder timer");
-        }
-
-        private async Task MoveToVoice(Channel voiceChannel, params User[] users)
-        {
-            foreach (User user in users.Where(user => user.Status == UserStatus.Online ||
-                                                      user.Status == UserStatus.Idle))
-            {
-                await user.Edit(voiceChannel: voiceChannel);
-            }
         }
     }
 }

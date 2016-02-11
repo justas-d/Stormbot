@@ -124,6 +124,7 @@ namespace Stormbot.Bot.Core
             Client.AddModule<TwitchEmoteModule>("Twitch Emotes", ModuleFilter.ServerWhitelist | ModuleFilter.ChannelWhitelist);
             Client.AddModule<AnnouncementModule>("Annoucements", ModuleFilter.ServerWhitelist);
             Client.AddModule<VermintideModule>("Vermintide", ModuleFilter.ServerWhitelist | ModuleFilter.ChannelWhitelist);
+            Client.AddModule<PersonalModule>("Personal", ModuleFilter.ServerWhitelist);
 #if DEBUG_DEV
             Client.AddModule<GameModule>("Game", ModuleFilter.ServerWhitelist | ModuleFilter.ChannelWhitelist | ModuleFilter.AlwaysAllowPrivate);
 #endif

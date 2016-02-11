@@ -146,6 +146,7 @@
     <Compile Include="Bot.Core\Modules\Game\GameSessionManager.cs" />
     <Compile Include="Bot.Core\Modules\InfoModule.cs" />
     <Compile Include="Bot.Core\Modules\ModulesModule.cs" />
+    <Compile Include="Bot.Core\Modules\PersonalModule.cs" />
     <Compile Include="Bot.Core\Modules\QualityOfLifeModule.cs" />
     <Compile Include="Bot.Core\Modules\ServerManagementModule.cs" />
     <Compile Include="Bot.Core\Modules\Relay\TerrariaRelayModule.cs" />

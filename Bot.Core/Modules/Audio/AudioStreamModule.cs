@@ -366,11 +366,33 @@ namespace Stormbot.Bot.Core.Modules.Audio
                     idleGroup.CreateCommand("start")
                         .Alias("play")
                         .Description("Starts the playback of the playlist.")
+                        .Parameter("channel", ParameterType.Optional)
                         .Do(async e =>
                         {
                             AudioState audio = GetAudio(e.Channel);
+                            string channelQuery = e.GetArg("channel");
 
-                            if (audio.PlaybackChannel == null && e.User.VoiceChannel != null) audio.PlaybackChannel = e.User.VoiceChannel;
+                            if (string.IsNullOrEmpty(channelQuery))
+                            {
+                                if (e.User.VoiceChannel != null)
+                                    audio.PlaybackChannel = e.User.VoiceChannel;
+                            }
+                            else
+                            {
+                                channelQuery = channelQuery.ToLowerInvariant();
+                                Channel voiceChannel =
+                                    e.Server.VoiceChannels.FirstOrDefault(
+                                        c => c.Name.ToLowerInvariant().StartsWith(channelQuery));
+
+                                if (voiceChannel == null)
+                                {
+                                    await
+                                        e.Channel.SendMessage(
+                                            $"Voice channel with the name of {channelQuery} was not found.");
+                                    return;
+                                }
+                                audio.PlaybackChannel = voiceChannel;
+                            }
 
                             if (audio.PlaybackChannel == null)
                             {

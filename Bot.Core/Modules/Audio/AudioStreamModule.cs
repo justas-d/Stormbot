@@ -165,7 +165,6 @@ namespace Stormbot.Bot.Core.Modules.Audio
                     if (await IsPlaylistEmpty())
                         return;
 
-                    await PrintCurrentTrack();
                     await StartCurrentTrackPlayback();
 
                     if (_prevFlag)
@@ -219,7 +218,10 @@ namespace Stormbot.Bot.Core.Modules.Audio
                         _skipToFlag = false;
                     }
                     else
+                    {
+                        await PrintCurrentTrack();
                         streamer.Start();
+                    }
 
 
                     int bufferSize = 1920*_client.Audio().Config.Channels;

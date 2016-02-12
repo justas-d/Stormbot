@@ -15,7 +15,7 @@ using StrmyCore;
 
 namespace Stormbot.Bot.Core.Modules.Audio
 {
-    public class AudioStreamModule : IDataModule
+    public class AudioStreamModule : IDataObject, IModule
     {
         [JsonObject(MemberSerialization.OptIn)]
         private class AudioState
@@ -520,7 +520,7 @@ namespace Stormbot.Bot.Core.Modules.Audio
             return _audioStates[chat.Server.Id];
         }
 
-        public void OnDataLoad()
+        void IDataObject.OnDataLoad()
         {
             if(_audioStates == null)
                 _audioStates = new ConcurrentDictionary<ulong, AudioState>();

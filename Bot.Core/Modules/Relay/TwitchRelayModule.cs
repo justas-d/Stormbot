@@ -14,7 +14,7 @@ using TwitchBotBase.Twitch.Bot;
 
 namespace Stormbot.Bot.Core.Modules.Relay
 {
-    public class TwitchRelayModule : IDataModule
+    public class TwitchRelayModule : IDataObject, IModule
     {
         private static readonly string EscapePrefix = "}";
         private const int MaxViewsPerChannel = 500;
@@ -234,7 +234,7 @@ namespace Stormbot.Bot.Core.Modules.Relay
 
         #endregion
 
-        public void OnDataLoad()
+        void IDataObject.OnDataLoad()
         {
 
             if (_relays == null)

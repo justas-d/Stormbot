@@ -16,7 +16,7 @@ using StrmyCore;
 
 namespace Stormbot.Bot.Core.Modules
 {
-    public class QualityOfLifeModule : IDataModule
+    public class QualityOfLifeModule : IDataObject, IModule
     {
         [Serializable]
         private class ReminderData
@@ -188,7 +188,7 @@ namespace Stormbot.Bot.Core.Modules
             return _quoteDictionary[server.Id];
         }
 
-        public void OnDataLoad()
+        void IDataObject.OnDataLoad()
         {
             if (_quoteDictionary == null)
                 _quoteDictionary = new ConcurrentDictionary<ulong, List<string>>();

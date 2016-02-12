@@ -17,7 +17,7 @@ using StrmyCore;
 
 namespace Stormbot.Bot.Core.Modules.Relay
 {
-    public class TerrariaRelayModule : IDataModule
+    public class TerrariaRelayModule : IDataObject, IModule
     {
         private const string EscapePrefix = ".";
 
@@ -276,7 +276,7 @@ namespace Stormbot.Bot.Core.Modules.Relay
             relay.Client.SocketDispose();
         }
 
-        public void OnDataLoad()
+        void IDataObject.OnDataLoad()
         {
             if (_relays == null)
                 _relays = new HashSet<TerrChannelRelay>();

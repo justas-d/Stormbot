@@ -14,7 +14,7 @@ using StrmyCore;
 
 namespace Stormbot.Bot.Core.Modules
 {
-    public class ModulesModule : IDataModule
+    public class ModulesModule : IDataObject, IModule
     {
         private ModuleService _moduleService;
         private DiscordClient _client;
@@ -237,7 +237,7 @@ namespace Stormbot.Bot.Core.Modules
             return module;
         }
 
-        void IDataModule.OnDataLoad()
+        void IDataObject.OnDataLoad()
         {
             foreach (KeyValuePair<ulong, HashSet<string>> pair in _serverModulesDictionary)
             {

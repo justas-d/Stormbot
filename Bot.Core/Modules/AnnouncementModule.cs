@@ -13,7 +13,7 @@ using StrmyCore;
 
 namespace Stormbot.Bot.Core.Modules
 {
-    public class AnnouncementModule : IDataModule
+    public class AnnouncementModule : IDataObject, IModule
     {
         [JsonObject(MemberSerialization.OptIn)]
         private class UserEventCallback
@@ -465,7 +465,7 @@ namespace Stormbot.Bot.Core.Modules
                 await callback.SafeSendMessage("Removed auto role assigner for this server.");
         }
 
-        public void OnDataLoad()
+        void IDataObject.OnDataLoad()
         {
             if (_userJoinedSubs == null)
                 _userJoinedSubs = new ConcurrentDictionary<ulong, UserEventCallback>();

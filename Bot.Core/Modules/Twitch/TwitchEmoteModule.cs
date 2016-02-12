@@ -10,7 +10,7 @@ using StrmyCore;
 
 namespace Stormbot.Bot.Core.Modules.Twitch
 {
-    public class TwitchEmoteModule : IDataModule
+    public class TwitchEmoteModule : IDataObject, IModule
     {
         private HttpService _http;
         private DiscordClient _client;
@@ -68,6 +68,6 @@ namespace Stormbot.Bot.Core.Modules.Twitch
             return null;
         }
 
-        void IDataModule.OnDataLoad() { }
+        void IDataObject.OnDataLoad() { }
     }
 }

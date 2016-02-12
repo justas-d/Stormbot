@@ -9,7 +9,7 @@ using StrmyCore;
 
 namespace Stormbot.Bot.Core.Modules.Game
 {
-    public class GameModule : IDataModule
+    public class GameModule : IDataObject, IModule
     {
         [DataLoad, DataSave] private GameSessionManager _sesh;
         private GameSessionManager GameSesh => _sesh ?? (_sesh = new GameSessionManager());
@@ -388,7 +388,7 @@ namespace Stormbot.Bot.Core.Modules.Game
                     $"Player data seems good.\r\n{player.CreateState}\r\n Use !cc finish to finish creating your character.");
         }
 
-        public void OnDataLoad()
+        void IDataObject.OnDataLoad()
         {
             // find the user associated with the gameplayer.
             foreach (GamePlayer player in GameSesh.Players.Values.Where(player => player.User == null))

@@ -52,11 +52,7 @@ namespace Stormbot.Bot.Core.DynPerm
             bool retval = false;
             DynamicPerms perms = _perms[channel.Server.Id];
 
-            // firsly do role checks.
-            foreach (AllowDenyBlock perm in perms.RolePerms)
-            {
-                if(perm.Allow)
-            }
+
 
             return retval;
         }

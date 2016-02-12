@@ -125,6 +125,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Bot.Core\DynPerm\DynamicPermissionModule.cs" />
+    <Compile Include="Bot.Core\DynPerm\JsonData.cs" />
     <Compile Include="Bot.Core\Extensions.cs" />
     <Compile Include="Bot.Core\JsonModels.cs" />
     <Compile Include="Bot.Core\Modules\AnnouncementModule.cs" />
@@ -159,6 +161,7 @@
     <Compile Include="Bot.Core\Modules\VermintideModule.cs" />
     <Compile Include="Bot.Core\PermissionLevel.cs" />
     <Compile Include="Bot.Core\Services\DataIoService.cs" />
+    <Compile Include="Bot.Core\DynPerm\DynamicPermissionService.cs" />
     <Compile Include="Bot.Core\Services\HttpService.cs" />
     <Compile Include="Bot.Core\Modules\Twitch\TwitchEmoteModule.cs" />
     <Compile Include="Bot.Core\StormBot.cs" />

@@ -106,6 +106,8 @@ namespace Stormbot.Bot.Core
                 return (int)PermissionLevel.User;
             });
 
+            Client.UsingDynamicPerms();
+
             Logger.Writeline("Connecting to Discord... ");
             await Client.Connect(_email, _password);
 

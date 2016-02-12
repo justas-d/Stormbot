@@ -141,6 +141,8 @@ namespace Stormbot.Bot.Core
             Logger.Writeline("Loading data... ");
             io.Load();
 
+            Client.SetGame("}help for commands");
+
             Logger.Writeline($" -WE ARE LIVE-{Environment.NewLine}");
         }
     }

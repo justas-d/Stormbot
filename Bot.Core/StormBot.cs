@@ -132,7 +132,7 @@ namespace Stormbot.Bot.Core
             {
                 if (_ignoredLogs.Contains(args.Severity)) return;
 
-                Logger.FormattedWrite($"[{args.Severity}] [{args.Source}]", $"{args.Message}", _colorMap[args.Severity]);
+                Logger.FormattedWrite($"{args.Severity} {args.Source}", $"{args.Message}", _colorMap[args.Severity]);
 
                 if(args.Exception != null)
                     Logger.Write($"Exception: {args.Exception}");

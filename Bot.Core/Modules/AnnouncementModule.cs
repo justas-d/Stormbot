@@ -53,10 +53,32 @@ namespace Stormbot.Bot.Core.Modules
             }
         }
 
+        [JsonObject(MemberSerialization.OptIn)]
+        private class AnnounceChannelData
+        {
+            [JsonProperty]
+            public JsonChannel Channel { get; private set; }
+
+            [JsonProperty]
+            public bool IsEnabled { get; set; }
+
+            [JsonConstructor]
+            private AnnounceChannelData(JsonChannel channel, bool isEnabled)
+            {
+                Channel = channel;
+                IsEnabled = isEnabled;
+            }
+
+            public AnnounceChannelData(Channel channel) : this(channel, true)
+            {
+
+            }
+        }
+
         [DataSave, DataLoad] private ConcurrentDictionary<ulong, UserEventCallback> _userJoinedSubs;
         [DataSave, DataLoad] private ConcurrentDictionary<ulong, UserEventCallback> _userLeftSubs;
         [DataSave, DataLoad] private ConcurrentDictionary<ulong, ulong> _joinedRoleSubs;
-        [DataSave, DataLoad] private ConcurrentDictionary<ulong, JsonChannel> _defaultAnnounceChannels;
+        [DataSave, DataLoad] private ConcurrentDictionary<ulong, AnnounceChannelData> _defaultAnnounceChannels;
 
         private const string UserNameKeyword = "|userName|";
         private const string LocationKeyword = "|location|";
@@ -76,6 +98,43 @@ namespace Stormbot.Bot.Core.Modules
 
             manager.CreateCommands("announce", group =>
             {
+                group.CreateCommand("disable")
+                    .AddCheck((cmd, usr, chnl) =>
+                    {
+                        if (_defaultAnnounceChannels.ContainsKey(chnl.Server.Id))
+                            return _defaultAnnounceChannels[chnl.Server.Id].IsEnabled;
+
+                        return true;
+                    })
+                    .Description("Disables but owner announcements on this server.")
+                    .MinPermissions((int) PermissionLevel.ServerModerator)
+                    .Do(async e =>
+                    {
+                        if (_defaultAnnounceChannels.ContainsKey(e.Server.Id))
+                            _defaultAnnounceChannels[e.Server.Id].IsEnabled = false;
+                        else
+                            _defaultAnnounceChannels.TryAdd(e.Server.Id,
+                                new AnnounceChannelData(e.Server.DefaultChannel) {IsEnabled = false});
+
+                        await e.Channel.SendMessage("Disabled owner announcements for this server.");
+                    });
+
+                group.CreateCommand("enable")
+                    .AddCheck((cmd, usr, chnl) =>
+                    {
+                        if (_defaultAnnounceChannels.ContainsKey(chnl.Server.Id))
+                            return !_defaultAnnounceChannels[chnl.Server.Id].IsEnabled;
+
+                        return false;
+                    })
+                    .MinPermissions((int) PermissionLevel.ServerModerator)
+                    .Description("Enabled but owner announcements on this server.")
+                    .Do(async e =>
+                    {
+                        _defaultAnnounceChannels[e.Server.Id].IsEnabled = true;
+                        await e.Channel.SendMessage("Enabled owner announcements for this server.");
+                    });
+
                 group.CreateCommand("channel")
                     .Description("Sets the default channel of any announcements from the bot's owner.")
                     .Parameter("channelname", ParameterType.Unparsed)
@@ -92,7 +151,7 @@ namespace Stormbot.Bot.Core.Modules
                             return;
                         }
 
-                        JsonChannel newVal = new JsonChannel(channel);
+                        AnnounceChannelData newVal = new AnnounceChannelData(channel);
                         _defaultAnnounceChannels.AddOrUpdate(e.Server.Id, newVal, (k, v) => newVal);
 
                         await e.Channel.SendMessage($"Set annoucement channel to `{channel.Name}`");
@@ -107,7 +166,7 @@ namespace Stormbot.Bot.Core.Modules
                         if (!_defaultAnnounceChannels.ContainsKey(e.Server.Id))
                             builder.Append(e.Server.DefaultChannel);
                         else
-                            builder.Append(_defaultAnnounceChannels[e.Server.Id].Channel.Name);
+                            builder.Append(_defaultAnnounceChannels[e.Server.Id].Channel.Channel.Name);
 
                         await e.Channel.SafeSendMessage(builder.ToString());
                     });
@@ -121,10 +180,16 @@ namespace Stormbot.Bot.Core.Modules
 
                         foreach (Server server in _client.Servers)
                         {
-                            if (!_defaultAnnounceChannels.ContainsKey(server.Id))
+                            AnnounceChannelData announceData;
+                            _defaultAnnounceChannels.TryGetValue(server.Id, out announceData);
+
+                            if (announceData == null)
                                 await server.DefaultChannel.SafeSendMessage(message);
                             else
-                                await _defaultAnnounceChannels[server.Id].Channel.SafeSendMessage(message);
+                            {
+                                if (announceData.IsEnabled)
+                                    await _defaultAnnounceChannels[server.Id].Channel.Channel.SafeSendMessage(message);
+                            }
                         }
                     });
             });
@@ -155,7 +220,8 @@ namespace Stormbot.Bot.Core.Modules
                             _joinedRoleSubs.TryAdd(e.Server.Id, role.Id);
 
                             await
-                                e.Channel.SafeSendMessage($"Created an auto role asigned for new users. Role: {role.Name}");
+                                e.Channel.SafeSendMessage(
+                                    $"Created an auto role asigned for new users. Role: {role.Name}");
                         });
                 });
 
@@ -225,7 +291,8 @@ namespace Stormbot.Bot.Core.Modules
 
                                 if (channel == null)
                                 {
-                                    await e.Channel.SafeSendMessage($"Channel with the name {channelName} was not found.");
+                                    await
+                                        e.Channel.SafeSendMessage($"Channel with the name {channelName} was not found.");
                                     return;
                                 }
 
@@ -302,7 +369,8 @@ namespace Stormbot.Bot.Core.Modules
 
                                 if (channel == null)
                                 {
-                                    await e.Channel.SafeSendMessage($"Channel with the name {channelName} was not found.");
+                                    await
+                                        e.Channel.SafeSendMessage($"Channel with the name {channelName} was not found.");
                                     return;
                                 }
 
@@ -367,7 +435,8 @@ namespace Stormbot.Bot.Core.Modules
 
                         Channel callback = e.Server.TextChannels.FirstOrDefault();
                         if (callback != null)
-                            await callback.SafeSendMessage("Auto role assigner was given a non existant role. Removing.");
+                            await
+                                callback.SafeSendMessage("Auto role assigner was given a non existant role. Removing.");
 
                         return;
                     }
@@ -404,18 +473,18 @@ namespace Stormbot.Bot.Core.Modules
                 _userLeftSubs = new ConcurrentDictionary<ulong, UserEventCallback>();
             if (_joinedRoleSubs == null)
                 _joinedRoleSubs = new ConcurrentDictionary<ulong, ulong>();
-            if(_defaultAnnounceChannels == null)
-                _defaultAnnounceChannels = new ConcurrentDictionary<ulong, JsonChannel>();
+            if (_defaultAnnounceChannels == null)
+                _defaultAnnounceChannels = new ConcurrentDictionary<ulong, AnnounceChannelData>();
 
             LoadChannels(_userJoinedSubs);
             LoadChannels(_userLeftSubs);
 
             foreach (var pair in _defaultAnnounceChannels)
             {
-                if (!pair.Value.FinishLoading(_client))
+                if (!pair.Value.Channel.FinishLoading(_client))
                 {
                     Logger.FormattedWrite("AnnounceLoad",
-                        $"Failed loading JsonChannel id {pair.Value.ChannelId}. Removing", ConsoleColor.Yellow);
+                        $"Failed loading JsonChannel id {pair.Value.Channel.ChannelId}. Removing", ConsoleColor.Yellow);
                     _defaultAnnounceChannels.Remove(pair.Key);
                 }
             }

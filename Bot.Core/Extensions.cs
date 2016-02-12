@@ -75,6 +75,10 @@ namespace Stormbot.Bot.Core
         public static async Task<Message> SafeSendMessage(this Channel textChannel, string msg)
         {
             if(textChannel.Type != ChannelType.Text) throw new ArgumentException(nameof(textChannel));
+
+            if(textChannel.Server == null)
+                return await textChannel.SendMessage(msg);
+
             if (!textChannel.Server.CurrentUser.GetPermissions(textChannel).SendMessages) return null;
            
             return await textChannel.SendMessage(msg);

@@ -126,10 +126,18 @@ namespace Stormbot.Bot.Core.Modules
             {
                 if (!e.Channel.IsPrivate) return;
 
-                Regex inviteRegex = new Regex(@"https?://(?!(www\.discord\.gg/?)).*");
+                if (e.Message.Text.StartsWith("https://discord.gg/"))
+                {
+                    string invite = String.Empty;
+                    try
+                    {
+                        invite = e.Message.Text.Split(' ').FirstOrDefault();
+                    }
+                    catch { } // ignored
 
-                foreach (Match match in inviteRegex.Matches(e.Message.Text))
-                    await DiscordUtils.JoinInvite(match.Value, e.Channel);
+                    if (!string.IsNullOrEmpty(invite))
+                        await DiscordUtils.JoinInvite(invite, e.Channel);
+                }
             };
         }
 

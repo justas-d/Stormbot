@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,6 +9,7 @@ using Discord.Commands.Permissions.Levels;
 using Discord.Modules;
 using Newtonsoft.Json;
 using Stormbot.Bot.Core.Services;
+using StrmyCore;
 
 namespace Stormbot.Bot.Core.Modules
 {
@@ -54,7 +56,7 @@ namespace Stormbot.Bot.Core.Modules
         [DataSave, DataLoad] private ConcurrentDictionary<ulong, UserEventCallback> _userJoinedSubs;
         [DataSave, DataLoad] private ConcurrentDictionary<ulong, UserEventCallback> _userLeftSubs;
         [DataSave, DataLoad] private ConcurrentDictionary<ulong, ulong> _joinedRoleSubs;
-        [DataSave, DataLoad] private ConcurrentDictionary<ulong, JosnChannel> _defaultAnnounceChannels;
+        [DataSave, DataLoad] private ConcurrentDictionary<ulong, JsonChannel> _defaultAnnounceChannels;
 
         private const string UserNameKeyword = "|userName|";
         private const string LocationKeyword = "|location|";
@@ -90,7 +92,7 @@ namespace Stormbot.Bot.Core.Modules
                             return;
                         }
 
-                        JosnChannel newVal = new JosnChannel(channel);
+                        JsonChannel newVal = new JsonChannel(channel);
                         _defaultAnnounceChannels.AddOrUpdate(e.Server.Id, newVal, (k, v) => newVal);
 
                         await e.Channel.SendMessage($"Set annoucement channel to `{channel.Name}`");
@@ -403,19 +405,38 @@ namespace Stormbot.Bot.Core.Modules
             if (_joinedRoleSubs == null)
                 _joinedRoleSubs = new ConcurrentDictionary<ulong, ulong>();
             if(_defaultAnnounceChannels == null)
-                _defaultAnnounceChannels = new ConcurrentDictionary<ulong, JosnChannel>();
+                _defaultAnnounceChannels = new ConcurrentDictionary<ulong, JsonChannel>();
 
             LoadChannels(_userJoinedSubs);
             LoadChannels(_userLeftSubs);
 
             foreach (var pair in _defaultAnnounceChannels)
-                pair.Value.FinishLoading(_client);
+            {
+                if (!pair.Value.FinishLoading(_client))
+                {
+                    Logger.FormattedWrite("AnnounceLoad",
+                        $"Failed loading JsonChannel id {pair.Value.ChannelId}. Removing", ConsoleColor.Yellow);
+                    _defaultAnnounceChannels.Remove(pair.Key);
+                }
+            }
         }
 
         private void LoadChannels(ConcurrentDictionary<ulong, UserEventCallback> dict)
         {
             foreach (var pair in dict)
-                pair.Value.Channel = _client.GetServer(pair.Key).GetChannel(pair.Value.ChannelId);
+            {
+                try
+                {
+                    pair.Value.Channel = _client.GetServer(pair.Key).GetChannel(pair.Value.ChannelId);
+                }
+                catch (NullReferenceException)
+                {
+                    Logger.FormattedWrite("AnnounceLoad",
+                        $"Failed loading channel {pair.Value.ChannelId} for server {pair.Key}. Removing",
+                        ConsoleColor.Yellow);
+                    dict.Remove(pair.Key);
+                }
+            }
         }
 
         private string ParseString(string input, User user, dynamic location)

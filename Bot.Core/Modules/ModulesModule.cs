@@ -10,6 +10,7 @@ using Discord.Commands.Permissions.Levels;
 using Discord.Modules;
 using Stormbot.Bot.Core.Services;
 using Stormbot.Helpers;
+using StrmyCore;
 
 namespace Stormbot.Bot.Core.Modules
 {
@@ -239,14 +240,37 @@ namespace Stormbot.Bot.Core.Modules
         void IDataModule.OnDataLoad()
         {
             foreach (KeyValuePair<ulong, HashSet<string>> pair in _serverModulesDictionary)
+            {
+                Server server = _client.GetServer(pair.Key);
+
+                if (server == null)
+                {
+                    Logger.FormattedWrite("ModulesModule", $"Failed loading server id {pair.Key}. Removing.", ConsoleColor.Yellow);
+                    _serverModulesDictionary.Remove(pair.Key);
+                    continue;
+                }
+
                 foreach (ModuleManager module in pair.Value.Select(GetModule))
                     if (module != null && module.FilterType.HasFlag(ModuleFilter.ServerWhitelist))
-                        module.EnableServer(_client.GetServer(pair.Key));
+                        module.EnableServer(server);
+            }
+
 
             foreach (KeyValuePair<ulong, HashSet<string>> pair in _channelModulesDictionary)
+            {
+                Channel channel = _client.GetChannel(pair.Key);
+
+                if (channel == null)
+                {
+                    Logger.FormattedWrite("ModulesModule", $"Failed loading channel id {pair.Key}. Removing.", ConsoleColor.Yellow);
+                    _channelModulesDictionary.Remove(pair.Key);
+                    continue;
+                }
+
                 foreach (ModuleManager module in pair.Value.Select(GetModule))
                     if (module != null && module.FilterType.HasFlag(ModuleFilter.ChannelWhitelist))
-                        module.EnableChannel(_client.GetChannel(pair.Key));
+                        module.EnableChannel(channel);
+            }
         }
 
         private ModuleManager GetModule(string id)

@@ -4,7 +4,7 @@ using Newtonsoft.Json;
 namespace Stormbot.Bot.Core
 {
     [JsonObject(MemberSerialization.OptIn)]
-    public class JosnChannel
+    public class JsonChannel
     {
         private Channel _channel;
 
@@ -22,19 +22,30 @@ namespace Stormbot.Bot.Core
         public ulong ChannelId { get; private set; }
 
         [JsonConstructor]
-        private JosnChannel(ulong channelId)
+        private JsonChannel(ulong channelId)
         {
             ChannelId = channelId;
         }
-       
-        public JosnChannel(Channel channel)
+
+        public JsonChannel(Channel channel)
         {
             Channel = channel;
         }
 
-        public static implicit operator JosnChannel(Channel channel)
-            => new JosnChannel(channel);
+        public static implicit operator JsonChannel(Channel channel)
+            => new JsonChannel(channel);
 
-        public void FinishLoading(DiscordClient client) => Channel = client.GetChannel(ChannelId);
+        public static implicit operator Channel(JsonChannel channel)
+            => channel.Channel;
+
+        public bool FinishLoading(DiscordClient client)
+        {
+            Channel channel = client.GetChannel(ChannelId);
+            if (channel == null)
+                return false;
+
+            Channel = channel;
+            return true;
+        }
     }
 }

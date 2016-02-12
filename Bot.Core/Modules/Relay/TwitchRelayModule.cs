@@ -21,9 +21,8 @@ namespace Stormbot.Bot.Core.Modules.Relay
 
         private DiscordClient _client;
 
-        [DataLoad, DataSave] private Dictionary<string, List<ulong>> _serializeRelays;
-
-        private readonly Dictionary<string, List<Channel>> _relays = new Dictionary<string, List<Channel>>();
+        [DataLoad, DataSave]
+        private Dictionary<string, List<JsonChannel>> _relays = new Dictionary<string, List<JsonChannel>>();
 
         private TwitchBot _twitch;
 
@@ -111,15 +110,11 @@ namespace Stormbot.Bot.Core.Modules.Relay
 
                 if (e.Message.Text.StartsWith(EscapePrefix)) return;
 
-                foreach (Channel relay in _relays[e.Message.Channel])
-                    await relay.SafeSendMessage($"**Twitch**: `<{e.Message.Username}> {e.Message.Text}`");
+                foreach (JsonChannel relay in _relays[e.Message.Channel])
+                    await relay.Channel.SafeSendMessage($"**Twitch**: `<{e.Message.Username}> {e.Message.Text}`");
             };
 
-            _twitch.ChannelLeave += (s, e) =>
-            {
-                _relays.Remove(e.Channel);
-                _serializeRelays.Remove(e.Channel);
-            };
+            _twitch.ChannelLeave += (s, e) => _relays.Remove(e.Channel);
 
             _client.MessageReceived += (s, e) =>
             {
@@ -139,7 +134,7 @@ namespace Stormbot.Bot.Core.Modules.Relay
         /// </summary>
         private IEnumerable<string> GetTwitchChannels(Channel discordChannel)
             => (from pair in _relays
-                where pair.Value.FirstOrDefault(c => c.Id == discordChannel.Id) != null
+                where pair.Value.FirstOrDefault(c => c.Channel.Id == discordChannel.Id) != null
                 select pair.Key);
 
         private async Task Unsubscribe(string twitchChannel, Channel discordChannel)
@@ -152,12 +147,11 @@ namespace Stormbot.Bot.Core.Modules.Relay
 
             // if the twitch relay discord connected channel list doesn't include the discord channel that
             // is passed as the argument, return. We don't want to try to delete something that doesn't exist.
-            if (_relays[twitchChannel].FirstOrDefault(c => c.Id == discordChannel.Id) == null) return;
+            if (_relays[twitchChannel].FirstOrDefault(c => c.Channel.Id == discordChannel.Id) == null) return;
 
             // Remove all of the channels in the twitchChannel entry which have the same id as the
             // discord channel that we passed in the arguments
-            _relays[twitchChannel].RemoveAll(match => match.Id == discordChannel.Id);
-            _serializeRelays[twitchChannel].Remove(discordChannel.Id); // do the same in the serialization data.
+            _relays[twitchChannel].RemoveAll(match => match.Channel.Id == discordChannel.Id);
 
             // we will command the twitch bot to disconnect from the twitch channel if no
             // discord channel is connected to it.
@@ -179,22 +173,20 @@ namespace Stormbot.Bot.Core.Modules.Relay
             // if there is no entry in _relays for the twitch channel, create one.
             if (!_relays.ContainsKey(twitchChannel))
             {
-                List<Channel> channel = new List<Channel> {discordChannel};
+                List<JsonChannel> channel = new List<JsonChannel> {discordChannel};
                 _relays.Add(twitchChannel, channel);
-                _serializeRelays.Add(twitchChannel, channel.Select(d => d.Id).ToList()); // serialize data dict
                 return;
             }
 
             // reference the list of channels found by the twitch channel key so we dont have to look it up every time.
-            List<Channel> subRef = _relays[twitchChannel];
+            List<JsonChannel> subRef = _relays[twitchChannel];
 
             // check if the discord channel is already subscribed to the twitch channel.
-            if (subRef.FirstOrDefault(c => c.Id == discordChannel.Id) != null)
+            if (subRef.FirstOrDefault(c => c.Channel.Id == discordChannel.Id) != null)
                 return;
 
             // add the discord channel to the twitch channel subscribers list.
             subRef.Add(discordChannel);
-            _serializeRelays[twitchChannel].Add(discordChannel.Id); // add it to the serialize data.
 
             await discordChannel.SafeSendMessage($"Subscribed to twitch chat: {twitchChannel}");
         }
@@ -244,20 +236,38 @@ namespace Stormbot.Bot.Core.Modules.Relay
 
         public void OnDataLoad()
         {
-            // if we did not have any previous data on disk, create a new _serializeRelays so we dont get null ref ex.
-            if (_serializeRelays == null)
+
+            if (_relays == null)
             {
-                _serializeRelays = new Dictionary<string, List<ulong>>();
+                _relays = new Dictionary<string, List<JsonChannel>>();
                 return;
             }
 
             // load the data from _serializeRelays into _relays using Subscribe()
             Task.Run(async () =>
             {
-                foreach (var pair in _serializeRelays)
+                foreach (var pair in _relays)
                 {
-                    foreach (ulong channel in pair.Value)
-                        await Subscribe(pair.Key, _client.GetChannel(channel));
+                    List<JsonChannel> removeChannels = new List<JsonChannel>();
+
+                    foreach (JsonChannel channel in pair.Value)
+                    {
+                        if (channel.FinishLoading(_client))
+                            await Subscribe(pair.Key, channel);
+                        else
+                        {
+                            Logger.FormattedWrite("TwitchRelayLoad",
+                                $"Tried to load TwitchRelay discord channel for nonexistant channel id : {channel.ChannelId}. Removing",
+                                ConsoleColor.Yellow);
+                            removeChannels.Add(channel);
+                        }
+                    }
+
+                    foreach (JsonChannel channel in removeChannels)
+                        pair.Value.Remove(channel);
+
+                    if (!pair.Value.Any())
+                        _relays.Remove(pair.Key);
                 }
             });
         }

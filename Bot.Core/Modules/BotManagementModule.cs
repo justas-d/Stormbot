@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
@@ -32,24 +33,7 @@ namespace Stormbot.Bot.Core.Modules
                     .MinPermissions((int) PermissionLevel.User)
                     .Description("Joins a server by invite.")
                     .Parameter("invite")
-                    .Do(async e =>
-                    {
-                        Invite invite = await _client.GetInvite(e.GetArg("invite"));
-                        if (invite == null)
-                        {
-                            await e.Channel.SafeSendMessage("Invite not found.");
-                            return;
-                        }
-                        if (invite.IsRevoked)
-                        {
-                            await
-                                e.Channel.SafeSendMessage("This invite has expired or the bot is banned from that server.");
-                            return;
-                        }
-
-                        await invite.Accept();
-                        await e.Channel.SafeSendMessage("Joined server.");
-                    });
+                    .Do(async e => await DiscordUtils.JoinInvite(e.GetArg("invite"), e.Channel));
 
                 group.CreateCommand("leave")
                     .Description("Instructs the bot to leave this server.")
@@ -137,6 +121,16 @@ namespace Stormbot.Bot.Core.Modules
                     .Description("Calls GC.GetTotalMemory()")
                     .Do(async e => await GetMemUsage(e));
             });
+
+            manager.MessageReceived += async (s, e) =>
+            {
+                if (!e.Channel.IsPrivate) return;
+
+                Regex inviteRegex = new Regex(@"https?://(?!(www\.discord\.gg/?)).*");
+
+                foreach (Match match in inviteRegex.Matches(e.Message.Text))
+                    await DiscordUtils.JoinInvite(match.Value, e.Channel);
+            };
         }
 
         private async Task Collect(CommandEventArgs e)

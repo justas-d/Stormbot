@@ -70,7 +70,7 @@ namespace Stormbot.Bot.Core.Modules.Audio
             public List<TrackData> Playlist { get; }
 
             [JsonProperty]
-            private ulong HostServerId { get; set; }
+            public ulong HostServerId { get; private set; }
 
             [JsonProperty]
             private ulong PlaybackChannelId { get; set; }
@@ -104,12 +104,18 @@ namespace Stormbot.Bot.Core.Modules.Audio
                 _client = client;
             }
 
-            public void FinishLoading(DiscordClient client)
+            public bool FinishLoading(DiscordClient client)
             {
                 if (HostServer != null) throw new InvalidOperationException();
 
-                HostServer = client.GetServer(HostServerId);
+                Server host = client.GetServer(HostServerId);
+
+                if (host == null)
+                    return false;
+
+                HostServer = host;
                 _client = client;
+                return true;
             }
 
             public void ClearPlaylist()
@@ -519,7 +525,15 @@ namespace Stormbot.Bot.Core.Modules.Audio
             if(_audioStates == null)
                 _audioStates = new ConcurrentDictionary<ulong, AudioState>();
             foreach (AudioState state in _audioStates.Values)
-                state.FinishLoading(_client);
+            {
+                if (!state.FinishLoading(_client))
+                {
+                    Logger.FormattedWrite("AudioLoad",
+                        $"Tried to load AudioState for nonexistant server id : {state.HostServerId}. Removing",
+                        ConsoleColor.Yellow);
+                    _audioStates.Remove(state.HostServerId);
+                }
+            }
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
@@ -34,10 +35,9 @@ namespace Stormbot.Bot.Core.Modules
 
             _scriptOptions = _scriptOptions.AddReferences(
                 typeof (object).Assembly,
-                typeof (System.Linq.Enumerable).Assembly,
-                GetType().Assembly,
+                typeof (Enumerable).Assembly,
                 _client.GetType().Assembly)
-                .AddImports("System", "System.Linq", "System.Collections.Generic", "Stormbot", "Discord");
+                .AddImports("System", "System.Linq", "System.Collections.Generic", "Discord");
 
             manager.CreateCommands("exec", group =>
             {
@@ -51,11 +51,10 @@ namespace Stormbot.Bot.Core.Modules
                         if (e.User.Name != "SSStormy" ||
                             e.User.Id != Constants.UserOwner)
                             return; // really have to make sure that it's me calling this tbh.
-
                         try
                         {
                             object output =
-                                await CSharpScript.EvaluateAsync(e.GetArg("query"), globals: new Globals(e, _client));
+                                await CSharpScript.EvaluateAsync(e.GetArg("query"), _scriptOptions, new Globals(e, _client));
 
                             if (output == null || (output as Task) != null || (output as string) == string.Empty)
                                 await e.Channel.SafeSendMessage("Output was empty or null.");

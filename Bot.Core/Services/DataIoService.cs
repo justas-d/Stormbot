@@ -42,7 +42,7 @@ namespace Stormbot.Bot.Core.Services
 
         private IEnumerable<SerializationData> GetAllFields<T>() where T : Attribute
         {
-            foreach (IService service in _client.Services.Services)
+            foreach (IService service in _client.Services)
             {
                 if (service is IDataObject)
                 {

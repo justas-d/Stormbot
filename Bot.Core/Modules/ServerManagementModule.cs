@@ -7,6 +7,7 @@ using Discord;
 using Discord.Commands;
 using Discord.Commands.Permissions.Levels;
 using Discord.Modules;
+using Stormbot.Bot.Core.DynPerm;
 using Stormbot.Helpers;
 
 namespace Stormbot.Bot.Core.Modules
@@ -15,10 +16,8 @@ namespace Stormbot.Bot.Core.Modules
     {
         public void Install(ModuleManager manager)
         {
-            manager.CreateCommands("channel", group =>
+            manager.CreateDynCommands("channel", PermissionLevel.ServerAdmin, group =>
             {
-                group.MinPermissions((int) PermissionLevel.ServerAdmin);
-
                 group.CreateCommand("list text")
                     .Description("Lists all text channels in server")
                     .Do(async e =>
@@ -40,12 +39,8 @@ namespace Stormbot.Bot.Core.Modules
                     });
 
                 group.CreateCommand("desc")
-                    .AddCheck((cmd, usr, chnl) =>
-                    {
-                        return chnl.Server.CurrentUser.ServerPermissions.ManageChannels ||
-                               chnl.Server.CurrentUser.GetPermissions(chnl).ManageChannel;
-                    })
-                    .AddCheck((cmd, usr, chnl) => chnl.Server.CurrentUser.GetPermissions(chnl).ManageChannel)
+                    .AddCheck((cmd, usr, chnl) => chnl.Server.CurrentUser.ServerPermissions.ManageChannels ||
+                                                  chnl.Server.CurrentUser.GetPermissions(chnl).ManageChannel)
                     .Description("Sets the channel description.")
                     .Parameter(Constants.ChannelIdArg)
                     .Parameter("desc", ParameterType.Unparsed)
@@ -54,11 +49,8 @@ namespace Stormbot.Bot.Core.Modules
                         await e.GetChannel().Edit(null, e.GetArg("desc"));
                     });
                 group.CreateCommand("name")
-                    .AddCheck((cmd, usr, chnl) =>
-                    {
-                        return chnl.Server.CurrentUser.ServerPermissions.ManageChannels ||
-                               chnl.Server.CurrentUser.GetPermissions(chnl).ManageChannel;
-                    })
+                    .AddCheck((cmd, usr, chnl) => chnl.Server.CurrentUser.ServerPermissions.ManageChannels ||
+                                                  chnl.Server.CurrentUser.GetPermissions(chnl).ManageChannel)
                     .Description("Sets the channel name.")
                     .Parameter(Constants.ChannelIdArg)
                     .Parameter("value", ParameterType.Unparsed)
@@ -68,16 +60,14 @@ namespace Stormbot.Bot.Core.Modules
                     });
             });
 
-            manager.CreateCommands("role", group =>
+            manager.CreateDynCommands("role", PermissionLevel.ServerAdmin, group =>
             {
-                group.MinPermissions((int) PermissionLevel.ServerAdmin);
-
                 group.CreateCommand("list")
                     .Description("Lists all the roles the server has")
                     .Do(async e =>
                     {
                         StringBuilder builder = new StringBuilder();
-                        builder.AppendLine("**Listing roles server:**");
+                        builder.AppendLine("**Listing roles in server:**");
                         CreateNameIdList(builder, e.Server.Roles);
                         await e.Channel.SafeSendMessage(builder.ToString());
                     });
@@ -171,10 +161,8 @@ namespace Stormbot.Bot.Core.Modules
                     });
             });
 
-            manager.CreateCommands("ued", group =>
+            manager.CreateDynCommands("ued", PermissionLevel.ServerModerator, group =>
             {
-                group.MinPermissions((int) PermissionLevel.ServerModerator);
-
                 group.CreateCommand("list")
                     .Description("Lists users in server and their UIDs")
                     .Do(async e =>

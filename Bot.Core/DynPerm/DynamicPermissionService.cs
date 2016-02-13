@@ -21,7 +21,7 @@ namespace Stormbot.Bot.Core.DynPerm
             _defaultPerms = client.Services.Get<PermissionLevelService>();
         }
 
-        public bool TryAddOrUpdate(ulong server, string input)
+        public DynamicPerms TryAddOrUpdate(ulong server, string input)
         {
             DynamicPerms perms;
             try
@@ -30,13 +30,13 @@ namespace Stormbot.Bot.Core.DynPerm
             }
             catch (JsonException)
             {
-                return false;
+                return null;
             }
 
-            if (perms == null) return false;
+            if (perms == null) return null;
 
             _perms.AddOrUpdate(server, perms, (k, v) => perms);
-            return true;
+            return perms;
         }
 
         public DynamicPerms GetPerms(ulong server)

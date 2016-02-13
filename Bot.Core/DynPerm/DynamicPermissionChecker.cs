@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
 using Discord;
 using Discord.Commands;
 using Discord.Commands.Permissions;
@@ -10,6 +12,9 @@ namespace Stormbot.Bot.Core.DynPerm
     {
         private DynamicPermissionService DynPerms { get; }
         private PermissionLevelService DefaultPermChecker { get; }
+
+        private static readonly ConcurrentDictionary<string, IEnumerable<string>> CachedCommandGroups =
+            new ConcurrentDictionary<string, IEnumerable<string>>();
 
         private int DefaultPermissionLevel { get; }
 
@@ -25,13 +30,13 @@ namespace Stormbot.Bot.Core.DynPerm
             DynamicPerms perms = DynPerms.GetPerms(channel.Server.Id);
             error = null;
 
-            if (perms == null)
+            if (perms == null || (!perms.RolePerms.Any() && !perms.UserPerms.Any()))
             {
                 // apply default perms if we do not have dynamic perms in place for the user's server.
-                return DefaultPermissionLevel >= DefaultPermChecker.GetPermissionLevel(user, channel);
+                return DefaultPermissionLevel <= DefaultPermChecker.GetPermissionLevel(user, channel);
             }
 
-            bool retval = false;
+            bool retval = true;
 
             // firsly do role checks.
             foreach (ulong roleId in user.Roles.Select(r => r.Id))
@@ -49,19 +54,31 @@ namespace Stormbot.Bot.Core.DynPerm
 
         private bool EvaluatePerms(DynamicPermissionBlock dynPerms, Command command)
         {
-            bool retval = false;
+            bool retval = true;
 
             if (dynPerms.Allow.Modules.Contains(command.Category))
                 retval = true;
             if (dynPerms.Deny.Modules.Contains(command.Category))
                 retval = false;
 
-            if (dynPerms.Allow.Commands.Contains(command.Text))
+            if (dynPerms.Allow.Commands.Contains(command.Text) ||
+                HashsetContainsComamndGroup(dynPerms.Allow.Commands, command.Text))
                 retval = true;
-            if (dynPerms.Deny.Commands.Contains(command.Text))
+            if (dynPerms.Deny.Commands.Contains(command.Text) ||
+                HashsetContainsComamndGroup(dynPerms.Deny.Commands, command.Text))
                 retval = false;
 
             return retval;
+        }
+
+        private bool HashsetContainsComamndGroup(HashSet<string> hashset, string commandText)
+        {
+            if (CachedCommandGroups.ContainsKey(commandText))
+                return hashset.Intersect(CachedCommandGroups[commandText]).Any();
+
+            string[] split = commandText.Split(' ');
+            CachedCommandGroups.TryAdd(commandText, split);
+            return hashset.Intersect(split).Any();
         }
     }
 }

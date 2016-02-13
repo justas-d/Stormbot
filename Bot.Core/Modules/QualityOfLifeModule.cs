@@ -11,6 +11,7 @@ using Discord.Modules;
 using JetBrains.Annotations;
 using Newtonsoft.Json;
 using RestSharp.Extensions.MonoHttp;
+using Stormbot.Bot.Core.DynPerm;
 using Stormbot.Bot.Core.Services;
 using StrmyCore;
 
@@ -58,7 +59,7 @@ namespace Stormbot.Bot.Core.Modules
         {
             _client = manager.Client;
 
-            manager.CreateCommands("", group =>
+            manager.CreateDynCommands("", PermissionLevel.User, group =>
             {
                 group.CreateCommand("remind list")
                     .Description("Lists the reminders you have set.")
@@ -139,7 +140,7 @@ namespace Stormbot.Bot.Core.Modules
                     });
             });
 
-            manager.CreateCommands("color", group =>
+            manager.CreateDynCommands("color", PermissionLevel.User, group =>
             {
                 // make sure we have permission to manage roles
                 group.AddCheck((cmd, usr, chnl) => chnl.Server.CurrentUser.ServerPermissions.ManageRoles);
@@ -168,7 +169,7 @@ namespace Stormbot.Bot.Core.Modules
                     });
 
                 group.CreateCommand("clean")
-                    .MinPermissions((int) PermissionLevel.ServerModerator)
+                    .MinDynPermissions((int) PermissionLevel.ServerModerator)
                     .Description("Removes unused color roles. Gets automatically called whenever a color is set.")
                     .Do(async e => await CleanColorRoles(e.Server));
             });

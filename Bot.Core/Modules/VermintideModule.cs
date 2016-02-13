@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Discord.Commands;
 using Discord.Modules;
+using Stormbot.Bot.Core.DynPerm;
 using StrmyCore;
 
 namespace Stormbot.Bot.Core.Modules
@@ -35,7 +36,7 @@ namespace Stormbot.Bot.Core.Modules
 
         public void Install(ModuleManager manager)
         {
-            manager.CreateCommands("verm", group =>
+            manager.CreateDynCommands("verm", PermissionLevel.User, group =>
             {
                 group.CreateCommand("roulette")
                     .Description(

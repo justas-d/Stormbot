@@ -6,6 +6,7 @@ using Discord.Audio;
 using Discord.Commands;
 using Discord.Commands.Permissions.Levels;
 using Discord.Modules;
+using Stormbot.Bot.Core.DynPerm;
 using Stormbot.Bot.Core.Modules;
 using Stormbot.Bot.Core.Modules.Audio;
 using Stormbot.Bot.Core.Modules.Relay;
@@ -120,11 +121,11 @@ namespace Stormbot.Bot.Core
             Client.AddModule<TestModule>("Test", ModuleFilter.ServerWhitelist | ModuleFilter.ChannelWhitelist);
             Client.AddModule<InfoModule>("Information", ModuleFilter.ServerWhitelist | ModuleFilter.ChannelWhitelist | ModuleFilter.AlwaysAllowPrivate);
             Client.AddModule<ModulesModule>("Modules");
-            Client.AddModule<ExecuteModule>("Execute", ModuleFilter.ServerWhitelist | ModuleFilter.ChannelWhitelist | ModuleFilter.AlwaysAllowPrivate);
+            Client.AddModule<ExecuteModule>("Execute", ModuleFilter.AlwaysAllowPrivate);
             Client.AddModule<TerrariaRelayModule>("Terraria Relay", ModuleFilter.ChannelWhitelist | ModuleFilter.ServerWhitelist);
             Client.AddModule<TwitchRelayModule>("Twitch Relay", ModuleFilter.ChannelWhitelist | ModuleFilter.ServerWhitelist);
             Client.AddModule<TwitchEmoteModule>("Twitch Emotes", ModuleFilter.ServerWhitelist | ModuleFilter.ChannelWhitelist);
-            Client.AddModule<AnnouncementModule>("Annoucements", ModuleFilter.ServerWhitelist);
+            Client.AddModule<AnnouncementModule>("Announcements", ModuleFilter.ServerWhitelist);
             Client.AddModule<VermintideModule>("Vermintide", ModuleFilter.ServerWhitelist | ModuleFilter.ChannelWhitelist | ModuleFilter.AlwaysAllowPrivate);
             Client.AddModule<PersonalModule>("Personal", ModuleFilter.ServerWhitelist);
 #if DEBUG_DEV

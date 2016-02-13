@@ -15,7 +15,6 @@ namespace Stormbot.Bot.Core.Modules
         private const ulong RebbitId = 131468210531860480;
         private const ulong CrixiusId = 131465844176715776;
 
-
         public void Install(ModuleManager manager)
         {
             manager.CreateCommands("", group =>

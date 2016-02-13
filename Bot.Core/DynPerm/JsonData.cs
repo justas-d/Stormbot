@@ -15,16 +15,16 @@ namespace Stormbot.Bot.Core.DynPerm
         public List<DynamicPermissionBlock> UserPerms { get; set; }
 
         [JsonConstructor]
-        private DynamicPerms(List<DynamicPermissionBlock> rolePerms, List<DynamicPermissionBlock> userPerms)
+        private DynamicPerms(List<DynamicPermissionBlock> roles, List<DynamicPermissionBlock> users)
         {
-            if (rolePerms == null)
-                rolePerms = new List<DynamicPermissionBlock>();
+            if (roles == null)
+                roles = new List<DynamicPermissionBlock>();
 
-            if (userPerms == null)
-                userPerms = new List<DynamicPermissionBlock>();
+            if (users == null)
+                users = new List<DynamicPermissionBlock>();
 
-            RolePerms = rolePerms;
-            UserPerms = userPerms;
+            RolePerms = roles;
+            UserPerms = users;
         }
 
         public DynamicPerms() : this(null, null)
@@ -45,7 +45,7 @@ namespace Stormbot.Bot.Core.DynPerm
         public ModuleCommandPair Deny { get; set; }
 
         [JsonConstructor]
-        private DynamicPermissionBlock(ModuleCommandPair allow, ModuleCommandPair deny)
+        private DynamicPermissionBlock(ulong id, ModuleCommandPair allow, ModuleCommandPair deny)
         {
             if (allow == null)
                 allow = new ModuleCommandPair();
@@ -53,11 +53,12 @@ namespace Stormbot.Bot.Core.DynPerm
             if (deny == null)
                 deny = new ModuleCommandPair();
 
+            Id = id;
             Allow = allow;
             Deny = deny;
         }
 
-        public DynamicPermissionBlock() : this(null, null)
+        public DynamicPermissionBlock(ulong id) : this(id, null, null)
         {
         }
     }

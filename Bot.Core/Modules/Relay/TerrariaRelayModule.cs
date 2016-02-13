@@ -12,6 +12,7 @@ using OpenTerrariaClient;
 using OpenTerrariaClient.Client;
 using OpenTerrariaClient.Model;
 using OpenTerrariaClient.Model.ID;
+using Stormbot.Bot.Core.DynPerm;
 using Stormbot.Bot.Core.Services;
 using StrmyCore;
 
@@ -79,7 +80,7 @@ namespace Stormbot.Bot.Core.Modules.Relay
         {
             _client = manager.Client;
 
-            manager.CreateCommands("terraria", mainGroup =>
+            manager.CreateDynCommands("terraria", PermissionLevel.User, mainGroup =>
             {
                 // commands which can only be used when caller channel is connected to a terraria server.
                 mainGroup.CreateGroup("", connectedGroup =>
@@ -88,7 +89,6 @@ namespace Stormbot.Bot.Core.Modules.Relay
                         (cmd, usr, chnl) => GetRelay(chnl) != null);
 
                     /*
-                      todo : add a command to check traveling merchant items
                       todo : command for getting player info
                     */
 
@@ -103,7 +103,7 @@ namespace Stormbot.Bot.Core.Modules.Relay
                         });
 
                     connectedGroup.CreateCommand("disconnect")
-                        .MinPermissions((int) PermissionLevel.ChannelModerator)
+                        .MinDynPermissions((int) PermissionLevel.ChannelModerator)
                         .Description("Disconnects from the terraria server connected to this channel.")
                         .Do(e =>
                         {
@@ -162,7 +162,7 @@ namespace Stormbot.Bot.Core.Modules.Relay
                     disconnectedGroup.AddCheck((cmd, usr, chnl) => GetRelay(chnl) == null);
 
                     disconnectedGroup.CreateCommand("connect")
-                        .MinPermissions((int) PermissionLevel.ChannelModerator)
+                        .MinDynPermissions((int) PermissionLevel.ChannelModerator)
                         .Description("Connects this channel to a terraria server.")
                         .Parameter("ip")
                         .Parameter("port")

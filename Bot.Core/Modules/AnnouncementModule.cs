@@ -8,6 +8,7 @@ using Discord.Commands;
 using Discord.Commands.Permissions.Levels;
 using Discord.Modules;
 using Newtonsoft.Json;
+using Stormbot.Bot.Core.DynPerm;
 using Stormbot.Bot.Core.Services;
 using StrmyCore;
 
@@ -96,7 +97,7 @@ namespace Stormbot.Bot.Core.Modules
         {
             _client = manager.Client;
 
-            manager.CreateCommands("announce", group =>
+            manager.CreateDynCommands("announce", PermissionLevel.ServerModerator, group =>
             {
                 group.CreateCommand("disable")
                     .AddCheck((cmd, usr, chnl) =>
@@ -107,7 +108,6 @@ namespace Stormbot.Bot.Core.Modules
                         return true;
                     })
                     .Description("Disables but owner announcements on this server.")
-                    .MinPermissions((int) PermissionLevel.ServerModerator)
                     .Do(async e =>
                     {
                         if (_defaultAnnounceChannels.ContainsKey(e.Server.Id))
@@ -127,7 +127,6 @@ namespace Stormbot.Bot.Core.Modules
 
                         return false;
                     })
-                    .MinPermissions((int) PermissionLevel.ServerModerator)
                     .Description("Enabled but owner announcements on this server.")
                     .Do(async e =>
                     {
@@ -138,7 +137,6 @@ namespace Stormbot.Bot.Core.Modules
                 group.CreateCommand("channel")
                     .Description("Sets the default channel of any announcements from the bot's owner.")
                     .Parameter("channelname", ParameterType.Unparsed)
-                    .MinPermissions((int) PermissionLevel.ServerModerator)
                     .Do(async e =>
                     {
                         string channelQuery = e.GetArg("channelname").ToLowerInvariant();
@@ -194,10 +192,8 @@ namespace Stormbot.Bot.Core.Modules
                     });
             });
 
-            manager.CreateCommands("autorole", group =>
+            manager.CreateDynCommands("autorole", PermissionLevel.ServerAdmin, group =>
             {
-                group.MinPermissions((int) PermissionLevel.ServerAdmin);
-
                 // commands that are available when the server doesnt have an auto role set on join.
                 group.CreateGroup("", noSubGroup =>
                 {
@@ -254,10 +250,8 @@ namespace Stormbot.Bot.Core.Modules
                 });
             });
 
-            manager.CreateCommands("newuser", group =>
+            manager.CreateDynCommands("newuser", PermissionLevel.ServerModerator,  group =>
             {
-                group.MinPermissions((int) PermissionLevel.ServerModerator);
-
                 group.CreateGroup("join", joinGroup =>
                 {
                     // joinGroup callback exists commands

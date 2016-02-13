@@ -7,6 +7,7 @@ using Discord;
 using Discord.Commands;
 using Discord.Commands.Permissions.Levels;
 using Discord.Modules;
+using Stormbot.Bot.Core.DynPerm;
 using Stormbot.Bot.Core.Services;
 using Stormbot.Helpers;
 using StrmyCore;
@@ -28,17 +29,6 @@ namespace Stormbot.Bot.Core.Modules
             manager.CreateCommands("", group =>
             {
                 group.MinPermissions((int) PermissionLevel.BotOwner);
-
-                group.CreateCommand("join")
-                    .MinPermissions((int) PermissionLevel.User)
-                    .Description("Joins a server by invite.")
-                    .Parameter("invite")
-                    .Do(async e => await DiscordUtils.JoinInvite(e.GetArg("invite"), e.Channel));
-
-                group.CreateCommand("leave")
-                    .Description("Instructs the bot to leave this server.")
-                    .MinPermissions((int) PermissionLevel.ServerModerator)
-                    .Do(async e => await e.Server.Leave());
 
                 group.CreateCommand("io save")
                     .Description("Saves data used by the bot.")
@@ -95,6 +85,31 @@ namespace Stormbot.Bot.Core.Modules
                         Environment.Exit(0);
                     });
 
+                group.CreateCommand("gc")
+                    .Description("Lists used memory, then collects it.")
+                    .Do(async e =>
+                    {
+                        await GetMemUsage(e);
+                        await Collect(e);
+                    });
+
+                group.CreateCommand("gc collect")
+                    .Description("Calls GC.Collect()")
+                    .Do(async e => await Collect(e));
+            });
+
+            manager.CreateDynCommands("", PermissionLevel.User, group =>
+            {
+                group.CreateCommand("join")
+                    .Description("Joins a server by invite.")
+                    .Parameter("invite")
+                    .Do(async e => await DiscordUtils.JoinInvite(e.GetArg("invite"), e.Channel));
+
+                group.CreateCommand("leave")
+                    .Description("Instructs the bot to leave this server.")
+                    .MinDynPermissions((int) PermissionLevel.ServerModerator)
+                    .Do(async e => await e.Server.Leave());
+
                 group.CreateCommand("cleanmsg")
                     .Description("Removes the last 100 messages sent by the bot in this channel.")
                     .MinPermissions((int)PermissionLevel.ChannelModerator)
@@ -104,20 +119,7 @@ namespace Stormbot.Bot.Core.Modules
                             await msg.Delete();
                     });
 
-                group.CreateCommand("gc")
-                   .Description("Lists used memory, then collects it.")
-                   .Do(async e =>
-                   {
-                       await GetMemUsage(e);
-                       await Collect(e);
-                   });
-
-                group.CreateCommand("gc collect")
-                    .Description("Calls GC.Collect()")
-                    .Do(async e => await Collect(e));
-
                 group.CreateCommand("gc list")
-                    .MinPermissions((int) PermissionLevel.User)
                     .Description("Calls GC.GetTotalMemory()")
                     .Do(async e => await GetMemUsage(e));
             });

@@ -10,6 +10,7 @@ using Discord.Commands;
 using Discord.Commands.Permissions.Levels;
 using Discord.Modules;
 using Newtonsoft.Json;
+using Stormbot.Bot.Core.DynPerm;
 using Stormbot.Bot.Core.Services;
 using StrmyCore;
 
@@ -336,7 +337,7 @@ namespace Stormbot.Bot.Core.Modules.Audio
         {
             _client = manager.Client;
 
-            manager.CreateCommands("stream", group =>
+            manager.CreateDynCommands("stream", PermissionLevel.User, group =>
             {
                 // commands which can only be called when there is a track currently playing.
                 group.CreateGroup("", playingGroup =>

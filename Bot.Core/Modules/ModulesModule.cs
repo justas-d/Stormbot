@@ -8,6 +8,7 @@ using Discord;
 using Discord.Commands;
 using Discord.Commands.Permissions.Levels;
 using Discord.Modules;
+using Stormbot.Bot.Core.DynPerm;
 using Stormbot.Bot.Core.Services;
 using Stormbot.Helpers;
 using StrmyCore;
@@ -45,7 +46,8 @@ namespace Stormbot.Bot.Core.Modules
         private HashSet<string> PrivateModules => new HashSet<string>()
         {
             "Audio",
-            "Personal"
+            "Personal",
+            "Test"
         };
 
         public void Install(ModuleManager manager)
@@ -53,10 +55,8 @@ namespace Stormbot.Bot.Core.Modules
             _client = manager.Client;
             _moduleService = _client.Modules();
 
-            manager.CreateCommands("module", group =>
+            manager.CreateDynCommands("module", PermissionLevel.ServerAdmin, group =>
             {
-                group.MinPermissions((int) PermissionLevel.ServerModerator);
-
                 group.CreateCommand("channel enable")
                     .Description("Enables a module on the current channel.")
                     .Parameter("module", ParameterType.Unparsed)

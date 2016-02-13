@@ -7,6 +7,7 @@ using Discord;
 using Discord.Commands.Permissions.Levels;
 using Discord.Modules;
 using Newtonsoft.Json.Linq;
+using Stormbot.Bot.Core.DynPerm;
 using Stormbot.Bot.Core.Services;
 using Stormbot.Helpers;
 using StrmyCore;
@@ -31,11 +32,10 @@ namespace Stormbot.Bot.Core.Modules.Relay
             _client = manager.Client;
             _twitch = new TwitchBot();
 
-            manager.CreateCommands("twitch", group =>
+            manager.CreateDynCommands("twitch", PermissionLevel.ChannelModerator, group =>
             {
                 group.CreateCommand("connect")
                     .Description("Connects this channel to a given twitch channel, relaying the messages between them.")
-                    .MinPermissions((int) PermissionLevel.ChannelModerator)
                     .Parameter("channel")
                     .Do(async e =>
                     {
@@ -58,13 +58,13 @@ namespace Stormbot.Bot.Core.Modules.Relay
 
                 group.CreateCommand("disconnect")
                     .Description("Disconnects this channel from the given twitch channel.")
-                    .MinPermissions((int) PermissionLevel.ChannelModerator)
                     .Parameter("channel")
                     .Do(async e =>
                     {
                         await Unsubscribe(e.GetArg("channel"), e.Channel);
                     });
                 group.CreateCommand("list")
+                    .MinDynPermissions((int) PermissionLevel.User)
                     .Description("Lists all the twitch channels this discord channel is connected to.")
                     .Do(async e =>
                     {

@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Modules;
+using Stormbot.Bot.Core.DynPerm;
 using Stormbot.Helpers;
 
 namespace Stormbot.Bot.Core.Modules
@@ -17,7 +18,7 @@ namespace Stormbot.Bot.Core.Modules
         {
             _client = manager.Client;
 
-            manager.CreateCommands("", group =>
+            manager.CreateDynCommands("", PermissionLevel.User, group =>
             {
                 group.CreateCommand("whois")
                     .Description("Displays information about the given user.")

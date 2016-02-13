@@ -1,4 +1,5 @@
-﻿using Discord;
+﻿using System;
+using Discord;
 using Discord.Commands;
 using Discord.Commands.Permissions.Levels;
 using Discord.Modules;
@@ -17,20 +18,35 @@ namespace Stormbot.Bot.Core.DynPerm
             return client;
         }
 
-        public static CommandBuilder MinPermissions(this CommandBuilder builder, int deafultPerms)
+        public static CommandBuilder MinDynPermissions(this CommandBuilder builder, int deafultPerms)
         {
             builder.AddCheck(new DynamicPermissionChecker(builder.Service.Client, deafultPerms));
             return builder;
         }
-        public static CommandGroupBuilder MinPermissions(this CommandGroupBuilder builder, int deafultPerms)
+
+        public static CommandGroupBuilder MinDynPermissions(this CommandGroupBuilder builder, int deafultPerms)
         {
             builder.AddCheck(new DynamicPermissionChecker(builder.Service.Client, deafultPerms));
             return builder;
         }
-        public static CommandService MinPermissions(this CommandService service, int deafultPerms)
+
+        public static CommandService MinDynPermissions(this CommandService service, int deafultPerms)
         {
             service.Root.AddCheck(new DynamicPermissionChecker(service.Client, deafultPerms));
             return service;
+        }
+
+        public static void CreateDynCommands(this ModuleManager manager, string prefix,
+            PermissionLevel defaultPermissionsLevel, Action<CommandGroupBuilder> builder)
+        {
+            CommandService commandService = manager.Client.Services.Get<CommandService>();
+            commandService.CreateGroup(prefix, x =>
+            {
+                x.Category(manager.Name);
+                x.AddCheck(new ModuleChecker(manager));
+                x.MinDynPermissions((int) defaultPermissionsLevel);
+                builder(x);
+            });
         }
     }
 }

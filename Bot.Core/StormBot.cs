@@ -11,9 +11,6 @@ using Stormbot.Bot.Core.Modules;
 using Stormbot.Bot.Core.Modules.Audio;
 using Stormbot.Bot.Core.Modules.Relay;
 using Stormbot.Bot.Core.Modules.Twitch;
-#if DEBUG_DEV
-using Stormbot.Bot.Core.Modules.Game;
-#endif
 using Stormbot.Bot.Core.Services;
 using Stormbot.Helpers;
 using StrmyCore;
@@ -128,9 +125,7 @@ namespace Stormbot.Bot.Core
             Client.AddModule<AnnouncementModule>("Announcements", ModuleFilter.ServerWhitelist);
             Client.AddModule<VermintideModule>("Vermintide", ModuleFilter.ServerWhitelist | ModuleFilter.ChannelWhitelist | ModuleFilter.AlwaysAllowPrivate);
             Client.AddModule<PersonalModule>("Personal", ModuleFilter.ServerWhitelist);
-#if DEBUG_DEV
-            Client.AddModule<GameModule>("Game", ModuleFilter.ServerWhitelist | ModuleFilter.ChannelWhitelist | ModuleFilter.AlwaysAllowPrivate);
-#endif
+            //Client.AddModule<GameModule>("Game", ModuleFilter.ServerWhitelist | ModuleFilter.ChannelWhitelist | ModuleFilter.AlwaysAllowPrivate);
             Client.Log.Message += (sender, args) =>
             {
                 if (_ignoredLogs.Contains(args.Severity)) return;

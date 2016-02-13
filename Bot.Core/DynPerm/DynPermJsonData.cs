@@ -24,7 +24,7 @@ namespace Stormbot.Bot.Core.DynPerm
             PastebinUrl = pastebinUrl;
         }
 
-        public DynPermFullData(string originalJson, DynamicPerms perms) : this(originalJson, perms, null)
+        internal DynPermFullData(string originalJson, DynamicPerms perms) : this(originalJson, perms, null)
         {
         }
     }
@@ -51,23 +51,19 @@ namespace Stormbot.Bot.Core.DynPerm
             RolePerms = roles;
             UserPerms = users;
         }
-
-        public DynamicPerms() : this(null, null)
-        {
-        }
     }
 
     [JsonObject]
-    public class DynamicPermissionBlock
+    public class DynamicPermissionBlock : IEquatable<DynamicPermissionBlock>
     {
         [JsonProperty]
         public ulong Id { get; }
 
         [JsonProperty]
-        public ModuleCommandPair Allow { get; set; }
+        public ModuleCommandPair Allow { get; }
 
         [JsonProperty]
-        public ModuleCommandPair Deny { get; set; }
+        public ModuleCommandPair Deny { get; }
 
         [JsonConstructor]
         private DynamicPermissionBlock(ulong id, ModuleCommandPair allow, ModuleCommandPair deny)
@@ -83,10 +79,26 @@ namespace Stormbot.Bot.Core.DynPerm
             Deny = deny;
         }
 
-        public DynamicPermissionBlock(ulong id) : this(id, null, null)
+        public bool Equals(DynamicPermissionBlock other) => Id == other.Id;
+
+        public override bool Equals(object obj)
         {
+            DynamicPermissionBlock block = obj as DynamicPermissionBlock;
+            return block != null && obj.Equals(this);
         }
 
+        public static bool operator ==(DynamicPermissionBlock a, DynamicPermissionBlock b)
+        {
+            if (ReferenceEquals(a, b))
+                return true;
+
+            if (((object)a == null) || ((object)b == null))
+                return false;
+
+            return a.Id == b.Id;
+        }
+
+        public static bool operator !=(DynamicPermissionBlock a, DynamicPermissionBlock b) => !(a == b);
         public override int GetHashCode() => unchecked((int) Id);
     }
 
@@ -94,10 +106,10 @@ namespace Stormbot.Bot.Core.DynPerm
     public class ModuleCommandPair
     {
         [JsonProperty]
-        public HashSet<string> Modules { get; set; }
+        public HashSet<string> Modules { get; }
 
         [JsonProperty]
-        public HashSet<string> Commands { get; set; }
+        public HashSet<string> Commands { get; }
 
         [JsonConstructor]
         private ModuleCommandPair(HashSet<string> modules, HashSet<string> commands)
@@ -118,7 +130,7 @@ namespace Stormbot.Bot.Core.DynPerm
             Commands = commands;
         }
 
-        public ModuleCommandPair() : this(null, null)
+        internal ModuleCommandPair() : this(null, null)
         {
 
         }

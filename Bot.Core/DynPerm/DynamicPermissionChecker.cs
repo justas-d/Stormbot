@@ -34,13 +34,20 @@ namespace Stormbot.Bot.Core.DynPerm
                     // if we do not have dynamic perms in place for the user's server, return the default perms.
 
             // firsly do role checks.
-            foreach (ulong roleId in user.Roles.Select(r => r.Id))
+
+            foreach (DynamicPermissionBlock dynPerms in data.Perms.RolePerms)
             {
-                foreach (DynamicPermissionBlock dynPerms in data.Perms.RolePerms.Where(rp => rp.Id == roleId))
-                {
+                if (user.HasRole(dynPerms.Id))
                     retval = EvaluatePerms(dynPerms, command, retval);
-                }
             }
+
+            //foreach (ulong roleId in user.Roles.Select(r => r.Id))
+            //{
+            //    foreach (DynamicPermissionBlock dynPerms in data.Perms.RolePerms.Where(rp => rp.Id == roleId))
+            //    {
+            //        retval = EvaluatePerms(dynPerms, command, retval);
+            //    }
+            //}
 
             // users override roles, do them next.
             foreach (DynamicPermissionBlock dynPerms in data.Perms.UserPerms.Where(up => up.Id == user.Id))

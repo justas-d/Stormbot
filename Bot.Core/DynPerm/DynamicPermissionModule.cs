@@ -37,22 +37,22 @@ namespace Stormbot.Bot.Core.DynPerm
                     .Do(async e =>
                     {
                         string input = e.GetArg("perms");
+                        string error;
 
                         if (input.StartsWith(PastebinIdentifier))
-                            input =
-                                await
-                                    Utils.AsyncDownloadRaw(
-                                        input.Insert(input.IndexOf(PastebinIdentifier, StringComparison.Ordinal),
-                                            RawPath));
-
-                        DynPermFullData perms = _dynPerms.TryAddOrUpdate(e.Server.Id, input);
-                        if (perms == null)
                         {
-                            await
-                                e.Channel.SendMessage(
-                                    "Failed parsing Dynamic Permissions. Make sure your JSON is valid.");
+                            string rawUrl = input.Insert(PastebinIdentifier.Length, RawPath);
+                            input = await Utils.AsyncDownloadRaw(rawUrl);
+                        }
+
+                        DynPermFullData perms = _dynPerms.TryAddOrUpdate(e.Server.Id, input, out error);
+
+                        if (!string.IsNullOrEmpty(error))
+                        {
+                            await e.Channel.SendMessage($"Failed parsing Dynamic Permissions. {error}");
                             return;
                         }
+
                         await e.Channel.SendMessage($"Parsed Dynamic Permissions:\r\n```" +
                                                     $"- Role Rules: {perms.Perms.RolePerms.Count}\r\n" +
                                                     $"- User Rules: {perms.Perms.UserPerms.Count}```");
@@ -110,6 +110,8 @@ namespace Stormbot.Bot.Core.DynPerm
                                 "The rules are encoded in a JSON format, which you can easily validate.(http://pro.jsonlint.com/)\r\n" +
                                 "The base format: https://ghostbin.com/paste/rqqqm\r\n" +
                                 "You can get user ids from `\"ued list\"` and role ids from `\"role list\"` commands.\r\n" +
+                                "Roles are checked from top to bottom.\r\n" +
+                                "This means that for example Role B, which is below Role A, will override any allows/denies Role A enforces.\r\n" +
                                 "\"Roles\" and \"Users\" are both arrays, meaning you can put multiple elements inside of them.\r\n" +
                                 "Here are some example rules: https://ghostbin.com/paste/ye267\r\n" +
                                 $"Since I am completely horrible at explaining concepts, please refer to these resources if you are still confused:\r\n" +

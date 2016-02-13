@@ -18,13 +18,15 @@ namespace Stormbot.Bot.Core.Modules
     {
         private DiscordClient _client;
 
+        private DataIoService _io;
+
         public void Install(ModuleManager manager)
         {
             _client = manager.Client;
             _client.MessageReceived +=
-                (sender, e) => Logger.FormattedWrite("Msg", e.Message.ToString(), ConsoleColor.White);
+                (sender, e) => Logger.FormattedWrite($"Msg {e.Server.Name}@{e.Channel.Name}", e.Message.ToString(), ConsoleColor.White);
 
-            DataIoService io = _client.Services.Get<DataIoService>();
+           _io = _client.Services.Get<DataIoService>();
 
             manager.CreateCommands("", group =>
             {
@@ -32,11 +34,11 @@ namespace Stormbot.Bot.Core.Modules
 
                 group.CreateCommand("io save")
                     .Description("Saves data used by the bot.")
-                    .Do(e => io.Save());
+                    .Do(e => _io.Save());
 
                 group.CreateCommand("io load")
                     .Description("Loads data that the bot loads at runtime.")
-                    .Do(e => io.Load());
+                    .Do(e => _io.Load());
 
                 group.CreateCommand("set name")
                     .Description("Changes the name of the bot")
@@ -81,7 +83,7 @@ namespace Stormbot.Bot.Core.Modules
                     .Description("Kills the bot.")
                     .Do(x =>
                     {
-                        io.Save();
+                        _io.Save();
                         Environment.Exit(0);
                     });
 

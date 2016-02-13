@@ -145,6 +145,7 @@ namespace Stormbot.Bot.Core
             io.Load();
 
             Client.SetGame("}help for commands");
+            Constants.Owner = Client.GetUser(Constants.UserOwner);
 
             Logger.Writeline($" -WE ARE LIVE-{Environment.NewLine}");
         }

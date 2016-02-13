@@ -1,27 +1,23 @@
 ﻿using System.Collections.Concurrent;
 using Discord;
-using Discord.Commands;
-using Discord.Commands.Permissions.Levels;
 using Newtonsoft.Json;
 using Stormbot.Bot.Core.Services;
+using StrmyCore;
 
 namespace Stormbot.Bot.Core.DynPerm
 {
     public class DynamicPermissionService : IService, IDataObject
     {
-        private DiscordClient _client;
+        [DataLoad, DataSave] private ConcurrentDictionary<ulong, DynPermFullData> _perms;
 
-        [DataLoad, DataSave] private ConcurrentDictionary<ulong, DynamicPerms> _perms;
-
-        private PermissionLevelService _defaultPerms;
 
         void IService.Install(DiscordClient client)
         {
-            _client = client;
-            _defaultPerms = client.Services.Get<PermissionLevelService>();
         }
 
-        public DynamicPerms TryAddOrUpdate(ulong server, string input)
+        public void DestroyServerPerms(ulong server) => _perms.Remove(server);
+
+        public DynPermFullData TryAddOrUpdate(ulong server, string input)
         {
             DynamicPerms perms;
             try
@@ -34,33 +30,23 @@ namespace Stormbot.Bot.Core.DynPerm
             }
 
             if (perms == null) return null;
+            DynPermFullData fullPermData = new DynPermFullData(input, perms);
 
-            _perms.AddOrUpdate(server, perms, (k, v) => perms);
-            return perms;
+            _perms.AddOrUpdate(server, fullPermData, (k, v) => fullPermData);
+            return fullPermData;
         }
 
-        public DynamicPerms GetPerms(ulong server)
+        public DynPermFullData GetPerms(ulong server)
         {
-            DynamicPerms perms;
+            DynPermFullData perms;
             _perms.TryGetValue(server, out perms);
             return perms;
-        }
-
-        public bool CanRunCommand(Command cmd, User user, Channel channel, PermissionLevel defaultPerms)
-        {
-
-            bool retval = false;
-            DynamicPerms perms = _perms[channel.Server.Id];
-
-
-
-            return retval;
         }
 
         void IDataObject.OnDataLoad()
         {
             if(_perms == null)
-                _perms = new ConcurrentDictionary<ulong, DynamicPerms>();
+                _perms = new ConcurrentDictionary<ulong, DynPermFullData>();
         }
     }
 }

@@ -1,6 +1,11 @@
-﻿using Discord;
+﻿using System;
+using System.Linq;
+using Discord;
 using Discord.Commands;
 using Discord.Modules;
+using Newtonsoft.Json;
+using Stormbot.Helpers;
+using StrmyCore;
 
 namespace Stormbot.Bot.Core.DynPerm
 {
@@ -9,8 +14,17 @@ namespace Stormbot.Bot.Core.DynPerm
         private DiscordClient _client;
         private DynamicPermissionService _dynPerms;
 
+        private PasteBinClient _pastebin;
+        private const string PastebinIdentifier = "http://pastebin.com/";
+        private const string RawPath = "raw/";
+
         public void Install(ModuleManager manager)
         {
+            Nullcheck(Constants.PastebinPassword, Constants.PastebinUsername, Constants.PastebinApiKey);
+
+            _pastebin = new PasteBinClient(Constants.PastebinApiKey);
+            _pastebin.Login(Constants.PastebinUsername, Constants.PastebinPassword);
+
             _client = manager.Client;
             _dynPerms = _client.DynPerms();
 
@@ -18,24 +32,73 @@ namespace Stormbot.Bot.Core.DynPerm
             {
                 group.CreateCommand("set")
                     .Description(
-                        "Sets the dynamic permissions for this server. Use the dynperm help command for more info.")
+                        "Sets the dynamic permissions for this server.\r\n*Pastebin links are supported.**\r\n Use the dynperm help command for more info.")
                     .Parameter("perms", ParameterType.Unparsed)
                     .Do(async e =>
                     {
-#if DEBUG_DEV
-                        DynamicPerms perms = _dynPerms.TryAddOrUpdate(e.Server.Id, e.GetArg("perms"));
+                        string input = e.GetArg("perms");
+
+                        if (input.StartsWith(PastebinIdentifier))
+                            input =
+                                await
+                                    Utils.AsyncDownloadRaw(
+                                        input.Insert(input.IndexOf(PastebinIdentifier, StringComparison.Ordinal),
+                                            RawPath));
+
+                        DynPermFullData perms = _dynPerms.TryAddOrUpdate(e.Server.Id, input);
                         if (perms == null)
                         {
-                            await e.Channel.SendMessage("Failed parsing Dynamic Permissions. Make sure your JSON is valid.");
+                            await
+                                e.Channel.SendMessage(
+                                    "Failed parsing Dynamic Permissions. Make sure your JSON is valid.");
                             return;
                         }
                         await e.Channel.SendMessage($"Parsed Dynamic Permissions:\r\n```" +
-                                                    $"- Role Rules: {perms.RolePerms.Count}" +
-                                                    $"- User Rules: {perms.UserPerms.Count}```");
-#else
-                        await e.Channel.SendMessage("This feature is currently being stress tested and is unavailable.");
-#endif
+                                                    $"- Role Rules: {perms.Perms.RolePerms.Count}\r\n" +
+                                                    $"- User Rules: {perms.Perms.UserPerms.Count}```");
                     });
+
+                // commands which can only be executed if the caller server has dynperms.
+                group.CreateGroup("", existsGroup =>
+                {
+                    existsGroup.AddCheck((cmd, usr, chnl) => _dynPerms.GetPerms(chnl.Server.Id) != null);
+
+                    existsGroup.CreateCommand("show")
+                        .Description("Shows the Dynamic Permissions for this server.")
+                        .Do(async e =>
+                        {
+                            DynPermFullData data = _dynPerms.GetPerms(e.Server.Id);
+
+                            if (string.IsNullOrEmpty(data.PastebinUrl))
+                            {
+                                data.PastebinUrl = _pastebin.Paste(new PasteBinEntry()
+                                {
+                                    Expiration = PasteBinExpiration.Never,
+                                    Format = "json",
+                                    Private = true,
+                                    Text = data.OriginalJson,
+                                    Title = $"{e.Server.Name}@{DateTime.Now}"
+                                });
+                            }
+
+                            await e.Channel.SendMessage($"Paste: {data.PastebinUrl}");
+                        });
+
+                    existsGroup.CreateCommand("clear")
+                        .Description(
+                            "Clears the Dynamic Permissions. This cannot be undone. Pass yes as an argument for this to work.")
+                        .Parameter("areyousure")
+                        .Do(async e =>
+                        {
+                            string input = e.GetArg("areyousure").ToLowerInvariant();
+                            if (input == "yes" ||
+                                input == "y")
+                            {
+                                _dynPerms.DestroyServerPerms(e.Server.Id);
+                                await e.Channel.SendMessage("Dynamic Permissions have been wiped.");
+                            }
+                        });
+                });
 
                 group.CreateCommand("help")
                     .Description("help")
@@ -54,6 +117,12 @@ namespace Stormbot.Bot.Core.DynPerm
                                 $"- http://www.w3schools.com/json/json_syntax.asp");
                     });
             });
+        }
+
+        private void Nullcheck(params string[] nullCheck)
+        {
+            foreach (string check in nullCheck.Where(string.IsNullOrEmpty))
+                throw new ArgumentNullException(nameof(check));
         }
     }
 }

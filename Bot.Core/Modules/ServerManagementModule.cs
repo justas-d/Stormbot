@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using Discord;
 using Discord.Commands;
-using Discord.Commands.Permissions.Levels;
 using Discord.Modules;
 using Stormbot.Bot.Core.DynPerm;
 using Stormbot.Helpers;
@@ -105,26 +103,26 @@ namespace Stormbot.Bot.Core.Modules
                         Role role = e.GetRole();
                         ServerPermissions perms = role.Permissions;
                         await
-                            e.Channel.SafeSendMessage($"**Listing permissions for `{role.Name}`**{Environment.NewLine}` +" +
-                                                  $"{"CreateInstantInvite",-25}: {perms.CreateInstantInvite}{Environment.NewLine}" +
-                                                  $"{"KickMembers",-25}: {perms.KickMembers}{Environment.NewLine}" +
-                                                  $"{"BanMembers",-25}: {perms.BanMembers}{Environment.NewLine}" +
-                                                  $"{"ManageRoles",-25}: {perms.ManageRoles}{Environment.NewLine}" +
-                                                  $"{"ManageChannels",-25}: {perms.ManageChannels}{Environment.NewLine}" +
-                                                  $"{"ManageServer",-25}: {perms.ManageServer}{Environment.NewLine}" +
-                                                  $"{"ReadMessages",-25}: {perms.ReadMessages}{Environment.NewLine}" +
-                                                  $"{"SafeSendMessages",-25}: {perms.SendMessages}{Environment.NewLine}" +
-                                                  $"{"SendTTSMessages",-25}: {perms.SendTTSMessages}{Environment.NewLine}" +
-                                                  $"{"ManageMessages",-25}: {perms.ManageMessages}{Environment.NewLine}" +
-                                                  $"{"EmbedLinks",-25}: {perms.EmbedLinks}{Environment.NewLine}" +
-                                                  $"{"AttachFiles",-25}: {perms.AttachFiles}{Environment.NewLine}" +
-                                                  $"{"ReadMessageHistory",-25}: {perms.ReadMessageHistory}{Environment.NewLine}" +
-                                                  $"{"MentionEveryone",-25}: {perms.MentionEveryone}{Environment.NewLine}" +
-                                                  $"{"Connect",-25}: {perms.Connect}{Environment.NewLine}" +
-                                                  $"{"Speak",-25}: {perms.Speak}{Environment.NewLine}" +
-                                                  $"{"MuteMembers",-25}: {perms.MuteMembers}{Environment.NewLine}" +
-                                                  $"{"DeafenMembers",-25}: {perms.DeafenMembers}{Environment.NewLine}" +
-                                                  $"{"MoveMembers",-25}: {perms.MoveMembers}{Environment.NewLine}" +
+                            e.Channel.SafeSendMessage($"**Listing permissions for {role.Name}**\r\n:" +
+                                                  $"{"CreateInstantInvite",-25}: {perms.CreateInstantInvite}\r\n" +
+                                                  $"{"KickMembers",-25}: {perms.KickMembers}\r\n" +
+                                                  $"{"BanMembers",-25}: {perms.BanMembers}\r\n" +
+                                                  $"{"ManageRoles",-25}: {perms.ManageRoles}\r\n" +
+                                                  $"{"ManageChannels",-25}: {perms.ManageChannels}\r\n" +
+                                                  $"{"ManageServer",-25}: {perms.ManageServer}\r\n" +
+                                                  $"{"ReadMessages",-25}: {perms.ReadMessages}\r\n" +
+                                                  $"{"SafeSendMessages",-25}: {perms.SendMessages}\r\n" +
+                                                  $"{"SendTTSMessages",-25}: {perms.SendTTSMessages}\r\n" +
+                                                  $"{"ManageMessages",-25}: {perms.ManageMessages}\r\n" +
+                                                  $"{"EmbedLinks",-25}: {perms.EmbedLinks}\r\n" +
+                                                  $"{"AttachFiles",-25}: {perms.AttachFiles}\r\n" +
+                                                  $"{"ReadMessageHistory",-25}: {perms.ReadMessageHistory}\r\n" +
+                                                  $"{"MentionEveryone",-25}: {perms.MentionEveryone}\r\n" +
+                                                  $"{"Connect",-25}: {perms.Connect}\r\n" +
+                                                  $"{"Speak",-25}: {perms.Speak}\r\n" +
+                                                  $"{"MuteMembers",-25}: {perms.MuteMembers}\r\n" +
+                                                  $"{"DeafenMembers",-25}: {perms.DeafenMembers}\r\n" +
+                                                  $"{"MoveMembers",-25}: {perms.MoveMembers}\r\n" +
                                                   $"{"UseVoiceActivation",-25}: {perms.UseVoiceActivation}`"
                                 );
                     });

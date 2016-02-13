@@ -128,7 +128,8 @@
     <Compile Include="Bot.Core\DynPerm\DynamicPermissionChecker.cs" />
     <Compile Include="Bot.Core\DynPerm\DynamicPermissionModule.cs" />
     <Compile Include="Bot.Core\DynPerm\DynPermExtenstions.cs" />
-    <Compile Include="Bot.Core\DynPerm\JsonData.cs" />
+    <Compile Include="Bot.Core\DynPerm\DynPermJsonData.cs" />
+    <Compile Include="Bot.Core\DynPerm\PastebinApi.cs" />
     <Compile Include="Bot.Core\Extensions.cs" />
     <Compile Include="Bot.Core\JsonModels.cs" />
     <Compile Include="Bot.Core\Modules\AnnouncementModule.cs" />

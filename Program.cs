@@ -24,6 +24,9 @@ namespace Stormbot
                     SoundcloudResolver.ApiKey = config.SoundcloudApiKey;
                     Constants.TwitchOauth = config.TwitchOauth;
                     Constants.TwitchUsername = config.TwitchUsername;
+                    Constants.PastebinApiKey = config.PastebinApiKey;
+                    Constants.PastebinUsername = config.PastebinUsername;
+                    Constants.PastebinPassword= config.PastebinPassword;
                 }
                 catch (Exception ex)
                 {

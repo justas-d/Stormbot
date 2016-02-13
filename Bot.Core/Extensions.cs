@@ -6,7 +6,6 @@ using Discord;
 using Discord.Audio;
 using Discord.Commands;
 using Discord.Modules;
-using Stormbot.Bot.Core.DynPerm;
 using Stormbot.Helpers;
 
 namespace Stormbot.Bot.Core

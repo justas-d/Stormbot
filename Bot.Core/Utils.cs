@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
 using Discord;
+using Stormbot.Helpers;
 
 namespace Stormbot.Bot.Core
 {
@@ -22,6 +23,7 @@ namespace Stormbot.Bot.Core
 
             await invite.Accept();
             await callback.SafeSendMessage("Joined server.");
+            await Constants.Owner.SendPrivate($"Joined server: `{invite.Server.Name}`.");
         }
     }
 }

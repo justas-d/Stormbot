@@ -11,6 +11,7 @@ namespace Stormbot.Bot.Core.Modules.Game
 {
     public class GameModule : IDataObject, IModule
     {
+        // practically scrapped. Haven't worked on it in a while.
         [DataLoad, DataSave] private GameSessionManager _sesh;
         private GameSessionManager GameSesh => _sesh ?? (_sesh = new GameSessionManager());
 
@@ -32,9 +33,6 @@ namespace Stormbot.Bot.Core.Modules.Game
             });
 
             // commands, which require the caller to have an in game user.
-            // bug : http://puu.sh/mzUz3/309cc7df23.png
-            // asked volt about this, hopefuly a solution comes soon.
-            // if not, I should not chain groups like that, only make groups from the manager object.
             manager.CreateCommands("", ingameG =>
             {
                 ingameG.AddCheck((cmd, usr, chl) =>

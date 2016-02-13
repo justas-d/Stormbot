@@ -50,13 +50,17 @@ namespace Stormbot.Bot.Core.Modules
                     .Description("Displays information about the bot.")
                     .Do(async e =>
                     {
-                        User owner = manager.Client.GetUser(Constants.UserOwner);
                         StringBuilder builder = new StringBuilder("**Bot info:\r\n**```");
-                        builder.AppendLine("- Owner: " + (owner == null ? "Not found." : $"{owner.Name} ({owner.Id})"));
+                        Tuple<int, int> serverData = GetServerData();
+
+                        builder.AppendLine("- Owner: " + (Constants.Owner == null ? "Not found." : $"{Constants.Owner.Name} ({Constants.Owner.Id})"));
                         builder.AppendLine($"- Uptime: {(DateTime.Now - Process.GetCurrentProcess().StartTime).ToString(@"dd\.hh\:mm\:ss")}");
                         builder.AppendLine("- GitHub: https://github.com/SSStormy/Stormbot");
                         builder.AppendLine($"- Memory Usage: {Math.Round(GC.GetTotalMemory(false)/(1024.0*1024.0), 2)} MB");
                         builder.AppendLine($"- Ffmpeg Process count: {Constants.FfmpegProcessCount}");
+                        builder.AppendLine($"- Servers: {_client.Servers.Count()}");
+                        builder.AppendLine($"- Channels: {serverData.Item1}");
+                        builder.AppendLine($"- Users: {serverData.Item2}");
 
                         await e.Channel.SafeSendMessage($"{builder}```");
                     });
@@ -68,9 +72,24 @@ namespace Stormbot.Bot.Core.Modules
                         await
                             e.Channel.SafeSendMessage(
                                 $"**Reach my developer at**:\r\n" +
-                                $"- <@{Constants.UserOwner}> <- click for PM Channel!");
+                                $"- http://steamcommunity.com/profiles/76561198035041409/");
                     });
             });
+        }
+
+        // int1: channel count: int2: user count.
+        private Tuple<int, int> GetServerData()
+        {
+            int channels = 0;
+            int users = 0;
+
+            foreach (Server server in _client.Servers)
+            {
+                channels += server.TextChannels.Count();
+                users += server.Users.Count();
+            }
+
+            return Tuple.Create(channels, users);
         }
 
         private async Task PrintUserInfo(User user, Channel textChannel)

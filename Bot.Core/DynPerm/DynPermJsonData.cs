@@ -1,27 +1,52 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using Newtonsoft.Json;
 
 namespace Stormbot.Bot.Core.DynPerm
 {
     [JsonObject]
+    public class DynPermFullData
+    {
+        [JsonProperty]
+        public string OriginalJson { get; }
+
+        [JsonProperty]
+        public DynamicPerms Perms { get; }
+
+        [JsonProperty]
+        public string PastebinUrl { get; set; }
+
+        [JsonConstructor]
+        private DynPermFullData(string originalJson, DynamicPerms perms, string pastebinUrl)
+        {
+            OriginalJson = originalJson;
+            Perms = perms;
+            PastebinUrl = pastebinUrl;
+        }
+
+        public DynPermFullData(string originalJson, DynamicPerms perms) : this(originalJson, perms, null)
+        {
+        }
+    }
+
+
+    [JsonObject]
     public class DynamicPerms
     {
         [JsonProperty]
-        public List<DynamicPermissionBlock> RolePerms { get; set; }
+        public HashSet<DynamicPermissionBlock> RolePerms { get; }
 
         [JsonProperty]
-        public List<DynamicPermissionBlock> UserPerms { get; set; }
+        public HashSet<DynamicPermissionBlock> UserPerms { get; }
 
         [JsonConstructor]
-        private DynamicPerms(List<DynamicPermissionBlock> roles, List<DynamicPermissionBlock> users)
+        private DynamicPerms(HashSet<DynamicPermissionBlock> roles, HashSet<DynamicPermissionBlock> users)
         {
             if (roles == null)
-                roles = new List<DynamicPermissionBlock>();
+                roles = new HashSet<DynamicPermissionBlock>();
 
             if (users == null)
-                users = new List<DynamicPermissionBlock>();
+                users = new HashSet<DynamicPermissionBlock>();
 
             RolePerms = roles;
             UserPerms = users;
@@ -61,6 +86,8 @@ namespace Stormbot.Bot.Core.DynPerm
         public DynamicPermissionBlock(ulong id) : this(id, null, null)
         {
         }
+
+        public override int GetHashCode() => unchecked((int) Id);
     }
 
     [JsonObject]

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
@@ -64,6 +63,18 @@ namespace Stormbot.Bot.Core
         {
             if (voiceChannel.Type != ChannelType.Voice) throw new ArgumentException(nameof(voiceChannel));
             return user.GetPermissions(voiceChannel).Connect;
+        }
+
+        public static async Task<bool> SafeEditChannel(this Channel channel, string name = null, string topic = null,
+            int? position = null)
+        {
+            if (channel.IsPrivate) return false;
+
+            if (!channel.Server.CurrentUser.ServerPermissions.ManageChannels &&
+                !channel.Server.CurrentUser.GetPermissions(channel).ManageChannel) return false;
+
+            await channel.Edit(name, topic, position);
+            return true;
         }
 
         /// <summary>

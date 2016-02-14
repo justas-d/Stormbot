@@ -85,11 +85,11 @@ namespace Stormbot.Bot.Core.DynPerm
             => IsInvalidChannelsInDict(set.Commands, server, out invalidId) ||
                IsInvalidChannelsInDict(set.Modules, server, out invalidId);
 
-        private bool IsInvalidChannelsInDict(Dictionary<string, HashSet<ulong>> dict, Server server, out ulong invalidId)
+        private bool IsInvalidChannelsInDict(Dictionary<string, RestrictionData> dict, Server server, out ulong invalidId)
         {
             foreach (var pair in dict)
             {
-                foreach (ulong channelId in pair.Value)
+                foreach (ulong channelId in pair.Value.ChannelRestrictions)
                 {
                     if (server.GetChannel(channelId) == null)
                     {

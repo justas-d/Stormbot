@@ -71,7 +71,7 @@ namespace Stormbot.Bot.Core.DynPerm
             return canRunState;
         }
 
-        private bool EvalPermsCommands(Dictionary<string, HashSet<ulong>> dict, Command command, Channel channel,
+        private bool EvalPermsCommands(Dictionary<string, RestrictionData> dict, Command command, Channel channel,
             bool canRunState, bool setState)
         {
             // check if full command exists in dict
@@ -83,9 +83,9 @@ namespace Stormbot.Bot.Core.DynPerm
             {
                 if (command.Text.StartsWith(pair.Key))
                 {
-                    if (pair.Value.Any())
+                    if (pair.Value.ChannelRestrictions.Any())
                     {
-                        if (pair.Value.Contains(channel.Id))
+                        if (pair.Value.ChannelRestrictions.Contains(channel.Id))
                             canRunState = setState;
                     }
                     else
@@ -96,16 +96,16 @@ namespace Stormbot.Bot.Core.DynPerm
             return canRunState;
         }
 
-        private bool EvalPermsExact(Dictionary<string, HashSet<ulong>> dict, string query, Channel channel,
+        private bool EvalPermsExact(Dictionary<string, RestrictionData> dict, string query, Channel channel,
             bool canRunState, bool setState)
         {
-            HashSet<ulong> whenInChannelList;
+            RestrictionData restData;
 
-            if (dict.TryGetValue(query, out whenInChannelList))
+            if (dict.TryGetValue(query, out restData))
             {
-                if (whenInChannelList.Any())
+                if (restData.ChannelRestrictions.Any())
                 {
-                    if (whenInChannelList.Contains(channel.Id))
+                    if (restData.ChannelRestrictions.Contains(channel.Id))
                         canRunState = setState;
                 }
                 else

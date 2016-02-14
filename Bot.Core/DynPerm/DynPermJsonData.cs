@@ -80,27 +80,27 @@ namespace Stormbot.Bot.Core.DynPerm
     public class DynamicRestricionSet
     {
         [JsonProperty]
-        public Dictionary<string, HashSet<ulong>> Modules { get; }
+        public Dictionary<string, RestrictionData> Modules { get; }
 
         [JsonProperty]
-        public Dictionary<string, HashSet<ulong>> Commands { get; }
+        public Dictionary<string, RestrictionData> Commands { get; }
 
         [JsonConstructor]
-        private DynamicRestricionSet(Dictionary<string, HashSet<ulong>> modules,
-            Dictionary<string, HashSet<ulong>> commands)
+        private DynamicRestricionSet(Dictionary<string, RestrictionData> modules,
+            Dictionary<string, RestrictionData> commands)
         {
             if (modules == null)
-                modules = new Dictionary<string, HashSet<ulong>>(StringComparer.InvariantCultureIgnoreCase);
+                modules = new Dictionary<string, RestrictionData>(StringComparer.InvariantCultureIgnoreCase);
 
             if (commands == null)
-                commands = new Dictionary<string, HashSet<ulong>>(StringComparer.InvariantCultureIgnoreCase);
+                commands = new Dictionary<string, RestrictionData>(StringComparer.InvariantCultureIgnoreCase);
 
 
             if (!Equals(modules.Comparer, StringComparer.InvariantCultureIgnoreCase))
-                modules = new Dictionary<string, HashSet<ulong>>(modules, StringComparer.InvariantCultureIgnoreCase);
+                modules = new Dictionary<string, RestrictionData>(modules, StringComparer.InvariantCultureIgnoreCase);
 
             if (!Equals(commands.Comparer, StringComparer.InvariantCultureIgnoreCase))
-                commands = new Dictionary<string, HashSet<ulong>>(commands, StringComparer.InvariantCultureIgnoreCase);
+                commands = new Dictionary<string, RestrictionData>(commands, StringComparer.InvariantCultureIgnoreCase);
 
             Modules = modules;
             Commands = commands;
@@ -108,6 +108,26 @@ namespace Stormbot.Bot.Core.DynPerm
 
         public DynamicRestricionSet() : this(null, null)
         {
+        }
+    }
+
+    [JsonObject]
+    public class RestrictionData
+    {
+        [JsonProperty("WhenInChannels")]
+        public HashSet<ulong> ChannelRestrictions { get; }
+
+        [JsonProperty("Error")]
+        public string ErrorMessage { get; }
+
+        [JsonConstructor]
+        public RestrictionData(HashSet<ulong> whenInChannels, string error)
+        {
+            if (whenInChannels == null)
+                whenInChannels = new HashSet<ulong>();
+
+            ChannelRestrictions = whenInChannels;
+            ErrorMessage = error;
         }
     }
 }

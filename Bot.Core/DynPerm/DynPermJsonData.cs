@@ -29,24 +29,24 @@ namespace Stormbot.Bot.Core.DynPerm
         }
     }
 
-
     [JsonObject]
     public class DynamicPerms
     {
         [JsonProperty]
-        public HashSet<DynamicPermissionBlock> RolePerms { get; }
+        public Dictionary<ulong, DynamicPermissionBlock> RolePerms { get; }
 
         [JsonProperty]
-        public HashSet<DynamicPermissionBlock> UserPerms { get; }
+        public Dictionary<ulong, DynamicPermissionBlock> UserPerms { get; }
 
         [JsonConstructor]
-        private DynamicPerms(HashSet<DynamicPermissionBlock> roles, HashSet<DynamicPermissionBlock> users)
+        private DynamicPerms(Dictionary<ulong, DynamicPermissionBlock> roles,
+            Dictionary<ulong, DynamicPermissionBlock> users)
         {
             if (roles == null)
-                roles = new HashSet<DynamicPermissionBlock>();
+                roles = new Dictionary<ulong, DynamicPermissionBlock>();
 
             if (users == null)
-                users = new HashSet<DynamicPermissionBlock>();
+                users = new Dictionary<ulong, DynamicPermissionBlock>();
 
             RolePerms = roles;
             UserPerms = users;
@@ -54,85 +54,60 @@ namespace Stormbot.Bot.Core.DynPerm
     }
 
     [JsonObject]
-    public class DynamicPermissionBlock : IEquatable<DynamicPermissionBlock>
+    public class DynamicPermissionBlock
     {
         [JsonProperty]
-        public ulong Id { get; }
+        public DynamicRestricionSet Allow { get; }
 
         [JsonProperty]
-        public ModuleCommandPair Allow { get; }
-
-        [JsonProperty]
-        public ModuleCommandPair Deny { get; }
+        public DynamicRestricionSet Deny { get; }
 
         [JsonConstructor]
-        private DynamicPermissionBlock(ulong id, ModuleCommandPair allow, ModuleCommandPair deny)
+        private DynamicPermissionBlock(ulong id, DynamicRestricionSet allow, DynamicRestricionSet deny)
         {
             if (allow == null)
-                allow = new ModuleCommandPair();
+                allow = new DynamicRestricionSet();
 
             if (deny == null)
-                deny = new ModuleCommandPair();
+                deny = new DynamicRestricionSet();
 
-            Id = id;
             Allow = allow;
             Deny = deny;
         }
-
-        public bool Equals(DynamicPermissionBlock other) => Id == other.Id;
-
-        public override bool Equals(object obj)
-        {
-            DynamicPermissionBlock block = obj as DynamicPermissionBlock;
-            return block != null && obj.Equals(this);
-        }
-
-        public static bool operator ==(DynamicPermissionBlock a, DynamicPermissionBlock b)
-        {
-            if (ReferenceEquals(a, b))
-                return true;
-
-            if (((object)a == null) || ((object)b == null))
-                return false;
-
-            return a.Id == b.Id;
-        }
-
-        public static bool operator !=(DynamicPermissionBlock a, DynamicPermissionBlock b) => !(a == b);
-        public override int GetHashCode() => unchecked((int) Id);
     }
 
     [JsonObject]
-    public class ModuleCommandPair
+    public class DynamicRestricionSet
     {
         [JsonProperty]
-        public HashSet<string> Modules { get; }
+        public Dictionary<string, HashSet<ulong>> Modules { get; }
 
         [JsonProperty]
-        public HashSet<string> Commands { get; }
+        public Dictionary<string, HashSet<ulong>> Commands { get; }
 
         [JsonConstructor]
-        private ModuleCommandPair(HashSet<string> modules, HashSet<string> commands)
+        private DynamicRestricionSet(Dictionary<string, HashSet<ulong>> modules,
+            Dictionary<string, HashSet<ulong>> commands)
         {
             if (modules == null)
-                modules = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                modules = new Dictionary<string, HashSet<ulong>>(StringComparer.InvariantCultureIgnoreCase);
 
             if (commands == null)
-                commands = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                commands = new Dictionary<string, HashSet<ulong>>(StringComparer.InvariantCultureIgnoreCase);
 
-            if (!Equals(modules.Comparer, StringComparer.OrdinalIgnoreCase))
-                modules = new HashSet<string>(modules, StringComparer.OrdinalIgnoreCase);
 
-            if (!Equals(commands.Comparer, StringComparer.OrdinalIgnoreCase))
-                commands = new HashSet<string>(commands, StringComparer.OrdinalIgnoreCase);
+            if (!Equals(modules.Comparer, StringComparer.InvariantCultureIgnoreCase))
+                modules = new Dictionary<string, HashSet<ulong>>(modules, StringComparer.InvariantCultureIgnoreCase);
+
+            if (!Equals(commands.Comparer, StringComparer.InvariantCultureIgnoreCase))
+                commands = new Dictionary<string, HashSet<ulong>>(commands, StringComparer.InvariantCultureIgnoreCase);
 
             Modules = modules;
             Commands = commands;
         }
 
-        internal ModuleCommandPair() : this(null, null)
+        public DynamicRestricionSet() : this(null, null)
         {
-
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -150,13 +151,18 @@ namespace Stormbot.Bot.Core.Modules
                     .Parameter("hex")
                     .Do(async e =>
                     {
-                        string stringhex = e.GetArg("hex").ToUpper();
+                        string stringhex = e.GetArg("hex");
+                        uint hex;
+
+                        if (!DiscordUtils.ToHex(stringhex, out hex))
+                            return;
+
                         Role role = e.Server.Roles.FirstOrDefault(x => x.Name == ColorRoleName + stringhex);
 
                         if (role == null || !e.User.HasRole(role) && role.CanEdit())
                         {
                             role = await e.Server.CreateRole(ColorRoleName + stringhex);
-                            await role.SetColor(stringhex);
+                            await role.SetColor(hex);
                             await e.User.Edit(roles: GetOtherRoles(e.User).Concat(new[] {role}));
                         }
                         await CleanColorRoles(e.Server);

@@ -35,9 +35,9 @@ namespace Stormbot.Bot.Core.DynPerm
             // apply default perms.
             bool retval = DefaultPermissionLevel <= DefaultPermChecker.GetPermissionLevel(user, channel);
 
+            // if we do not have dynamic perms in place for the user's server, return the default perms.
             if (data == null || (!data.Perms.RolePerms.Any() && !data.Perms.UserPerms.Any()))
                 return retval;
-            // if we do not have dynamic perms in place for the user's server, return the default perms.
 
             /* 
               Firsly do role checks.
@@ -48,69 +48,72 @@ namespace Stormbot.Bot.Core.DynPerm
             foreach (var pair in data.Perms.RolePerms)
             {
                 if (user.HasRole(pair.Key))
-                    retval = EvaluatePerms(pair.Value, command, retval, channel);
+                    retval = EvaluatePerms(pair.Value, command, retval, channel, ref error);
             }
 
             // users override roles, do them next.
             DynamicPermissionBlock permBlock;
             if (data.Perms.UserPerms.TryGetValue(user.Id, out permBlock))
-                retval = EvaluatePerms(permBlock, command, retval, channel);
+                retval = EvaluatePerms(permBlock, command, retval, channel, ref error);
 
             return retval;
         }
 
-        private bool EvaluatePerms(DynamicPermissionBlock dynPerms, Command command, bool canRunState, Channel channel)
+        private bool EvaluatePerms(DynamicPermissionBlock dynPerms, Command command, bool canRunState, Channel channel,
+            ref string error)
         {
             string category = command.Category.ToLowerInvariant();
 
-            canRunState = EvalPermsExact(dynPerms.Allow.Modules, category, channel, canRunState, true);
-            canRunState = EvalPermsExact(dynPerms.Deny.Modules, category, channel, canRunState, false);
-            canRunState = EvalPermsCommands(dynPerms.Allow.Commands, command, channel, canRunState, true);
-            canRunState = EvalPermsCommands(dynPerms.Deny.Commands, command, channel, canRunState, false);
+            canRunState = EvalPermsExact(dynPerms.Allow.Modules, category, channel, canRunState, true, ref error);
+            canRunState = EvalPermsExact(dynPerms.Deny.Modules, category, channel, canRunState, false, ref error);
+            canRunState = EvalPermsCommands(dynPerms.Allow.Commands, command, channel, canRunState, true, ref error);
+            canRunState = EvalPermsCommands(dynPerms.Deny.Commands, command, channel, canRunState, false, ref error);
 
             return canRunState;
         }
 
         private bool EvalPermsCommands(Dictionary<string, RestrictionData> dict, Command command, Channel channel,
-            bool canRunState, bool setState)
+            bool canRunState, bool setState, ref string error)
         {
             // check if full command exists in dict
-            if (EvalPermsExact(dict, command.Text, channel, canRunState, setState) == setState)
+            if (EvalPermsExact(dict, command.Text, channel, canRunState, setState, ref error) == setState)
                 return setState;
 
             // look for group
             foreach (var pair in dict)
             {
                 if (command.Text.StartsWith(pair.Key))
-                {
-                    if (pair.Value.ChannelRestrictions.Any())
-                    {
-                        if (pair.Value.ChannelRestrictions.Contains(channel.Id))
-                            canRunState = setState;
-                    }
-                    else
-                        canRunState = setState;
-                }
+                    canRunState = EvalRestrictionData(pair.Value, channel, canRunState, setState, ref error);
             }
 
             return canRunState;
         }
 
         private bool EvalPermsExact(Dictionary<string, RestrictionData> dict, string query, Channel channel,
-            bool canRunState, bool setState)
+            bool canRunState, bool setState, ref string error)
         {
             RestrictionData restData;
 
             if (dict.TryGetValue(query, out restData))
+                canRunState = EvalRestrictionData(restData, channel, canRunState, setState, ref error);
+
+            return canRunState;
+        }
+
+        private bool EvalRestrictionData(RestrictionData restData, Channel channel, bool canRunState, bool setState,
+            ref string error)
+        {
+            if (restData.ChannelRestrictions.Any())
             {
-                if (restData.ChannelRestrictions.Any())
-                {
-                    if (restData.ChannelRestrictions.Contains(channel.Id))
-                        canRunState = setState;
-                }
-                else
+                if (restData.ChannelRestrictions.Contains(channel.Id) == setState)
                     canRunState = setState;
             }
+            else
+                canRunState = setState;
+
+            if (restData.ErrorMessage != null)
+                error = restData.ErrorMessage;
+
             return canRunState;
         }
     }

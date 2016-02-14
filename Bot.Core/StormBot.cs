@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Audio;
@@ -65,7 +67,42 @@ namespace Stormbot.Bot.Core
             Client.UsingCommands(cmd =>
             {
                 cmd.AllowMentionPrefix = true;
-                cmd.ErrorHandler += (s, e) => Logger.FormattedWrite("CommandService", $"CmdEx: {e.ErrorType} Ex: {e.Exception}", ConsoleColor.Red);
+                cmd.ErrorHandler += async (s, e) =>
+                {
+                    switch (e.ErrorType)
+                    {
+                        case CommandErrorType.Exception:
+                            await
+                                e.Channel.SendMessage(
+                                    $"{e.User.Mention} Something went wrong while processing your command! Make sure your input is in the valid format.");
+                            break;
+
+                        case CommandErrorType.UnknownCommand:
+                            await e.Channel.SendMessage($"{e.User.Mention} that command does not exist.");
+                            break;
+
+                        case CommandErrorType.BadPermissions:
+                            StringBuilder builder = new StringBuilder($"{e.User.Mention} you do not have sufficient permissions for that command. ");
+                            if (e.Exception != null && !string.IsNullOrEmpty(e.Exception.Message))
+                                builder.AppendLine($"Error message: ```{e.Exception.Message}```");
+                            await e.Channel.SendMessage(builder.ToString());
+                            break;
+
+                        case CommandErrorType.BadArgCount:
+                            await
+                                e.Channel.SendMessage(
+                                    $"{e.User.Mention} bad argument count.");
+                            break;
+
+                        case CommandErrorType.InvalidInput:
+                            await e.Channel.SendMessage($"{e.User.Mention} invalid command input.");
+                            break;
+
+                        default:
+                            Logger.FormattedWrite("CommandService", $"e.ErrorType ({e.ErrorType}) is not handled.", ConsoleColor.Yellow);
+                            break;
+                    }
+                };
                 cmd.PrefixChar = '}';
                 cmd.HelpMode = HelpMode.Public;
             });

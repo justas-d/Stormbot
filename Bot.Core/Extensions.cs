@@ -21,11 +21,9 @@ namespace Stormbot.Bot.Core
         public static bool CanRun(this ModuleManager manager, Channel channel)
             => manager.EnabledServers.Contains(channel.Server) || manager.EnabledChannels.Contains(channel);
 
-        public static async Task SetColor(this Role role, string stringhex)
+        public static async Task SetColor(this Role role, uint hex)
         {
             if (!CanEdit(role)) return;
-            if (stringhex.Length > 6) return; //input is invalid if length isn't 0 < x > 7
-            uint hex = uint.Parse(stringhex, NumberStyles.HexNumber);
             await role.Edit(color: new Color(hex));
         }
 

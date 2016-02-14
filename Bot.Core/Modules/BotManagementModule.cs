@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
+using System.Text;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
@@ -24,7 +24,18 @@ namespace Stormbot.Bot.Core.Modules
         {
             _client = manager.Client;
             _client.MessageReceived +=
-                (sender, e) => Logger.FormattedWrite($"Msg {e.Server.Name}@{e.Channel.Name}", e.Message.ToString(), ConsoleColor.White);
+                (s, e) =>
+                {
+                    StringBuilder builder = new StringBuilder($"Msg: ");
+
+                    if (e.Server != null)
+                        builder.Append($"{e.Server.Name} ");
+
+                    builder.Append(e.Channel.Name);
+
+                    Logger.FormattedWrite(builder.ToString(), e.Message.ToString(),
+                        ConsoleColor.White);
+                };
 
            _io = _client.Services.Get<DataIoService>();
 

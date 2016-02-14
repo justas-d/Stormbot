@@ -1,11 +1,9 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using Discord;
 using Discord.Commands;
 using Discord.Commands.Permissions;
 using Discord.Commands.Permissions.Levels;
-using StrmyCore;
 
 namespace Stormbot.Bot.Core.DynPerm
 {

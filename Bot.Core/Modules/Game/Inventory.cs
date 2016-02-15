@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Text;
-using JetBrains.Annotations;
 using Newtonsoft.Json;
 
 namespace Stormbot.Bot.Core.Modules.Game
@@ -37,7 +36,7 @@ namespace Stormbot.Bot.Core.Modules.Game
         [JsonProperty]
         public Item[] Items => _items ?? (_items = new Item[Size]);
 
-        [JsonConstructor, UsedImplicitly]
+        [JsonConstructor]
         private Inventory(int size, Item[] items)
         {
             Size = size;
@@ -100,7 +99,6 @@ namespace Stormbot.Bot.Core.Modules.Game
         /// </summary>
         /// <param name="index">The index of the item array from which we will remove and return an item</param>
         /// <returns>The item, found at given index.</returns>
-        [CanBeNull]
         public Item TakeItem(int index)
         {
             // check for out of range input.
@@ -287,7 +285,6 @@ namespace Stormbot.Bot.Core.Modules.Game
             
         }
 
-        [CanBeNull]
         public string GetPageData(int page)
         {
             // check for out of range input.

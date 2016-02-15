@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using JetBrains.Annotations;
 using Newtonsoft.Json;
 using Stormbot.Helpers;
 using StrmyCore;
@@ -27,7 +26,7 @@ namespace Stormbot.Bot.Core.Modules.Audio
         public TimeSpan? Length { get; set; }
         public string Name { get; private set; }
 
-        [JsonConstructor, UsedImplicitly]
+        [JsonConstructor]
         private TrackData(string location, TimeSpan? length, string name)
         {
             Location = location;
@@ -53,7 +52,6 @@ namespace Stormbot.Bot.Core.Modules.Audio
             return resolver?.ResolveStreamUrl(Location);
         }
 
-        [CanBeNull]
         public string GetStream()
         {
             string stream = GetStreamUrl();
@@ -70,7 +68,6 @@ namespace Stormbot.Bot.Core.Modules.Audio
             return stream;
         }
 
-        [CanBeNull]
         public static TrackData Parse(string input)
         {
             if (File.Exists(input))

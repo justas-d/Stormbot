@@ -171,10 +171,12 @@ namespace Stormbot.Bot.Core.Modules
 
                         Role role = e.Server.Roles.FirstOrDefault(x => x.Name == ColorRoleName + stringhex);
 
-                        if (role == null || !e.User.HasRole(role) && role.CanEdit())
+                        if (role == null || !e.User.HasRole(role))
                         {
                             role = await e.Server.CreateRole(ColorRoleName + stringhex);
-                            await role.SetColor(hex);
+                            if(!await role.SafeEdit(color: new Color(hex)))
+                                await e.Channel.SendMessage($"Failed editing role. Make sure it's not everyone or managed.");
+
                             await e.User.Edit(roles: GetOtherRoles(e.User).Concat(new[] {role}));
                         }
                         await CleanColorRoles(e.Server);

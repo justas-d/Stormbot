@@ -16,7 +16,7 @@ namespace Stormbot.Helpers
         internal static User Owner;
 
         internal const string RoleIdArg = "roleid";
-        internal const string UserIdArg = "userid";
+        internal const string UserMentionArg = "usermention";
         internal const string ChannelIdArg = "channelid";
 
         internal static string Pass;

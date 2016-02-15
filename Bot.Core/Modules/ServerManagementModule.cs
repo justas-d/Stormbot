@@ -80,7 +80,6 @@ namespace Stormbot.Bot.Core.Modules
                     .Do(async e =>
                     {
                         Channel channel = e.GetChannel();
-                        string nameBefore = channel.Name;
                         string name = e.GetArg("name");
 
                         if (channel == null)
@@ -88,6 +87,8 @@ namespace Stormbot.Bot.Core.Modules
                             await e.Channel.SendMessage($"Channel not found.");
                             return;
                         }
+                        string nameBefore = channel.Name;
+
                         if (!await channel.SafeEditChannel(name: name))
                         {
                             await
@@ -123,7 +124,11 @@ namespace Stormbot.Bot.Core.Modules
                         {
                             string name = e.GetArg("name");
                             Role role = FindRole(name, e);
-                            if (role != null) return;
+                            if (role != null)
+                            {
+                                await e.Channel.SendMessage("Role not found.");
+                                return;
+                            }
 
                             await e.Server.CreateRole(name);
                             await e.Channel.SafeSendMessage($"Created role `{name}`");
@@ -134,7 +139,18 @@ namespace Stormbot.Bot.Core.Modules
                         .Do(async e =>
                         {
                             Role role = e.GetRole();
-                            if (role == null || role.IsManaged || role.IsEveryone) return;
+
+                            if (role == null)
+                            {
+                                await e.Channel.SendMessage("Role not found.");
+                                return;
+                            }
+
+                            if (role.IsEveryone || role.IsHoisted || role.IsManaged)
+                            {
+                                await e.Channel.SendMessage("You cannot remove this role.");
+                                return;
+                            }
 
                             await role.Delete();
                             await e.Channel.SafeSendMessage($"Removed role `{role.Name}`");
@@ -148,13 +164,20 @@ namespace Stormbot.Bot.Core.Modules
                         .Do(async e =>
                         {
                             Role role = e.GetRole();
+
+                            if (role == null)
+                            {
+                                await e.Channel.SendMessage("Role not found.");
+                                return;
+                            }
+
                             ServerPermissions edited = role.Permissions;
                             PropertyInfo prop = edited.GetType().GetProperty(e.GetArg("permission"));
 
                             bool value = bool.Parse(e.GetArg("value"));
                             prop.SetValue(edited, value);
 
-                            await role.Edit(permissions: edited);
+                            await role.SafeEdit(perm: edited);
                             await
                                 e.Channel.SafeSendMessage(
                                     $"Set permission `{prop.Name}` in `{role.Name}` to `{value}`");
@@ -167,12 +190,21 @@ namespace Stormbot.Bot.Core.Modules
                         .Parameter("hex")
                         .Do(async e =>
                         {
+                            Role role = e.GetRole();
+
+                            if (role == null)
+                            {
+                                await e.Channel.SendMessage("Role not found.");
+                                return;
+                            }
+
                             uint hex;
 
                             if (!DiscordUtils.ToHex(e.GetArg("hex"), out hex))
                                 return;
 
-                            await e.GetRole().SetColor(hex);
+                            if(!await role.SafeEdit(color: new Color(hex)))
+                                await e.Channel.SendMessage($"Failed editing role. Make sure it's not everyone or managed.");
                         });
                 });
 
@@ -182,6 +214,13 @@ namespace Stormbot.Bot.Core.Modules
                     .Do(async e =>
                     {
                         Role role = e.GetRole();
+
+                        if (role == null)
+                        {
+                            await e.Channel.SendMessage("Role not found.");
+                            return;
+                        }
+
                         ServerPermissions perms = role.Permissions;
                         await
                             e.Channel.SafeSendMessage($"**Listing permissions for {role.Name}**\r\n:" +
@@ -224,57 +263,90 @@ namespace Stormbot.Bot.Core.Modules
                 group.CreateCommand("mute")
                     .AddCheck((cmd, usr, chnl) => chnl.Server.CurrentUser.ServerPermissions.MuteMembers)
                     .Description("Mutes(true)/unmutes(false) the userid")
-                    .Parameter(Constants.UserIdArg)
+                    .Parameter(Constants.UserMentionArg)
                     .Parameter("val")
                     .Do(async e =>
                     {
                         User user = e.GetUser();
+
+                        if (user == null)
+                        {
+                            await e.Channel.SendMessage("User not found.");
+                            return;
+                        }
+
                         await user.Edit(bool.Parse(e.GetArg("val")));
                         await e.Channel.SafeSendMessage($"Muted `{user.Name}`");
                     });
                 group.CreateCommand("deaf")
                     .AddCheck((cmd, usr, chnl) => chnl.Server.CurrentUser.ServerPermissions.DeafenMembers)
-                    .Description("Deafens(true)/Undeafens(false) the current edit user.")
-                    .Parameter(Constants.UserIdArg)
+                    .Description("Deafens(true)/Undeafens(false) @user")
+                    .Parameter(Constants.UserMentionArg)
                     .Parameter("val")
                     .Do(async e =>
                     {
                         User user = e.GetUser();
+
+                        if (user == null)
+                        {
+                            await e.Channel.SendMessage("User not found.");
+                            return;
+                        }
+
                         await user.Edit(isDeafened: bool.Parse(e.GetArg("val")));
                         await e.Channel.SafeSendMessage($"Deafened `{user.Name}`");
                     });
                 group.CreateCommand("move")
                     .AddCheck((cmd, usr, chnl) => chnl.Server.CurrentUser.ServerPermissions.MoveMembers)
-                    .Description("Moves the current edit user to a given voice channel")
-                    .Parameter(Constants.UserIdArg)
+                    .Description("Moves a @user to a given voice channel")
+                    .Parameter(Constants.UserMentionArg)
                     .Parameter("channelid", ParameterType.Unparsed)
                     .Do(async e =>
                     {
                         User user = e.GetUser();
+
+                        if (user == null)
+                        {
+                            await e.Channel.SendMessage("User not found.");
+                            return;
+                        }
+
                         Channel moveChnl = e.Server.GetChannel(ulong.Parse(e.GetArg("channelid")));
                         await user.Edit(voiceChannel: moveChnl);
                         await e.Channel.SafeSendMessage($"Moved `{user.Name}` to `{moveChnl.Name}`");
                     });
                 group.CreateCommand("role add")
                     .AddCheck((cmd, usr, chnl) => chnl.Server.CurrentUser.ServerPermissions.ManageRoles)
-                    .Description("Adds a role, found by id, to the current edit user if it doesn't already have it.")
-                    .Parameter(Constants.UserIdArg)
+                    .Description("Adds a role, found by id, to @user if they dont have it.")
+                    .Parameter(Constants.UserMentionArg)
                     .Parameter(Constants.RoleIdArg)
                     .Do(async e =>
                     {
                         User user = e.GetUser();
                         Role role = e.GetRole();
 
-                        if (!user.HasRole(role) && role.CanEdit())
+                        if (user == null)
+                        {
+                            await e.Channel.SendMessage("User not found.");
+                            return;
+                        }
+
+                        if (role == null)
+                        {
+                            await e.Channel.SendMessage("Role not found.");
+                            return;
+                        }
+
+                        if (!user.HasRole(role))
                         {
                             await user.Edit(roles: user.Roles.Concat(new[] {role}));
-                            await e.Channel.SafeSendMessage($"Given role `{role.Name}` to `{user.Name}`");
+                            await e.Channel.SafeSendMessage($"Given role `{role.Name}` to `{user.Mention}`");
                         }
                     });
 
                 group.CreateCommand("role list")
-                    .Description("Returns a list of roles the given userid has.")
-                    .Parameter(Constants.UserIdArg)
+                    .Description("Returns a list of roles a @user has.")
+                    .Parameter(Constants.UserMentionArg)
                     .Do(async e =>
                     {
                         StringBuilder builder = new StringBuilder();
@@ -285,14 +357,27 @@ namespace Stormbot.Bot.Core.Modules
                     });
                 group.CreateCommand("role rem")
                     .AddCheck((cmd, usr, chnl) => chnl.Server.CurrentUser.ServerPermissions.ManageRoles)
-                    .Description("Removes a roleid from the userid if it has it.")
-                    .Parameter(Constants.UserIdArg)
+                    .Description("Removes a roleid from a @user if they have it.")
+                    .Parameter(Constants.UserMentionArg)
                     .Parameter(Constants.RoleIdArg)
                     .Do(async e =>
                     {
                         User user = e.GetUser();
                         Role role = e.GetRole();
-                        if (user.HasRole(role) && role.CanEdit())
+
+                        if (user == null)
+                        {
+                            await e.Channel.SendMessage("User not found.");
+                            return;
+                        }
+
+                        if (role == null)
+                        {
+                            await e.Channel.SendMessage("Role not found.");
+                            return;
+                        }
+
+                        if (user.HasRole(role))
                         {
                             await user.RemoveRoles(role);
                             await e.Channel.SafeSendMessage($"Removed role `{role.Name}` from `{user.Name}`.");
@@ -300,7 +385,7 @@ namespace Stormbot.Bot.Core.Modules
                     });
 
                 group.CreateCommand("kick")
-                    .Description("Kick an user, found by their mention.")
+                    .Description("Kicks a @user.")
                     .AddCheck((cmd, usr, chnl) => chnl.Server.CurrentUser.ServerPermissions.KickMembers)
                     .Parameter("userMention")
                     .Do(async e =>
@@ -318,7 +403,7 @@ namespace Stormbot.Bot.Core.Modules
                     });
 
                 group.CreateCommand("ban")
-                    .Description("Bans an user, found by their mention. Also allows for message pruning for a given amount of days.")
+                    .Description("Bans an @user. Also allows for message pruning for a given amount of days.")
                     .AddCheck((cmd, usr, chnl) => chnl.Server.CurrentUser.ServerPermissions.BanMembers)
                     .Parameter("userMention")
                     .Parameter("pruneDays", ParameterType.Optional)

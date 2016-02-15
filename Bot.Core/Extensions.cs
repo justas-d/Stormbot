@@ -20,10 +20,16 @@ namespace Stormbot.Bot.Core
         public static bool CanRun(this ModuleManager manager, Channel channel)
             => manager.EnabledServers.Contains(channel.Server) || manager.EnabledChannels.Contains(channel);
 
-        public static async Task SetColor(this Role role, uint hex)
+        public static async Task<bool> SafeEdit(this Role role,
+            string name = null, ServerPermissions? perm = null, Color color = null, bool? isHoisted = false,
+            int? position = null)
         {
-            if (!CanEdit(role)) return;
-            await role.Edit(color: new Color(hex));
+            if (color != null && role.IsEveryone)
+                return false;
+
+            await role.Edit(name, perm, color, isHoisted, position);
+
+            return true;
         }
 
         public static async Task SendPrivate(this User user, string message)
@@ -39,8 +45,6 @@ namespace Stormbot.Bot.Core
         public static User GetUser(this DiscordClient client, ulong userid)
             => client.Servers.Select(server => server.GetUser(userid)).FirstOrDefault(user => user != null);
 
-        public static bool CanEdit(this Role role) => !role.IsEveryone || !role.IsManaged;
-
         /// <summary>
         /// Returns the role, which is found by the ulong paramater defined by Constants.RoleIdArg
         /// </summary>
@@ -51,7 +55,7 @@ namespace Stormbot.Bot.Core
         /// Returns the user, which is found by the ulong paramater defined by Constants.UserIdArg
         /// </summary>
         public static User GetUser(this CommandEventArgs e)
-            => e.Server.GetUser(ulong.Parse(e.GetArg(Constants.UserIdArg)));
+            => e.Server.GetUser(DiscordUtils.ParseMention(e.GetArg(Constants.UserMentionArg)).FirstOrDefault());
 
         /// <summary>
         /// Returns the channel, which is found by the ulong paramater defined by Constants.ChannelIdArg

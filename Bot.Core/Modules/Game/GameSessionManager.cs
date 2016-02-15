@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Discord;
-using JetBrains.Annotations;
 using Newtonsoft.Json;
 using StrmyCore;
 
@@ -39,10 +38,8 @@ namespace Stormbot.Bot.Core.Modules.Game
                 player.User.SendPrivate("Welcome to the character creation! Use !help cc to find out what you can do.");
         }
 
-        [CanBeNull]
         public GamePlayer GetPlayer(ulong userid) => Players.TrySafeGet(userid, false);
 
-        [CanBeNull]
         public GamePlayer GetPlayer(User user) => GetPlayer(user.Id);
 
         public bool PlayerExists(ulong userid) => Players.ContainsKey(userid);

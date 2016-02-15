@@ -1,15 +1,12 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
-using Discord.Commands.Permissions.Levels;
 using Discord.Modules;
-using JetBrains.Annotations;
 using Newtonsoft.Json;
 using RestSharp.Extensions.MonoHttp;
 using Stormbot.Bot.Core.DynPerm;
@@ -20,13 +17,29 @@ namespace Stormbot.Bot.Core.Modules
 {
     public class QualityOfLifeModule : IDataObject, IModule
     {
-        [Serializable]
+        [JsonObject]
         private class ReminderData
         {
+            [JsonProperty]
             public ulong User { get; }
+
+            [JsonProperty]
             public DateTime EndTime { get; }
+
+            [JsonProperty]
             public DateTime CreateTime { get; }
+
+            [JsonProperty]
             public string Reason { get; }
+
+            [JsonConstructor]
+            private ReminderData(ulong user, DateTime endTime, DateTime createTime, string reason)
+            {
+                User = user;
+                EndTime = endTime;
+                CreateTime = createTime;
+                Reason = reason;
+            }
 
             public ReminderData(ulong user, TimeSpan span, string reason)
             {
@@ -35,18 +48,10 @@ namespace Stormbot.Bot.Core.Modules
                 CreateTime = DateTime.Now;
                 Reason = reason;
             }
-
-            [JsonConstructor, UsedImplicitly]
-            private ReminderData(ulong user, DateTime endTime, DateTime createTime, string reason)
-            {
-                User = user;
-                EndTime = endTime;
-                CreateTime = createTime;
-                Reason = reason;
-            }
         }
 
-        [DataLoad, DataSave] private ConcurrentDictionary<ulong, List<string>> _quoteDictionary;
+        [DataLoad, DataSave] private ConcurrentDictionary<ulong, HashSet<string>> _quoteDictionary;
+        private const byte MinQuoteSize = 3;
 
         [DataLoad, DataSave] private List<ReminderData> _reminders = new List<ReminderData>();
 
@@ -122,6 +127,13 @@ namespace Stormbot.Bot.Core.Modules
                     .Do(async e =>
                     {
                         string input = e.GetArg("quote");
+
+                        if (input.Length < MinQuoteSize)
+                        {
+                            await e.Channel.SafeSendMessage($"Quote too short. (min {MinQuoteSize})");
+                            return;
+                        }
+
                         if (string.IsNullOrEmpty(input))
                         {
                             await e.Channel.SafeSendMessage("Input cannot be empty.");
@@ -187,10 +199,10 @@ namespace Stormbot.Bot.Core.Modules
             }
         }
 
-        private List<string> GetQuotes(Server server)
+        private HashSet<string> GetQuotes(Server server)
         {
             if (!_quoteDictionary.ContainsKey(server.Id))
-                _quoteDictionary.TryAdd(server.Id, new List<string>());
+                _quoteDictionary.TryAdd(server.Id, new HashSet<string>());
 
             return _quoteDictionary[server.Id];
         }
@@ -198,7 +210,7 @@ namespace Stormbot.Bot.Core.Modules
         void IDataObject.OnDataLoad()
         {
             if (_quoteDictionary == null)
-                _quoteDictionary = new ConcurrentDictionary<ulong, List<string>>();
+                _quoteDictionary = new ConcurrentDictionary<ulong, HashSet<string>>();
         }
 
         private async Task CleanColorRoles(Server server)

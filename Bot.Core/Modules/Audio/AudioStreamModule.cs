@@ -62,6 +62,9 @@ namespace Stormbot.Bot.Core.Modules.Audio
                 get { return _playbackVoiceChannel; }
                 set
                 {
+                    if (value.Type != ChannelType.Voice)
+                        return;
+
                     _playbackVoiceChannel = value;
                     PlaybackChannelId = value.Id;
                 }
@@ -85,13 +88,15 @@ namespace Stormbot.Bot.Core.Modules.Audio
             private bool _pausePlaybackFlag; // pauses playback of the currently played track.
             private bool _prevFlag; // set when we want to go one track back.
 
-            private bool _skipToFlag; // set when we want to skip to a ceratin point in the currently played track or in the playlist
+            private bool _skipToFlag;
+                // set when we want to skip to a ceratin point in the currently played track or in the playlist
 
             // the time to which we will skip in the currently played track when the skiptoflag is set.
             private TimeSpan _skipTime;
 
             [JsonConstructor]
-            private AudioState(ulong hostServerId, List<TrackData> playlist = null, ushort trackIndex = 0, ulong playbackChannelId = 0)
+            private AudioState(ulong hostServerId, List<TrackData> playlist = null, ushort trackIndex = 0,
+                ulong playbackChannelId = 0)
             {
                 HostServerId = hostServerId;
                 Playlist = playlist ?? new List<TrackData>();
@@ -144,22 +149,10 @@ namespace Stormbot.Bot.Core.Modules.Audio
                     return;
                 }
 
-                if (PlaybackChannel.Type != ChannelType.Voice)
-                {
-                    await ChatChannel.SafeSendMessage("Audio playback channel type is not voice.");
+                if (!await DiscordUtils.CanJoinAndTalkInVoiceChannel(PlaybackChannel, ChatChannel))
                     return;
-                }
 
-                // check if we have talk permission in channel.
-                if (!PlaybackChannel.Server.CurrentUser.GetPermissions(PlaybackChannel).Speak)
-                {
-                    await ChatChannel.SafeSendMessage($"I don't have permission to speak in `{PlaybackChannel.Name}`.");
-                    return;
-                }
-
-                _voiceClient = await _client.Audio().SafeJoin(PlaybackChannel, ChatChannel);
-                if (_voiceClient == null) return;
-
+                _voiceClient = await _client.Audio().Join(PlaybackChannel);
 
                 while (true)
                 {
@@ -187,6 +180,17 @@ namespace Stormbot.Bot.Core.Modules.Audio
                 await _voiceClient.Disconnect();
             }
 
+            public async Task SwitchChannel(Channel channel)
+            {
+                if (!IsPlaying) return;
+
+                if (!await DiscordUtils.CanJoinAndTalkInVoiceChannel(channel, ChatChannel))
+                    return;
+
+                await _voiceClient.Join(channel);
+                PlaybackChannel = channel;
+            }
+
             private async Task<bool> IsPlaylistEmpty()
             {
                 if (!Playlist.Any())
@@ -203,13 +207,16 @@ namespace Stormbot.Bot.Core.Modules.Audio
 
                 if (PlaybackChannel == null)
                 {
-                    await ChatChannel.SafeSendMessage("Playback channel wasn't set when attempting to start track playback.");
+                    await
+                        ChatChannel.SafeSendMessage(
+                            "Playback channel wasn't set when attempting to start track playback.");
                     return;
                 }
 
                 if (_voiceClient == null)
                 {
-                    await ChatChannel.SafeSendMessage("Voice client wasn't set when attempting to start track playback.");
+                    await
+                        ChatChannel.SafeSendMessage("Voice client wasn't set when attempting to start track playback.");
                     return;
                 }
 
@@ -330,8 +337,7 @@ namespace Stormbot.Bot.Core.Modules.Audio
 
         private DiscordClient _client;
 
-        [DataSave, DataLoad]
-        private ConcurrentDictionary<ulong, AudioState> _audioStates;
+        [DataSave, DataLoad] private ConcurrentDictionary<ulong, AudioState> _audioStates;
 
         public void Install(ModuleManager manager)
         {
@@ -370,8 +376,7 @@ namespace Stormbot.Bot.Core.Modules.Audio
                         .Description("Displays information about the currently played track.")
                         .Do(async e => await GetAudio(e.Channel).PrintCurrentTrack());
 
-                    playingGroup.CreateCommand("toggle")
-                        .Alias("pause")
+                    playingGroup.CreateCommand("pause")
                         .Description("Pauses/unpauses playback of the current track.")
                         .Do(e => GetAudio(e.Channel).Pause());
                 });
@@ -384,7 +389,7 @@ namespace Stormbot.Bot.Core.Modules.Audio
                     idleGroup.CreateCommand("start")
                         .Alias("play")
                         .Description("Starts the playback of the playlist.")
-                        .Parameter("channel", ParameterType.Optional)
+                        .Parameter("channel", ParameterType.Unparsed)
                         .Do(async e =>
                         {
                             AudioState audio = GetAudio(e.Channel);
@@ -420,26 +425,7 @@ namespace Stormbot.Bot.Core.Modules.Audio
 
                             await audio.StartPlaylist();
                         });
-                    idleGroup.CreateCommand("channel")
-                        .Description(
-                            "Sets the channel in which the audio will be played in. Use .c to set it to your current channel.")
-                        .Parameter("channel", ParameterType.Unparsed)
-                        .Do(async e =>
-                        {
-                            AudioState audio = GetAudio(e.Channel);
-
-                            string chnl = e.GetArg("channel");
-                            audio.PlaybackChannel = chnl == ".c"
-                                ? e.User.VoiceChannel
-                                : e.Server.FindChannels(e.GetArg("channel"), ChannelType.Voice).FirstOrDefault();
-
-                            if (audio.PlaybackChannel != null)
-                                await
-                                    e.Channel.SafeSendMessage($"Set playback channel to \"`{audio.PlaybackChannel.Name}`\"");
-                        });
-                    // todo : move to channel command
                 });
-
 
                 group.CreateCommand("add")
                     .Description("Adds a track to the music playlist.")
@@ -507,6 +493,33 @@ namespace Stormbot.Bot.Core.Modules.Audio
                     .Description("Stops music and clears the playlist.")
                     .MinPermissions((int) PermissionLevel.ServerModerator)
                     .Do(e => GetAudio(e.Channel).ClearPlaylist());
+
+                group.CreateCommand("channel")
+                    .Description(
+                        "Sets the channel in which the audio will be played in. Use .c to set it to your current channel.")
+                    .Parameter("channel", ParameterType.Unparsed)
+                    .Do(async e =>
+                    {
+                        AudioState audio = GetAudio(e.Channel);
+                        string channelQuery = e.GetArg("channel");
+                        Channel channel = channelQuery == ".c"
+                            ? e.User.VoiceChannel
+                            : e.Server.FindChannels(channelQuery, ChannelType.Voice).FirstOrDefault();
+
+                        if (channel == null)
+                        {
+                            await e.Channel.SafeSendMessage($"Voice channel `{channelQuery}` not found.");
+                            return;
+                        }
+
+                        if (audio.IsPlaying)
+                            await audio.SwitchChannel(channel);
+                        else
+                        {
+                            audio.PlaybackChannel = channel;
+                            await e.Channel.SafeSendMessage($"Set playback channel to \"`{audio.PlaybackChannel.Name}`\"");
+                        }
+                    });
             });
         }
 

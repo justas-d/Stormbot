@@ -3,7 +3,6 @@ using System.Linq;
 using Discord;
 using Discord.Commands;
 using Discord.Modules;
-using Newtonsoft.Json;
 using Stormbot.Helpers;
 using StrmyCore;
 
@@ -23,13 +22,14 @@ namespace Stormbot.Bot.Core.DynPerm
             Nullcheck(Constants.PastebinPassword, Constants.PastebinUsername, Constants.PastebinApiKey);
 
             _pastebin = new PasteBinClient(Constants.PastebinApiKey);
-            _pastebin.Login(Constants.PastebinUsername, Constants.PastebinPassword);
 
             _client = manager.Client;
             _dynPerms = _client.DynPerms();
 
             manager.CreateDynCommands("dynperm", PermissionLevel.ServerAdmin, group =>
             {
+                group.AddCheck((cmd, usr, chnl) => !chnl.IsPrivate);
+
                 group.CreateCommand("set")
                     .Description(
                         "Sets the dynamic permissions for this server.\r\n*Pastebin links are supported.**\r\n Use the dynperm help command for more info.")
@@ -61,7 +61,7 @@ namespace Stormbot.Bot.Core.DynPerm
                 // commands which can only be executed if the caller server has dynperms.
                 group.CreateGroup("", existsGroup =>
                 {
-                    existsGroup.AddCheck((cmd, usr, chnl) => _dynPerms.GetPerms(chnl.Server.Id) != null);
+                    existsGroup.AddCheck((cmd, usr, chnl) =>_dynPerms.GetPerms(chnl.Server.Id) != null);
 
                     existsGroup.CreateCommand("show")
                         .Description("Shows the Dynamic Permissions for this server.")
@@ -71,7 +71,10 @@ namespace Stormbot.Bot.Core.DynPerm
 
                             if (string.IsNullOrEmpty(data.PastebinUrl))
                             {
-                                data.PastebinUrl = _pastebin.Paste(new PasteBinEntry()
+                                if(!_pastebin.IsLoggedIn)
+                                    await _pastebin.Login(Constants.PastebinUsername, Constants.PastebinPassword);
+
+                                data.PastebinUrl = await _pastebin.Paste(new PasteBinEntry()
                                 {
                                     Expiration = PasteBinExpiration.Never,
                                     Format = "json",

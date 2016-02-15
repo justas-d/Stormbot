@@ -57,7 +57,7 @@ namespace Stormbot.Bot.Core.Modules
                         builder.AppendLine($"- Uptime: {(DateTime.Now - Process.GetCurrentProcess().StartTime).ToString(@"dd\.hh\:mm\:ss")}");
                         builder.AppendLine("- GitHub: https://github.com/SSStormy/Stormbot");
                         builder.AppendLine($"- Memory Usage: {Math.Round(GC.GetTotalMemory(false)/(1024.0*1024.0), 2)} MB");
-                        builder.AppendLine($"- Ffmpeg Process count: {Constants.FfmpegProcessCount}");
+                        builder.AppendLine($"- Audio streaming jobs: {Constants.StreamingJobs}");
                         builder.AppendLine($"- Servers: {_client.Servers.Count()}");
                         builder.AppendLine($"- Channels: {serverData.Item1}");
                         builder.AppendLine($"- Users: {serverData.Item2}");

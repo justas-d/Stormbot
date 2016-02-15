@@ -32,7 +32,7 @@ namespace Stormbot.Helpers
         internal static string PastebinUsername;
         internal static string PastebinPassword;
 
-        internal static int FfmpegProcessCount = 0;
+        internal static int StreamingJobs = 0;
 
     }
 }

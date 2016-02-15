@@ -47,13 +47,13 @@ namespace Stormbot.Bot.Core.Modules.Audio
                 Logger.FormattedWrite(GetType().Name, "Failed starting ffmpeg.", ConsoleColor.Red);
                 return;
             }
-            Constants.FfmpegProcessCount++;
+            Constants.StreamingJobs++;
             OutputStream = _ffmpeg.StandardOutput.BaseStream;
         }
 
         public void Dispose()
         {
-            Constants.FfmpegProcessCount--;
+            Constants.StreamingJobs--;
             OutputStream?.Dispose();
             _ffmpeg?.Dispose();
         }

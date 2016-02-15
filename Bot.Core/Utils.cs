@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -10,6 +11,25 @@ namespace Stormbot.Bot.Core
     public static class DiscordUtils
     {
         private static readonly Regex MentionIdRegex = new Regex(@"(\@|\#)([0-9]+?)\>");
+
+        public static async Task<bool> CanJoinAndTalkInVoiceChannel(Channel voiceChannel, Channel callback)
+        {
+            if (voiceChannel.Type != ChannelType.Voice) throw new ArgumentException(nameof(voiceChannel));
+            if (callback.Type != ChannelType.Text) throw new ArgumentException(nameof(callback));
+
+            if (!voiceChannel.Server.CurrentUser.GetPermissions(voiceChannel).Speak)
+            {
+                await callback.SafeSendMessage($"I don't have permission to speak in `{voiceChannel.Name}`.");
+                return false;
+            }
+            if (!voiceChannel.CanJoinChannel(voiceChannel.Server.CurrentUser))
+            {
+                await callback.SafeSendMessage($"I don't have permission to join `{voiceChannel.Name}`");
+                return false;
+            }
+
+            return true;
+        }
 
         public static IEnumerable<ulong> ParseMention(string input)
         {

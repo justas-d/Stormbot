@@ -88,7 +88,7 @@ namespace Stormbot.Bot.Core
                             StringBuilder builder =
                                 new StringBuilder(
                                     $"{e.User.Mention} you do not have sufficient permissions for that command. ");
-                            if (e.Exception != null && !string.IsNullOrEmpty(e.Exception.Message))
+                            if (!string.IsNullOrEmpty(e.Exception?.Message))
                                 builder.AppendLine($"Error message: ```{e.Exception.Message}```");
                             await e.Channel.SendMessage(builder.ToString());
                             break;

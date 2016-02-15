@@ -3,7 +3,6 @@ using System.Linq;
 using Discord;
 using Discord.Commands;
 using Discord.Modules;
-using Newtonsoft.Json;
 using Stormbot.Helpers;
 using StrmyCore;
 
@@ -23,7 +22,6 @@ namespace Stormbot.Bot.Core.DynPerm
             Nullcheck(Constants.PastebinPassword, Constants.PastebinUsername, Constants.PastebinApiKey);
 
             _pastebin = new PasteBinClient(Constants.PastebinApiKey);
-            _pastebin.Login(Constants.PastebinUsername, Constants.PastebinPassword);
 
             _client = manager.Client;
             _dynPerms = _client.DynPerms();
@@ -73,7 +71,10 @@ namespace Stormbot.Bot.Core.DynPerm
 
                             if (string.IsNullOrEmpty(data.PastebinUrl))
                             {
-                                data.PastebinUrl = _pastebin.Paste(new PasteBinEntry()
+                                if(!_pastebin.IsLoggedIn)
+                                    await _pastebin.Login(Constants.PastebinUsername, Constants.PastebinPassword);
+
+                                data.PastebinUrl = await _pastebin.Paste(new PasteBinEntry()
                                 {
                                     Expiration = PasteBinExpiration.Never,
                                     Format = "json",

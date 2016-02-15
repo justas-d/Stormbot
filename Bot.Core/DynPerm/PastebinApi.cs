@@ -1,141 +1,10 @@
 ﻿using System;
-using System.Collections.Specialized;
-using System.IO;
-using System.Net;
+using System.Collections.Generic;
+using System.Net.Http;
+using System.Threading.Tasks;
 
 namespace Stormbot.Bot.Core.DynPerm
 {
-    // http://stackoverflow.com/a/6919419
-    public class PasteBinClient
-    {
-        private const string _apiPostUrl = "http://pastebin.com/api/api_post.php";
-        private const string _apiLoginUrl = "http://pastebin.com/api/api_login.php";
-
-        private readonly string _apiDevKey;
-        private string _userName;
-        private string _apiUserKey;
-
-        public PasteBinClient(string apiDevKey)
-        {
-            if (string.IsNullOrEmpty(apiDevKey))
-                throw new ArgumentNullException(nameof(apiDevKey));
-            _apiDevKey = apiDevKey;
-        }
-
-        public string UserName
-        {
-            get { return _userName; }
-        }
-
-        public void Login(string userName, string password)
-        {
-            if (string.IsNullOrEmpty(userName))
-                throw new ArgumentNullException(nameof(userName));
-            if (string.IsNullOrEmpty(password))
-                throw new ArgumentNullException(nameof(password));
-
-            var parameters = GetBaseParameters();
-            parameters[ApiParameters.UserName] = userName;
-            parameters[ApiParameters.UserPassword] = password;
-
-            WebClient client = new WebClient();
-            byte[] bytes = client.UploadValues(_apiLoginUrl, parameters);
-            string resp = GetResponseText(bytes);
-            if (resp.StartsWith("Bad API request"))
-                throw new PasteBinApiException(resp);
-
-            _userName = userName;
-            _apiUserKey = resp;
-        }
-
-        public void Logout()
-        {
-            _userName = null;
-            _apiUserKey = null;
-        }
-
-        public string Paste(PasteBinEntry entry)
-        {
-            if (entry == null)
-                throw new ArgumentNullException(nameof(entry));
-            if (string.IsNullOrEmpty(entry.Text))
-                throw new ArgumentException("The paste text must be set", nameof(entry));
-
-            var parameters = GetBaseParameters();
-            parameters[ApiParameters.Option] = "paste";
-            parameters[ApiParameters.PasteCode] = entry.Text;
-            SetIfNotEmpty(parameters, ApiParameters.PasteName, entry.Title);
-            SetIfNotEmpty(parameters, ApiParameters.PasteFormat, entry.Format);
-            SetIfNotEmpty(parameters, ApiParameters.PastePrivate, entry.Private ? "1" : "0");
-            SetIfNotEmpty(parameters, ApiParameters.PasteExpireDate, FormatExpireDate(entry.Expiration));
-            SetIfNotEmpty(parameters, ApiParameters.UserKey, _apiUserKey);
-
-            WebClient client = new WebClient();
-            byte[] bytes = client.UploadValues(_apiPostUrl, parameters);
-            string resp = GetResponseText(bytes);
-            if (resp.StartsWith("Bad API request"))
-                throw new PasteBinApiException(resp);
-            return resp;
-
-        }
-
-        private static string FormatExpireDate(PasteBinExpiration expiration)
-        {
-            switch (expiration)
-            {
-                case PasteBinExpiration.Never:
-                    return "N";
-                case PasteBinExpiration.TenMinutes:
-                    return "10M";
-                case PasteBinExpiration.OneHour:
-                    return "1H";
-                case PasteBinExpiration.OneDay:
-                    return "1D";
-                case PasteBinExpiration.OneMonth:
-                    return "1M";
-                default:
-                    throw new ArgumentException("Invalid expiration date");
-            }
-        }
-
-        private static void SetIfNotEmpty(NameValueCollection parameters, string name, string value)
-        {
-            if (!string.IsNullOrEmpty(value))
-                parameters[name] = value;
-        }
-
-        private NameValueCollection GetBaseParameters()
-        {
-            var parameters = new NameValueCollection();
-            parameters[ApiParameters.DevKey] = _apiDevKey;
-
-            return parameters;
-        }
-
-        private static string GetResponseText(byte[] bytes)
-        {
-            using (var ms = new MemoryStream(bytes))
-            using (var reader = new StreamReader(ms))
-            {
-                return reader.ReadToEnd();
-            }
-        }
-
-        private static class ApiParameters
-        {
-            public const string DevKey = "api_dev_key";
-            public const string UserKey = "api_user_key";
-            public const string Option = "api_option";
-            public const string UserName = "api_user_name";
-            public const string UserPassword = "api_user_password";
-            public const string PasteCode = "api_paste_code";
-            public const string PasteName = "api_paste_name";
-            public const string PastePrivate = "api_paste_private";
-            public const string PasteFormat = "api_paste_format";
-            public const string PasteExpireDate = "api_paste_expire_date";
-        }
-    }
-
     public class PasteBinApiException : Exception
     {
         public PasteBinApiException(string message)
@@ -160,5 +29,121 @@ namespace Stormbot.Bot.Core.DynPerm
         OneHour,
         OneDay,
         OneMonth
+    }
+
+    // initial source - http://stackoverflow.com/a/6919419
+    public class PasteBinClient : IDisposable
+    {
+        private static class ApiParameters
+        {
+            public const string DevKey = "api_dev_key";
+            public const string UserKey = "api_user_key";
+            public const string Option = "api_option";
+            public const string UserName = "api_user_name";
+            public const string UserPassword = "api_user_password";
+            public const string PasteCode = "api_paste_code";
+            public const string PasteName = "api_paste_name";
+            public const string PastePrivate = "api_paste_private";
+            public const string PasteFormat = "api_paste_format";
+            public const string PasteExpireDate = "api_paste_expire_date";
+        }
+
+        private const string ApiPostUrl = "http://pastebin.com/api/api_post.php";
+        private const string ApiLoginUrl = "http://pastebin.com/api/api_login.php";
+        private HttpClient HttpClient => new HttpClient();
+
+        private readonly string _apiDevKey;
+        private string _apiUserKey;
+
+        public bool IsLoggedIn => !string.IsNullOrEmpty(_apiUserKey);
+
+        public PasteBinClient(string apiDevKey)
+        {
+            if (string.IsNullOrEmpty(apiDevKey))
+                throw new ArgumentNullException(nameof(apiDevKey));
+            _apiDevKey = apiDevKey;
+        }
+
+        public async Task Login(string username, string password)
+        {
+            if (string.IsNullOrEmpty(username))
+                throw new ArgumentNullException(nameof(username));
+            if (string.IsNullOrEmpty(password))
+                throw new ArgumentNullException(nameof(password));
+
+            FormUrlEncodedContent request = new FormUrlEncodedContent(new[]
+            {
+                new KeyValuePair<string, string>(ApiParameters.DevKey, _apiDevKey),
+                new KeyValuePair<string, string>(ApiParameters.UserName, username),
+                new KeyValuePair<string, string>(ApiParameters.UserPassword, password)
+            });
+
+            HttpResponseMessage responce = await HttpClient.PostAsync(ApiLoginUrl, request);
+            _apiUserKey = await ParseResponce(responce);
+        }
+
+        public async Task<string> Paste(PasteBinEntry entry)
+        {
+            if (entry == null)
+                throw new ArgumentNullException(nameof(entry));
+            if (string.IsNullOrEmpty(entry.Text))
+                throw new ArgumentException("The paste text must be set", nameof(entry));
+
+            IList<KeyValuePair<string, string>> content = new List<KeyValuePair<string, string>>()
+            {
+                new KeyValuePair<string, string>(ApiParameters.DevKey, _apiDevKey),
+                new KeyValuePair<string, string>(ApiParameters.Option, "paste"),
+                new KeyValuePair<string, string>(ApiParameters.PasteCode, entry.Text)
+            };
+
+            SetIfNotEmpty(content, ApiParameters.PasteName, entry.Title);
+            SetIfNotEmpty(content, ApiParameters.PasteFormat, entry.Format);
+            SetIfNotEmpty(content, ApiParameters.PastePrivate, entry.Private ? "1" : "0");
+            SetIfNotEmpty(content, ApiParameters.PasteExpireDate, FormatExpireDate(entry.Expiration));
+            SetIfNotEmpty(content, ApiParameters.UserKey, _apiUserKey);
+
+            FormUrlEncodedContent request = new FormUrlEncodedContent(content);
+
+            HttpResponseMessage responce = await HttpClient.PostAsync(ApiPostUrl, request);
+            return await ParseResponce(responce);
+        }
+
+        private async Task<string> ParseResponce(HttpResponseMessage responce)
+        {
+            string respString = await responce.Content.ReadAsStringAsync();
+
+            if (respString.StartsWith("Bad API request"))
+                throw new PasteBinApiException(respString);
+
+            return respString;
+        }
+
+        private static string FormatExpireDate(PasteBinExpiration expiration)
+        {
+            switch (expiration)
+            {
+                case PasteBinExpiration.Never:
+                    return "N";
+                case PasteBinExpiration.TenMinutes:
+                    return "10M";
+                case PasteBinExpiration.OneHour:
+                    return "1H";
+                case PasteBinExpiration.OneDay:
+                    return "1D";
+                case PasteBinExpiration.OneMonth:
+                    return "1M";
+                default:
+                    throw new ArgumentException("Invalid expiration date");
+            }
+        }
+
+        private static void SetIfNotEmpty(IList<KeyValuePair<string, string>> content, string name, string value)
+        {
+            if (!string.IsNullOrEmpty(value))
+                content.Add(new KeyValuePair<string, string>(name, value));
+        }
+
+        public void Dispose()
+            => HttpClient?.Dispose();
     }
 }

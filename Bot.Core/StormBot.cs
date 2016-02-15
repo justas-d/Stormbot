@@ -74,7 +74,10 @@ namespace Stormbot.Bot.Core
                         case CommandErrorType.Exception:
                             await
                                 e.Channel.SendMessage(
-                                    $"{e.User.Mention} Something went wrong while processing your command! Make sure your input is in the valid format.");
+                                    $"{e.User.Mention} Something went wrong while processing your command! Make sure your input is in the valid format. `({e.Exception})`");
+
+                            Logger.FormattedWrite("CommandService", $"Exception on command: {e.Exception}",
+                                ConsoleColor.Yellow);
                             break;
 
                         case CommandErrorType.UnknownCommand:
@@ -82,7 +85,9 @@ namespace Stormbot.Bot.Core
                             break;
 
                         case CommandErrorType.BadPermissions:
-                            StringBuilder builder = new StringBuilder($"{e.User.Mention} you do not have sufficient permissions for that command. ");
+                            StringBuilder builder =
+                                new StringBuilder(
+                                    $"{e.User.Mention} you do not have sufficient permissions for that command. ");
                             if (e.Exception != null && !string.IsNullOrEmpty(e.Exception.Message))
                                 builder.AppendLine($"Error message: ```{e.Exception.Message}```");
                             await e.Channel.SendMessage(builder.ToString());
@@ -99,7 +104,8 @@ namespace Stormbot.Bot.Core
                             break;
 
                         default:
-                            Logger.FormattedWrite("CommandService", $"e.ErrorType ({e.ErrorType}) is not handled.", ConsoleColor.Yellow);
+                            Logger.FormattedWrite("CommandService", $"e.ErrorType ({e.ErrorType}) is not handled.",
+                                ConsoleColor.Yellow);
                             break;
                     }
                 };

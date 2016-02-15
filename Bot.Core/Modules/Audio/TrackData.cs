@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Stormbot.Helpers;
 using StrmyCore;
@@ -40,21 +41,21 @@ namespace Stormbot.Bot.Core.Modules.Audio
             Name = name;
         }
 
-        private string GetStreamUrl()
+        private async Task<string> GetStreamUrl()
         {
             if (File.Exists(Location)) return Location;
 
             if (_cachedResolver != null)
-                return _cachedResolver.ResolveStreamUrl(Location);
+                return await _cachedResolver.ResolveStreamUrl(Location);
 
             IStreamResolver resolver = Resolvers.FirstOrDefault(r => r.CanResolve(Location));
 
-            return resolver?.ResolveStreamUrl(Location);
+            return await resolver?.ResolveStreamUrl(Location);
         }
 
-        public string GetStream()
+        public async Task<string> GetStream()
         {
-            string stream = GetStreamUrl();
+            string stream = await GetStreamUrl();
 
             if (string.IsNullOrEmpty(stream))
             {
@@ -68,14 +69,14 @@ namespace Stormbot.Bot.Core.Modules.Audio
             return stream;
         }
 
-        public static TrackData Parse(string input)
+        public async static Task<TrackData> Parse(string input)
         {
             if (File.Exists(input))
                 return new TrackData(input, Utils.GetFilename(input));
 
             foreach (IStreamResolver resolver in Resolvers)
                 if (resolver.CanResolve(input))
-                    return new TrackData(input, resolver.GetTrackName(input)) {_cachedResolver = resolver};
+                    return new TrackData(input, await resolver.GetTrackName(input)) {_cachedResolver = resolver};
 
             return null;
         }

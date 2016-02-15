@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Threading.Tasks;
 using StrmyCore;
 using YoutubeExtractor;
 
@@ -7,7 +8,7 @@ namespace Stormbot.Bot.Core.Modules.Audio
 {
     public sealed class YoutubeResolver : IStreamResolver
     {
-        public string ResolveStreamUrl(string input)
+        public async Task<string> ResolveStreamUrl(string input)
         {
             VideoInfo video = GetVideo(input);
 
@@ -17,7 +18,8 @@ namespace Stormbot.Bot.Core.Modules.Audio
             return video.DownloadUrl;
         }
 
-        public string GetTrackName(string input) => GetVideo(input).Title;
+        // todo : this too
+        public async Task<string> GetTrackName(string input) => GetVideo(input).Title;
 
         private VideoInfo GetVideo(string input)
         {

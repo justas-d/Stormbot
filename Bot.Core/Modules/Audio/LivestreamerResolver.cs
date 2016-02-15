@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using Stormbot.Helpers;
 using StrmyCore;
 
@@ -7,7 +8,8 @@ namespace Stormbot.Bot.Core.Modules.Audio
 {
     public sealed class LivestreamerResolver : IStreamResolver
     {
-        public string ResolveStreamUrl(string input)
+        // todo : make this actually async
+        public async Task<string> ResolveStreamUrl(string input)
         {
             string retval = string.Empty;
 
@@ -71,6 +73,7 @@ namespace Stormbot.Bot.Core.Modules.Audio
             return livestreamer;
         }
 
-        public string GetTrackName(string input) => input;
+        // todo : this too
+        public async Task<string> GetTrackName(string input) => input;
     }
 }

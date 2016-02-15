@@ -167,7 +167,6 @@ namespace Stormbot.Bot.Core
             Client.AddModule<AnnouncementModule>("Announcements", ModuleFilter.ServerWhitelist);
             Client.AddModule<VermintideModule>("Vermintide", ModuleFilter.ServerWhitelist | ModuleFilter.ChannelWhitelist | ModuleFilter.AlwaysAllowPrivate);
             Client.AddModule<PersonalModule>("Personal", ModuleFilter.ServerWhitelist);
-            //Client.AddModule<GameModule>("Game", ModuleFilter.ServerWhitelist | ModuleFilter.ChannelWhitelist | ModuleFilter.AlwaysAllowPrivate);
             Client.Log.Message += (sender, args) =>
             {
                 if (_ignoredLogs.Contains(args.Severity)) return;

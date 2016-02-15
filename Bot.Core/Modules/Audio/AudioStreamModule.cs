@@ -223,7 +223,7 @@ namespace Stormbot.Bot.Core.Modules.Audio
                 _stopTrackFlag = false;
                 IsPlaying = true;
 
-                using (AudioStreamer streamer = new AudioStreamer(CurrentTrack.GetStream(), _client))
+                using (AudioStreamer streamer = new AudioStreamer(await CurrentTrack.GetStream(), _client))
                 {
                     if (_skipToFlag)
                     {
@@ -433,7 +433,7 @@ namespace Stormbot.Bot.Core.Modules.Audio
                     .Do(async e =>
                     {
                         string loc = e.GetArg("location");
-                        TrackData result = TrackData.Parse(loc);
+                        TrackData result = await TrackData.Parse(loc);
 
                         if (result == null)
                         {

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using StrmyCore;
 
@@ -12,19 +13,19 @@ namespace Stormbot.Bot.Core.Modules.Audio
         internal static string ApiKey;
         private string ClientIdParam => $"client_id={ApiKey}";
 
-        public string ResolveStreamUrl(string input)
+        public async Task<string> ResolveStreamUrl(string input)
         {
             if (ApiKey != null)
-                return $"{(string) GetTrackData(input).stream_url}?{ClientIdParam}";
+                return $"{(string)(await GetTrackData(input)).stream_url}?{ClientIdParam}";
 
             Logger.FormattedWrite(GetType().Name, "Soundcloud API Key was not set.");
             return null;
         }
 
         public bool CanResolve(string input) => input.Contains("soundcloud.com");
-        public string GetTrackName(string input) => GetTrackData(input).title;
+        public async Task<string> GetTrackName(string input) => (await GetTrackData(input)).title;
 
-        private dynamic GetTrackData(string trackUrl)
+        private async Task<dynamic> GetTrackData(string trackUrl)
         {
             try
             {
@@ -33,7 +34,7 @@ namespace Stormbot.Bot.Core.Modules.Audio
 
                 dynamic trackCallback =
                     JObject.Parse(
-                        Utils.DownloadRaw($"http://api.soundcloud.com/resolve?url={trackUrl}&{ClientIdParam}"));
+                        await Utils.AsyncDownloadRaw($"http://api.soundcloud.com/resolve?url={trackUrl}&{ClientIdParam}"));
 
                 _cachedTrackData.Add(trackUrl, trackCallback);
 

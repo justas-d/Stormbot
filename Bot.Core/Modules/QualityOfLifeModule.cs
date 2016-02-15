@@ -167,7 +167,10 @@ namespace Stormbot.Bot.Core.Modules
                         uint hex;
 
                         if (!DiscordUtils.ToHex(stringhex, out hex))
+                        {
+                            await e.Channel.SendMessage("Failed parsing input. Valid format: `RRGGBB`");
                             return;
+                        }
 
                         Role role = e.Server.Roles.FirstOrDefault(x => x.Name == ColorRoleName + stringhex);
 
@@ -177,15 +180,17 @@ namespace Stormbot.Bot.Core.Modules
                             if(!await role.SafeEdit(color: new Color(hex)))
                                 await e.Channel.SendMessage($"Failed editing role. Make sure it's not everyone or managed.");
 
-                            await e.User.Edit(roles: GetOtherRoles(e.User).Concat(new[] {role}));
                         }
+                        await e.User.AddRoles(role);
+
                         await CleanColorRoles(e.Server);
                     });
                 group.CreateCommand("clear")
                     .Description("Removes your username color, returning it to default.")
                     .Do(async e =>
                     {
-                        await e.User.Edit(roles: GetOtherRoles(e.User));
+                        foreach (Role role in e.User.Roles.Where(role => role.Name.StartsWith(ColorRoleName)))
+                            await e.User.RemoveRoles(role);
                     });
 
                 group.CreateCommand("clean")
@@ -225,8 +230,6 @@ namespace Stormbot.Bot.Core.Modules
             }
         }
 
-        private IEnumerable<Role> GetOtherRoles(User user) => user.Roles.Where(x => !x.Name.StartsWith(ColorRoleName));
-
         private async void StartReminderTimer()
         {
             try
@@ -243,7 +246,7 @@ namespace Stormbot.Bot.Core.Modules
                             $"Paging you about the reminder you've set at `{_reminders[i].CreateTime}` for \"{_reminders[i].Reason}\"");
                         _reminders.RemoveAt(i);
                     }
-                    await Task.Delay(1000); // wait 1 second.
+                    await Task.Delay(5000);
                 }
             }
             catch (TaskCanceledException)

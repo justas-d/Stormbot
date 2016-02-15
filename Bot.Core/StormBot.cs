@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Discord;
@@ -74,7 +73,7 @@ namespace Stormbot.Bot.Core
                         case CommandErrorType.Exception:
                             await
                                 e.Channel.SendMessage(
-                                    $"{e.User.Mention} Something went wrong while processing your command! Make sure your input is in the valid format. `({e.Exception})`");
+                                    $"{e.User.Mention} Something went wrong while processing your command! Make sure your input is in the valid format. `({e.Exception.GetType().Name})`");
 
                             Logger.FormattedWrite("CommandService", $"Exception on command: {e.Exception}",
                                 ConsoleColor.Yellow);

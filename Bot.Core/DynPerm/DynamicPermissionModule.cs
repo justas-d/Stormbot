@@ -30,6 +30,8 @@ namespace Stormbot.Bot.Core.DynPerm
 
             manager.CreateDynCommands("dynperm", PermissionLevel.ServerAdmin, group =>
             {
+                group.AddCheck((cmd, usr, chnl) => !chnl.IsPrivate);
+
                 group.CreateCommand("set")
                     .Description(
                         "Sets the dynamic permissions for this server.\r\n*Pastebin links are supported.**\r\n Use the dynperm help command for more info.")
@@ -61,7 +63,7 @@ namespace Stormbot.Bot.Core.DynPerm
                 // commands which can only be executed if the caller server has dynperms.
                 group.CreateGroup("", existsGroup =>
                 {
-                    existsGroup.AddCheck((cmd, usr, chnl) => _dynPerms.GetPerms(chnl.Server.Id) != null);
+                    existsGroup.AddCheck((cmd, usr, chnl) =>_dynPerms.GetPerms(chnl.Server.Id) != null);
 
                     existsGroup.CreateCommand("show")
                         .Description("Shows the Dynamic Permissions for this server.")

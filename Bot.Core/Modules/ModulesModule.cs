@@ -56,6 +56,8 @@ namespace Stormbot.Bot.Core.Modules
 
             manager.CreateDynCommands("module", PermissionLevel.ServerAdmin, group =>
             {
+                group.AddCheck((cmd, usr, chnl) => !chnl.IsPrivate);
+
                 group.CreateCommand("channel enable")
                     .Description("Enables a module on the current channel.")
                     .Parameter("module", ParameterType.Unparsed)
@@ -64,19 +66,8 @@ namespace Stormbot.Bot.Core.Modules
                         ModuleManager module = await VerifyFindModule(e.GetArg("module"), e.Channel);
                         if (module == null) return;
 
-                        if (!module.FilterType.HasFlag(ModuleFilter.ChannelWhitelist))
-                        {
-                            await e.Channel.SafeSendMessage("This module doesn't support being enabled for channel.");
+                        if (!await CanChangeModuleStateInServer(module, ModuleFilter.ChannelWhitelist, e))
                             return;
-                        }
-
-                        if (PrivateModules.FirstOrDefault(m => m.ToLowerInvariant() == module.Id) != null &&
-                            e.User.Id != Constants.UserOwner)
-                        {
-                            await
-                                e.Channel.SafeSendMessage("This module is private. Use }contact for more information.");
-                            return;
-                        }
 
                         Channel channel = e.Channel;
 
@@ -99,11 +90,8 @@ namespace Stormbot.Bot.Core.Modules
                         ModuleManager module = await VerifyFindModule(e.GetArg("module"), e.Channel);
                         if (module == null) return;
 
-                        if (!module.FilterType.HasFlag(ModuleFilter.ChannelWhitelist))
-                        {
-                            await e.Channel.SafeSendMessage("This module doesn't support being enabled for channel.");
+                        if (!await CanChangeModuleStateInServer(module, ModuleFilter.ChannelWhitelist, e, false))
                             return;
-                        }
 
                         Channel channel = e.Channel;
 
@@ -126,19 +114,8 @@ namespace Stormbot.Bot.Core.Modules
                         ModuleManager module = await VerifyFindModule(e.GetArg("module"), e.Channel);
                         if (module == null) return;
 
-                        if (!module.FilterType.HasFlag(ModuleFilter.ServerWhitelist))
-                        {
-                            await e.Channel.SafeSendMessage("This module doesn't support being enabled for servers.");
+                        if (!await CanChangeModuleStateInServer(module, ModuleFilter.ServerWhitelist, e))
                             return;
-                        }
-
-                        if (PrivateModules.FirstOrDefault(m => m.ToLowerInvariant() == module.Id) != null &&
-                            e.User.Id != Constants.UserOwner)
-                        {
-                            await
-                                e.Channel.SafeSendMessage("This module is private. Use }contact for more information.");
-                            return;
-                        }
 
                         Server server = e.Server;
 
@@ -161,11 +138,8 @@ namespace Stormbot.Bot.Core.Modules
                         ModuleManager module = await VerifyFindModule(e.GetArg("module"), e.Channel);
                         if (module == null) return;
 
-                        if (!module.FilterType.HasFlag(ModuleFilter.ServerWhitelist))
-                        {
-                            await e.Channel.SafeSendMessage("This module doesn't support being enabled for servers.");
+                        if (!await CanChangeModuleStateInServer(module, ModuleFilter.ServerWhitelist, e, false))
                             return;
-                        }
 
                         Server server = e.Server;
 
@@ -188,13 +162,22 @@ namespace Stormbot.Bot.Core.Modules
                         {
                             builder.Append($"`* {module.Id,-20} ");
 
-                            if (module.FilterType.HasFlag(ModuleFilter.ServerWhitelist))
-                                builder.Append($"Globally server: {module.EnabledServers.Contains(e.Server), -5} ");
-                            if (module.FilterType.HasFlag(ModuleFilter.ChannelWhitelist))
-                                builder.Append($"Channel: {module.EnabledChannels.Contains(e.Channel), -5}");
+                            if (e.Channel.IsPrivate)
+                            {
+                                if (module.FilterType.HasFlag(ModuleFilter.AlwaysAllowPrivate))
+                                    builder.Append($"Always available on prviate.");
+                            }
+                            else
+                            {
+                                if (module.FilterType.HasFlag(ModuleFilter.ServerWhitelist))
+                                    builder.Append($"Globally server: {module.EnabledServers.Contains(e.Server),-5} ");
+                                if (module.FilterType.HasFlag(ModuleFilter.ChannelWhitelist))
+                                    builder.Append($"Channel: {module.EnabledChannels.Contains(e.Channel),-5}");
+                            }
+
                             builder.AppendLine("`");
                         }
-                        
+
                         await e.Channel.SafeSendMessage(builder.ToString());
                     });
             });
@@ -217,6 +200,30 @@ namespace Stormbot.Bot.Core.Modules
             };
         }
 
+        private async Task<bool> CanChangeModuleStateInServer(ModuleManager module, ModuleFilter checkFilter, CommandEventArgs evnt, bool prviateCheck = true)
+        {
+            if (!module.FilterType.HasFlag(checkFilter))
+            {
+                await evnt.Channel.SafeSendMessage($"This module doesn't support being enabled. (no `{checkFilter}` flag)");
+                return false;
+            }
+
+            if (evnt.Channel.IsPrivate)
+            {
+                await evnt.Channel.SafeSendMessage("Moduel state changing is not allowed in private channels.");
+                return false;
+            }
+
+            if (prviateCheck && PrivateModules.FirstOrDefault(m => m.ToLowerInvariant() == module.Id) != null &&
+                evnt.User.Id != Constants.UserOwner)
+            {
+                await
+                    evnt.Channel.SafeSendMessage("This module is private. Use }contact for more information.");
+                return false;
+            }
+            return true;
+        }
+
         private async Task<ModuleManager> VerifyFindModule(string id, Channel callback, bool useCallback = true)
         {
             ModuleManager module = GetModule(id);
@@ -226,6 +233,7 @@ namespace Stormbot.Bot.Core.Modules
                     await callback.SafeSendMessage("Unknown module");
                 return null;
             }
+
             if (module.FilterType == ModuleFilter.None ||
                 module.FilterType == ModuleFilter.AlwaysAllowPrivate)
             {
@@ -233,6 +241,7 @@ namespace Stormbot.Bot.Core.Modules
                     await callback.SafeSendMessage("This module is global and cannot be enabled/disabled.");
                 return null;
             }
+
             return module;
         }
 

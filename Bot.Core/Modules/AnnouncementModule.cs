@@ -86,8 +86,6 @@ namespace Stormbot.Bot.Core.Modules
 
         private static readonly string DefaultMessage = $"{UserNameKeyword} has joined {LocationKeyword}!";
 
-        private string SyntaxMessage => $"Syntax: `{UserNameKeyword}` - replaced with the name of the user who triggered the event, `{LocationKeyword}` - replaced with the location (server or channel) where the event occured.```";
-
         private DiscordClient _client;
 
         public void Install(ModuleManager manager)
@@ -249,6 +247,10 @@ namespace Stormbot.Bot.Core.Modules
 
             manager.CreateDynCommands("newuser", PermissionLevel.ServerModerator,  group =>
             {
+                group.CreateCommand("syntax")
+                .Description("Syntax rules for newuser commands.")
+                .Do(async e => await e.Channel.SafeSendMessage($"Syntax: `{UserNameKeyword}` - replaced with the name of the user who triggered the event, `{LocationKeyword}` - replaced with the location (server or channel) where the event occured.```"));
+
                 group.CreateGroup("join", joinGroup =>
                 {
                     // joinGroup callback exists commands
@@ -263,7 +265,7 @@ namespace Stormbot.Bot.Core.Modules
                         });
 
                         existsJoin.CreateCommand("message")
-                            .Description($"Sets the join message for this current server.\r\n{SyntaxMessage}")
+                            .Description($"Sets the join message for this current server.")
                             .Parameter("message", ParameterType.Unparsed)
                             .Do(async e =>
                             {
@@ -341,7 +343,7 @@ namespace Stormbot.Bot.Core.Modules
                         });
 
                         existsLeave.CreateCommand("message")
-                            .Description($"Sets the leave message for this current server.\r\n{SyntaxMessage}")
+                            .Description($"Sets the leave message for this current server.")
                             .Parameter("message", ParameterType.Unparsed)
                             .Do(async e =>
                             {

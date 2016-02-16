@@ -171,10 +171,10 @@ namespace Stormbot.Bot.Core.Modules
             StringBuilder builder = new StringBuilder()
                 .AppendLine("# StormBot command table.")
                 .AppendLine($"This file was automatically generated at {DateTime.UtcNow} UTC.")
-                .AppendLine("## Preface")
+                .AppendLine("### Preface")
                 .AppendLine("This document contains every command, that has been registered in the CommandService system, their paramaters, their desciptions and their default permissions.")
                 .AppendLine("Every command belongs to a cetain module. These modules can be enabled and disabled at will using the Modules module. Each comamnd is seperated into their parent modules command table.")
-                .AppendLine($"{Environment.NewLine}### Commands");
+                .AppendLine($"{Environment.NewLine}## Commands");
 
             string currentModule = null;
             foreach (Command cmd in _client.Commands().AllCommands)

@@ -1,10 +1,10 @@
 # StormBot command table.
-This file was automatically generated at 16-02-2016 08:35:50 UTC.
-## Preface
+This file was automatically generated at 16-02-2016 08:41:57 UTC.
+### Preface
 This document contains every command, that has been registered in the CommandService system, their paramaters, their desciptions and their default permissions.
 Every command belongs to a cetain module. These modules can be enabled and disabled at will using the Modules module. Each comamnd is seperated into their parent modules command table.
 
-### Commands
+## Commands
 
 #### Dynamic Permissions
 Commands | Parameters | Description | Default Permissions
@@ -143,13 +143,12 @@ Commands | Parameters | Description | Default Permissions
 `autorole create` |  `[-]` | Enables the bot to add a given role to newly joined users. | ServerAdmin
 `autorole destroy` |  | Destoys the auto role assigner for this server. | ServerAdmin
 `autorole role` |  `[-]` | Changes the role of the auto role assigner for this server. | ServerAdmin
-`newuser join message` |  `[-]` | Sets the join message for this current server.
-Syntax: `|userName|` - replaced with the name of the user who triggered the event, `|location|` - replaced with the location (server or channel) where the event occured.``` | ServerModerator
+`newuser syntax` |  | Syntax rules for newuser commands. | ServerModerator
+`newuser join message` |  `[-]` | Sets the join message for this current server. | ServerModerator
 `newuser join channel` |  `[-]` | Sets the callback channel for this servers join announcements. | ServerModerator
 `newuser join destroy` |  | Stops announcing when new users have joined this server. | ServerModerator
 `newuser join enable` |  | Enables announcing for when a new user joins this server. | ServerModerator
-`newuser leave message` |  `[-]` | Sets the leave message for this current server.
-Syntax: `|userName|` - replaced with the name of the user who triggered the event, `|location|` - replaced with the location (server or channel) where the event occured.``` | ServerModerator
+`newuser leave message` |  `[-]` | Sets the leave message for this current server. | ServerModerator
 `newuser leave channel` |  `[-]` | Sets the callback channel for this servers leave announcements. | ServerModerator
 `newuser leave destroy` |  | Stops announcing when users have left joined this server. | ServerModerator
 `newuser leave enable` |  | Enables announcing for when a user leaves this server. | ServerModerator

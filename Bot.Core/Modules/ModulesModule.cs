@@ -79,7 +79,8 @@ namespace Stormbot.Bot.Core.Modules
                             return;
                         }
                         _channelModulesDictionary.AddModuleToSave(module.Id, e.Channel.Id);
-                        await e.Channel.SafeSendMessage($"Module `{module.Id}` was enabled for channel `{channel.Name}`.");
+                        await
+                            e.Channel.SafeSendMessage($"Module `{module.Id}` was enabled for channel `{channel.Name}`.");
                     });
 
                 group.CreateCommand("channel disable")
@@ -103,7 +104,8 @@ namespace Stormbot.Bot.Core.Modules
                             return;
                         }
                         _channelModulesDictionary.DeleteModuleFromSave(module.Id, e.Channel.Id);
-                        await e.Channel.SafeSendMessage($"Module `{module.Id}` was disabled for channel `{channel.Name}`.");
+                        await
+                            e.Channel.SafeSendMessage($"Module `{module.Id}` was disabled for channel `{channel.Name}`.");
                     });
 
                 group.CreateCommand("server enable")
@@ -151,9 +153,11 @@ namespace Stormbot.Bot.Core.Modules
                             return;
                         }
                         _serverModulesDictionary.DeleteModuleFromSave(module.Id, e.Server.Id);
-                        await e.Channel.SafeSendMessage($"Module `{module.Id}` was disabled for server `{server.Name}`.");
+                        await
+                            e.Channel.SafeSendMessage($"Module `{module.Id}` was disabled for server `{server.Name}`.");
                     });
                 group.CreateCommand("list")
+                    .Description("Lists all available modules.")
                     .Do(async e =>
                     {
                         StringBuilder builder = new StringBuilder("**Available modules:**\r\n");

@@ -32,7 +32,7 @@ namespace Stormbot.Bot.Core.DynPerm
 
                 group.CreateCommand("set")
                     .Description(
-                        "Sets the dynamic permissions for this server.\r\n*Pastebin links are supported.**\r\n Use the dynperm help command for more info.")
+                        "Sets the dynamic permissions for this server.**Pastebin links are supported.**Use the dynperm help command for more info.")
                     .Parameter("perms", ParameterType.Unparsed)
                     .Do(async e =>
                     {

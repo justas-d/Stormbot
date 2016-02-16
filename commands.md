@@ -1,5 +1,5 @@
 # StormBot command table.
-This file was automatically generated at 16-02-2016 08:41:57 UTC.
+This file was automatically generated at 16-02-2016 08:44:43 UTC.
 ### Preface
 This document contains every command, that has been registered in the CommandService system, their paramaters, their desciptions and their default permissions.
 Every command belongs to a cetain module. These modules can be enabled and disabled at will using the Modules module. Each comamnd is seperated into their parent modules command table.
@@ -9,9 +9,7 @@ Every command belongs to a cetain module. These modules can be enabled and disab
 #### Dynamic Permissions
 Commands | Parameters | Description | Default Permissions
 --- | --- | --- | ---
-`dynperm set` |  `[-]` | Sets the dynamic permissions for this server.
-*Pastebin links are supported.**
- Use the dynperm help command for more info. | ServerAdmin
+`dynperm set` |  `[-]` | Sets the dynamic permissions for this server.**Pastebin links are supported.**Use the dynperm help command for more info. | ServerAdmin
 `dynperm show` |  | Shows the Dynamic Permissions for this server. | ServerAdmin
 `dynperm clear` |  `<areyousure>` | Clears the Dynamic Permissions. This cannot be undone. Pass yes as an argument for this to work. | ServerAdmin
 `dynperm help` |  | help | ServerAdmin
@@ -109,7 +107,7 @@ Commands | Parameters | Description | Default Permissions
 `module channel disable` |  `[-]` | Disable a module on the current channel. | ServerAdmin
 `module server enable` |  `[-]` | Enables a module on the current server. | ServerAdmin
 `module server disable` |  `[-]` | Disables a module for the current server. | ServerAdmin
-`module list` |  |  | ServerAdmin
+`module list` |  | Lists all available modules. | ServerAdmin
 
 #### Execute
 Commands | Parameters | Description | Default Permissions

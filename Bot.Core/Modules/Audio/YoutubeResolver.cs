@@ -9,23 +9,6 @@ namespace Stormbot.Bot.Core.Modules.Audio
 {
     public sealed class YoutubeResolver : IStreamResolver
     {
-        private async Task<VideoInfo> GetVideo(string input)
-        {
-            VideoInfo video = (await GetDownloadUrlsAsync(input))
-                .OrderByDescending(v => v.AudioBitrate)
-                .FirstOrDefault();
-
-            if (video == null)
-            {
-                Logger.FormattedWrite(GetType().Name, "A video stream we could use wasn't found.");
-                return null;
-            }
-            return video;
-        }
-
-        private static Task<IEnumerable<VideoInfo>> GetDownloadUrlsAsync(string videoUrl, bool decryptSignature = true)
-            => Task.Run(() => DownloadUrlResolver.GetDownloadUrls(videoUrl, decryptSignature));
-
         bool IStreamResolver.SupportsTrackNames => true;
         bool IStreamResolver.SupportsAsyncCanResolve => false;
 
@@ -52,5 +35,22 @@ namespace Stormbot.Bot.Core.Modules.Audio
 
         async Task<string> IStreamResolver.GetTrackName(string input)
             => (await GetVideo(input)).Title;
+
+        private async Task<VideoInfo> GetVideo(string input)
+        {
+            VideoInfo video = (await GetDownloadUrlsAsync(input))
+                .OrderByDescending(v => v.AudioBitrate)
+                .FirstOrDefault();
+
+            if (video == null)
+            {
+                Logger.FormattedWrite(GetType().Name, "A video stream we could use wasn't found.");
+                return null;
+            }
+            return video;
+        }
+
+        private static Task<IEnumerable<VideoInfo>> GetDownloadUrlsAsync(string videoUrl, bool decryptSignature = true)
+            => Task.Run(() => DownloadUrlResolver.GetDownloadUrls(videoUrl, decryptSignature));
     }
 }

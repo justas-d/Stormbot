@@ -34,7 +34,7 @@ namespace Stormbot.Bot.Core.Modules
             "Wheat and Chaff"
         };
 
-        public void Install(ModuleManager manager)
+        void IModule.Install(ModuleManager manager)
         {
             manager.CreateDynCommands("verm", PermissionLevel.User, group =>
             {

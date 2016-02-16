@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Modules;
 using Stormbot.Bot.Core.DynPerm;
-using Stormbot.Helpers;
 
 namespace Stormbot.Bot.Core.Modules
 {
@@ -14,7 +13,7 @@ namespace Stormbot.Bot.Core.Modules
     {
         private DiscordClient _client;
 
-        public void Install(ModuleManager manager)
+        void IModule.Install(ModuleManager manager)
         {
             _client = manager.Client;
 
@@ -23,17 +22,15 @@ namespace Stormbot.Bot.Core.Modules
                 group.CreateCommand("whois")
                     .Description("Displays information about the given user.")
                     .Parameter("username")
-                    .Do(async e =>
-                    {
-                        await PrintUserInfo(e.Server.FindUsers(e.GetArg("username")).FirstOrDefault(), e.Channel);
-                    });
+                    .Do(
+                        async e =>
+                        {
+                            await PrintUserInfo(e.Server.FindUsers(e.GetArg("username")).FirstOrDefault(), e.Channel);
+                        });
 
                 group.CreateCommand("whoami")
                     .Description("Displays information about the callers user.")
-                    .Do(async e =>
-                    {
-                        await PrintUserInfo(e.User, e.Channel);
-                    });
+                    .Do(async e => { await PrintUserInfo(e.User, e.Channel); });
                 group.CreateCommand("chatinfo")
                     .Description("Displays information about the current chat channel.")
                     .Do(async e =>
@@ -53,10 +50,15 @@ namespace Stormbot.Bot.Core.Modules
                         StringBuilder builder = new StringBuilder("**Bot info:\r\n**```");
                         Tuple<int, int> serverData = GetServerData();
 
-                        builder.AppendLine("- Owner: " + (Constants.Owner == null ? "Not found." : $"{Constants.Owner.Name} ({Constants.Owner.Id})"));
-                        builder.AppendLine($"- Uptime: {(DateTime.Now - Process.GetCurrentProcess().StartTime).ToString(@"dd\.hh\:mm\:ss")}");
+                        builder.AppendLine("- Owner: " +
+                                           (Constants.Owner == null
+                                               ? "Not found."
+                                               : $"{Constants.Owner.Name} ({Constants.Owner.Id})"));
+                        builder.AppendLine(
+                            $"- Uptime: {(DateTime.Now - Process.GetCurrentProcess().StartTime).ToString(@"dd\.hh\:mm\:ss")}");
                         builder.AppendLine("- GitHub: https://github.com/SSStormy/Stormbot");
-                        builder.AppendLine($"- Memory Usage: {Math.Round(GC.GetTotalMemory(false)/(1024.0*1024.0), 2)} MB");
+                        builder.AppendLine(
+                            $"- Memory Usage: {Math.Round(GC.GetTotalMemory(false)/(1024.0*1024.0), 2)} MB");
                         builder.AppendLine($"- Audio streaming jobs: {Constants.StreamingJobs}");
                         builder.AppendLine($"- Servers: {_client.Servers.Count()}");
                         builder.AppendLine($"- Channels: {serverData.Item1}");

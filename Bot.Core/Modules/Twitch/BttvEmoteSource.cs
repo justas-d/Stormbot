@@ -5,7 +5,6 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using Stormbot.Bot.Core.Services;
-using Stormbot.Helpers;
 using StrmyCore;
 
 namespace Stormbot.Bot.Core.Modules.Twitch
@@ -32,7 +31,8 @@ namespace Stormbot.Bot.Core.Modules.Twitch
 
                 if (!File.Exists(dir))
                 {
-                    HttpContent content = await http.Send(HttpMethod.Get, $"https://cdn.betterttv.net/emote/{imageId}/2x");
+                    HttpContent content =
+                        await http.Send(HttpMethod.Get, $"https://cdn.betterttv.net/emote/{imageId}/2x");
                     File.WriteAllBytes(dir, await content.ReadAsByteArrayAsync());
                 }
 

@@ -157,7 +157,7 @@
     <Compile Include="Bot.Core\Services\PastebinService.cs" />
     <Compile Include="Bot.Core\StormBot.cs" />
     <Compile Include="Bot.Core\Utils.cs" />
-    <Compile Include="Helpers\Constants.cs" />
+    <Compile Include="Bot.Core\Constants.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

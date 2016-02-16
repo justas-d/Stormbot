@@ -11,6 +11,25 @@ namespace Stormbot.Bot.Core.Modules.Audio
         internal static string ApiKey;
         private readonly Dictionary<string, dynamic> _cachedTrackData = new Dictionary<string, dynamic>();
         private string ClientIdParam => $"client_id={ApiKey}";
+        bool IStreamResolver.SupportsTrackNames => true;
+        bool IStreamResolver.SupportsAsyncCanResolve => false;
+
+        async Task<string> IStreamResolver.ResolveStreamUrl(string input)
+        {
+            if (ApiKey != null)
+                return $"{(string) (await GetTrackData(input)).stream_url}?{ClientIdParam}";
+
+            Logger.FormattedWrite(GetType().Name, "Soundcloud API Key was not set.");
+            return null;
+        }
+
+        Task<bool> IStreamResolver.AsyncCanResolve(string input)
+        {
+            throw new NotSupportedException();
+        }
+
+        bool IStreamResolver.SyncCanResolve(string input) => input.Contains("soundcloud.com");
+        async Task<string> IStreamResolver.GetTrackName(string input) => (await GetTrackData(input)).title;
 
         private async Task<dynamic> GetTrackData(string trackUrl)
         {
@@ -34,25 +53,5 @@ namespace Stormbot.Bot.Core.Modules.Audio
                 return null;
             }
         }
-
-        bool IStreamResolver.SupportsTrackNames => true;
-        bool IStreamResolver.SupportsAsyncCanResolve => false;
-
-        async Task<string> IStreamResolver.ResolveStreamUrl(string input)
-        {
-            if (ApiKey != null)
-                return $"{(string) (await GetTrackData(input)).stream_url}?{ClientIdParam}";
-
-            Logger.FormattedWrite(GetType().Name, "Soundcloud API Key was not set.");
-            return null;
-        }
-
-        Task<bool> IStreamResolver.AsyncCanResolve(string input)
-        {
-            throw new NotSupportedException();
-        }
-
-        bool IStreamResolver.SyncCanResolve(string input) => input.Contains("soundcloud.com");
-        async Task<string> IStreamResolver.GetTrackName(string input) => (await GetTrackData(input)).title;
     }
 }

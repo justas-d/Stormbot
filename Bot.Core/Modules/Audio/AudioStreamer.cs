@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using System.IO;
 using Discord;
-using Stormbot.Helpers;
 using StrmyCore;
 
 namespace Stormbot.Bot.Core.Modules.Audio
@@ -21,6 +20,13 @@ namespace Stormbot.Bot.Core.Modules.Audio
         {
             Location = location;
             Client = client;
+        }
+
+        void IDisposable.Dispose()
+        {
+            Constants.StreamingJobs--;
+            OutputStream?.Dispose();
+            _ffmpeg?.Dispose();
         }
 
         public void Start(TimeSpan startTime) => StartFfmpeg($"-ss {startTime} {DefaultStartArgs}");
@@ -46,13 +52,6 @@ namespace Stormbot.Bot.Core.Modules.Audio
             }
             Constants.StreamingJobs++;
             OutputStream = _ffmpeg.StandardOutput.BaseStream;
-        }
-
-        public void Dispose()
-        {
-            Constants.StreamingJobs--;
-            OutputStream?.Dispose();
-            _ffmpeg?.Dispose();
         }
     }
 }

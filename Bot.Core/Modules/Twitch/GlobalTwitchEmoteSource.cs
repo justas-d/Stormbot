@@ -6,7 +6,6 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using Stormbot.Bot.Core.Services;
-using Stormbot.Helpers;
 using StrmyCore;
 
 namespace Stormbot.Bot.Core.Modules.Twitch
@@ -21,7 +20,7 @@ namespace Stormbot.Bot.Core.Modules.Twitch
             foreach (JToken token in data["emoticons"])
             {
                 EmoteDict.Add(token["regex"].ToObject<string>(),
-                    ((JArray)token["images"]).Children().First()["url"].ToObject<string>());
+                    ((JArray) token["images"]).Children().First()["url"].ToObject<string>());
             }
 
             Logger.FormattedWrite(
@@ -52,8 +51,6 @@ namespace Stormbot.Bot.Core.Modules.Twitch
         }
 
         public override bool ContainsEmote(string emote)
-        {
-            return EmoteDict.ContainsKey(emote);
-        }
+            => EmoteDict.ContainsKey(emote);
     }
 }

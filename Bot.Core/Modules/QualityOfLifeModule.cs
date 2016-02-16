@@ -50,18 +50,20 @@ namespace Stormbot.Bot.Core.Modules
             }
         }
 
-        [DataLoad, DataSave] private ConcurrentDictionary<ulong, HashSet<string>> _quoteDictionary;
         private const byte MinQuoteSize = 3;
-
+        private const string ColorRoleName = "ColorsAddRole";
+        private DiscordClient _client;
+        private bool _isReminderTimerRunning;
+        [DataLoad, DataSave] private ConcurrentDictionary<ulong, HashSet<string>> _quoteDictionary;
         [DataLoad, DataSave] private List<ReminderData> _reminders = new List<ReminderData>();
 
-        private bool _isReminderTimerRunning;
+        void IDataObject.OnDataLoad()
+        {
+            if (_quoteDictionary == null)
+                _quoteDictionary = new ConcurrentDictionary<ulong, HashSet<string>>();
+        }
 
-        private const string ColorRoleName = "ColorsAddRole";
-
-        private DiscordClient _client;
-
-        public void Install(ModuleManager manager)
+        void IModule.Install(ModuleManager manager)
         {
             _client = manager.Client;
 
@@ -177,9 +179,10 @@ namespace Stormbot.Bot.Core.Modules
                         if (role == null || !e.User.HasRole(role))
                         {
                             role = await e.Server.CreateRole(ColorRoleName + stringhex);
-                            if(!await role.SafeEdit(color: new Color(hex)))
-                                await e.Channel.SendMessage($"Failed editing role. Make sure it's not everyone or managed.");
-
+                            if (!await role.SafeEdit(color: new Color(hex)))
+                                await
+                                    e.Channel.SendMessage(
+                                        $"Failed editing role. Make sure it's not everyone or managed.");
                         }
                         await e.User.AddRoles(role);
 
@@ -212,12 +215,6 @@ namespace Stormbot.Bot.Core.Modules
                 _quoteDictionary.TryAdd(server.Id, new HashSet<string>());
 
             return _quoteDictionary[server.Id];
-        }
-
-        void IDataObject.OnDataLoad()
-        {
-            if (_quoteDictionary == null)
-                _quoteDictionary = new ConcurrentDictionary<ulong, HashSet<string>>();
         }
 
         private async Task CleanColorRoles(Server server)

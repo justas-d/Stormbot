@@ -5,7 +5,6 @@ using System.Reflection;
 using Discord;
 using Discord.Modules;
 using Newtonsoft.Json;
-using Stormbot.Helpers;
 using StrmyCore;
 
 namespace Stormbot.Bot.Core.Services
@@ -31,11 +30,10 @@ namespace Stormbot.Bot.Core.Services
             }
         }
 
+        private const string DataDir = Constants.DataFolderDir + @"data\";
         private DiscordClient _client;
 
-        private const string DataDir = Constants.DataFolderDir + @"data\";
-
-        public void Install(DiscordClient client)
+        void IService.Install(DiscordClient client)
         {
             _client = client;
         }

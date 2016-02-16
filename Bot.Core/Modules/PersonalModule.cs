@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Commands.Permissions.Levels;
 using Discord.Modules;
-using Stormbot.Helpers;
 using StrmyCore;
 
 namespace Stormbot.Bot.Core.Modules
@@ -15,7 +14,7 @@ namespace Stormbot.Bot.Core.Modules
         private const ulong RebbitId = 131468210531860480;
         private const ulong CrixiusId = 131465844176715776;
 
-        public void Install(ModuleManager manager)
+        void IModule.Install(ModuleManager manager)
         {
             manager.CreateCommands("", group =>
             {

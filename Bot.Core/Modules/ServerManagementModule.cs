@@ -6,13 +6,12 @@ using Discord;
 using Discord.Commands;
 using Discord.Modules;
 using Stormbot.Bot.Core.DynPerm;
-using Stormbot.Helpers;
 
 namespace Stormbot.Bot.Core.Modules
 {
     public class ServerManagementModule : IModule
     {
-        public void Install(ModuleManager manager)
+        void IModule.Install(ModuleManager manager)
         {
             manager.CreateDynCommands("channel", PermissionLevel.ServerAdmin, group =>
             {
@@ -89,7 +88,7 @@ namespace Stormbot.Bot.Core.Modules
                         }
                         string nameBefore = channel.Name;
 
-                        if (!await channel.SafeEditChannel(name: name))
+                        if (!await channel.SafeEditChannel(name))
                         {
                             await
                                 e.Channel.SendMessage($"I don't have sufficient permissions to edit {channel.Mention}");
@@ -181,7 +180,6 @@ namespace Stormbot.Bot.Core.Modules
                             await
                                 e.Channel.SafeSendMessage(
                                     $"Set permission `{prop.Name}` in `{role.Name}` to `{value}`");
-
                         });
 
                     manageRolesGroup.CreateCommand("edit color")
@@ -203,8 +201,10 @@ namespace Stormbot.Bot.Core.Modules
                             if (!DiscordUtils.ToHex(e.GetArg("hex"), out hex))
                                 return;
 
-                            if(!await role.SafeEdit(color: new Color(hex)))
-                                await e.Channel.SendMessage($"Failed editing role. Make sure it's not everyone or managed.");
+                            if (!await role.SafeEdit(color: new Color(hex)))
+                                await
+                                    e.Channel.SendMessage(
+                                        $"Failed editing role. Make sure it's not everyone or managed.");
                         });
                 });
 
@@ -434,6 +434,7 @@ namespace Stormbot.Bot.Core.Modules
             foreach (dynamic val in values) builder.AppendLine($"* `{val.Name,-30} {val.Id,-20}`");
         }
 
-        private Role FindRole(string name, CommandEventArgs e) => e.Server.Roles.FirstOrDefault(x => x.Name == name);
+        private Role FindRole(string name, CommandEventArgs e)
+            => e.Server.Roles.FirstOrDefault(x => x.Name == name);
     }
 }

@@ -58,7 +58,7 @@ namespace Stormbot.Bot.Core.Modules
         private class AnnounceChannelData
         {
             [JsonProperty]
-            public JsonChannel Channel { get; private set; }
+            public JsonChannel Channel { get; }
 
             [JsonProperty]
             public bool IsEnabled { get; set; }
@@ -72,23 +72,44 @@ namespace Stormbot.Bot.Core.Modules
 
             public AnnounceChannelData(Channel channel) : this(channel, true)
             {
-
             }
         }
 
-        [DataSave, DataLoad] private ConcurrentDictionary<ulong, UserEventCallback> _userJoinedSubs;
-        [DataSave, DataLoad] private ConcurrentDictionary<ulong, UserEventCallback> _userLeftSubs;
-        [DataSave, DataLoad] private ConcurrentDictionary<ulong, ulong> _joinedRoleSubs;
-        [DataSave, DataLoad] private ConcurrentDictionary<ulong, AnnounceChannelData> _defaultAnnounceChannels;
-
         private const string UserNameKeyword = "|userName|";
         private const string LocationKeyword = "|location|";
-
         private static readonly string DefaultMessage = $"{UserNameKeyword} has joined {LocationKeyword}!";
-
         private DiscordClient _client;
+        [DataSave, DataLoad] private ConcurrentDictionary<ulong, AnnounceChannelData> _defaultAnnounceChannels;
+        [DataSave, DataLoad] private ConcurrentDictionary<ulong, ulong> _joinedRoleSubs;
+        [DataSave, DataLoad] private ConcurrentDictionary<ulong, UserEventCallback> _userJoinedSubs;
+        [DataSave, DataLoad] private ConcurrentDictionary<ulong, UserEventCallback> _userLeftSubs;
 
-        public void Install(ModuleManager manager)
+        void IDataObject.OnDataLoad()
+        {
+            if (_userJoinedSubs == null)
+                _userJoinedSubs = new ConcurrentDictionary<ulong, UserEventCallback>();
+            if (_userLeftSubs == null)
+                _userLeftSubs = new ConcurrentDictionary<ulong, UserEventCallback>();
+            if (_joinedRoleSubs == null)
+                _joinedRoleSubs = new ConcurrentDictionary<ulong, ulong>();
+            if (_defaultAnnounceChannels == null)
+                _defaultAnnounceChannels = new ConcurrentDictionary<ulong, AnnounceChannelData>();
+
+            LoadChannels(_userJoinedSubs);
+            LoadChannels(_userLeftSubs);
+
+            foreach (var pair in _defaultAnnounceChannels)
+            {
+                if (!pair.Value.Channel.FinishLoading(_client))
+                {
+                    Logger.FormattedWrite("AnnounceLoad",
+                        $"Failed loading JsonChannel id {pair.Value.Channel.ChannelId}. Removing", ConsoleColor.Yellow);
+                    _defaultAnnounceChannels.Remove(pair.Key);
+                }
+            }
+        }
+
+        void IModule.Install(ModuleManager manager)
         {
             _client = manager.Client;
 
@@ -102,7 +123,7 @@ namespace Stormbot.Bot.Core.Modules
 
                         return true;
                     })
-                    .Description("Disables but owner announcements on this server.")
+                    .Description("Disables bot owner announcements on this server.")
                     .Do(async e =>
                     {
                         if (_defaultAnnounceChannels.ContainsKey(e.Server.Id))
@@ -245,11 +266,15 @@ namespace Stormbot.Bot.Core.Modules
                 });
             });
 
-            manager.CreateDynCommands("newuser", PermissionLevel.ServerModerator,  group =>
+            manager.CreateDynCommands("newuser", PermissionLevel.ServerModerator, group =>
             {
                 group.CreateCommand("syntax")
-                .Description("Syntax rules for newuser commands.")
-                .Do(async e => await e.Channel.SafeSendMessage($"Syntax: `{UserNameKeyword}` - replaced with the name of the user who triggered the event, `{LocationKeyword}` - replaced with the location (server or channel) where the event occured.```"));
+                    .Description("Syntax rules for newuser commands.")
+                    .Do(
+                        async e =>
+                            await
+                                e.Channel.SafeSendMessage(
+                                    $"Syntax: `{UserNameKeyword}` - replaced with the name of the user who triggered the event, `{LocationKeyword}` - replaced with the location (server or channel) where the event occured.```"));
 
                 group.CreateGroup("join", joinGroup =>
                 {
@@ -456,31 +481,6 @@ namespace Stormbot.Bot.Core.Modules
 
             if (shouldCallback)
                 await callback.SafeSendMessage("Removed auto role assigner for this server.");
-        }
-
-        void IDataObject.OnDataLoad()
-        {
-            if (_userJoinedSubs == null)
-                _userJoinedSubs = new ConcurrentDictionary<ulong, UserEventCallback>();
-            if (_userLeftSubs == null)
-                _userLeftSubs = new ConcurrentDictionary<ulong, UserEventCallback>();
-            if (_joinedRoleSubs == null)
-                _joinedRoleSubs = new ConcurrentDictionary<ulong, ulong>();
-            if (_defaultAnnounceChannels == null)
-                _defaultAnnounceChannels = new ConcurrentDictionary<ulong, AnnounceChannelData>();
-
-            LoadChannels(_userJoinedSubs);
-            LoadChannels(_userLeftSubs);
-
-            foreach (var pair in _defaultAnnounceChannels)
-            {
-                if (!pair.Value.Channel.FinishLoading(_client))
-                {
-                    Logger.FormattedWrite("AnnounceLoad",
-                        $"Failed loading JsonChannel id {pair.Value.Channel.ChannelId}. Removing", ConsoleColor.Yellow);
-                    _defaultAnnounceChannels.Remove(pair.Key);
-                }
-            }
         }
 
         private void LoadChannels(ConcurrentDictionary<ulong, UserEventCallback> dict)

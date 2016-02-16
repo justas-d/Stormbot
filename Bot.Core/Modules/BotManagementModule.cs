@@ -11,7 +11,6 @@ using Discord.Commands.Permissions.Levels;
 using Discord.Modules;
 using Stormbot.Bot.Core.DynPerm;
 using Stormbot.Bot.Core.Services;
-using Stormbot.Helpers;
 using StrmyCore;
 
 namespace Stormbot.Bot.Core.Modules
@@ -21,7 +20,7 @@ namespace Stormbot.Bot.Core.Modules
         private DiscordClient _client;
         private DataIoService _io;
 
-        public void Install(ModuleManager manager)
+        void IModule.Install(ModuleManager manager)
         {
             _client = manager.Client;
             _client.MessageReceived +=
@@ -103,7 +102,7 @@ namespace Stormbot.Bot.Core.Modules
                     .Description("Lists used memory, then collects it.")
                     .Do(async e =>
                     {
-                        await GetMemUsage(e);
+                        await PrintMemUsage(e);
                         await Collect(e);
                     });
 
@@ -138,7 +137,7 @@ namespace Stormbot.Bot.Core.Modules
 
                 group.CreateCommand("gc list")
                     .Description("Calls GC.GetTotalMemory()")
-                    .Do(async e => await GetMemUsage(e));
+                    .Do(async e => await PrintMemUsage(e));
             });
 
             manager.MessageReceived += async (s, e) =>
@@ -172,10 +171,13 @@ namespace Stormbot.Bot.Core.Modules
                 .AppendLine("# StormBot command table.")
                 .AppendLine($"This file was automatically generated at {DateTime.UtcNow} UTC.")
                 .AppendLine("### Preface")
-                .AppendLine("This document contains every command, that has been registered in the CommandService system, their paramaters, their desciptions and their default permissions.")
-                .AppendLine("Every command belongs to a cetain module. These modules can be enabled and disabled at will using the Modules module. Each comamnd is seperated into their parent modules command table.")
+                .AppendLine(
+                    "This document contains every command, that has been registered in the CommandService system, their paramaters, their desciptions and their default permissions.")
+                .AppendLine(
+                    "Every command belongs to a cetain module. These modules can be enabled and disabled at will using the Modules module. Each comamnd is seperated into their parent modules command table.")
                 .AppendLine($"{Environment.NewLine}{Environment.NewLine}")
-                .AppendLine($"Each and every one of these commands can be triggered by saying `{_client.Commands().Config.PrefixChar}<command>` or `{e.Server.CurrentUser.Mention}<command>`")
+                .AppendLine(
+                    $"Each and every one of these commands can be triggered by saying `{_client.Commands().Config.PrefixChar}<command>` or `{e.Server.CurrentUser.Mention}<command>`")
                 .AppendLine($"{Environment.NewLine}## Commands");
 
             string currentModule = null;
@@ -235,7 +237,10 @@ namespace Stormbot.Bot.Core.Modules
                         .FirstOrDefault(f => f.Name == "_checks")
                         .GetValue(cmd);
 
-                PermissionLevel lowestPermissionLevel = Enum.GetValues(typeof(PermissionLevel)).Cast<PermissionLevel>().Max(); // get max value of PermissionLevel
+                // get max value of PermissionLevel
+                PermissionLevel lowestPermissionLevel =
+                    Enum.GetValues(typeof (PermissionLevel)).Cast<PermissionLevel>().Max();
+
                 foreach (IPermissionChecker permCheck in checkers)
                 {
                     PermissionLevelChecker perms = permCheck as PermissionLevelChecker;
@@ -262,11 +267,10 @@ namespace Stormbot.Bot.Core.Modules
                     $"Collected `{memoryBefore - GetMemoryUsage()} mb` of trash.");
         }
 
-        private async Task GetMemUsage(CommandEventArgs e)
-        {
-            await e.Channel.SafeSendMessage($"Memory usage: `{GetMemoryUsage()} mb`");
-        }
+        private async Task PrintMemUsage(CommandEventArgs e)
+            => await e.Channel.SafeSendMessage($"Memory usage: `{GetMemoryUsage()} mb`");
 
-        private double GetMemoryUsage() => Math.Round(GC.GetTotalMemory(false)/(1024.0*1024.0), 2);
+        private double GetMemoryUsage()
+            => Math.Round(GC.GetTotalMemory(false)/(1024.0*1024.0), 2);
     }
 }

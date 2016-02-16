@@ -4,7 +4,6 @@ using System.Globalization;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Discord;
-using Stormbot.Helpers;
 
 namespace Stormbot.Bot.Core
 {

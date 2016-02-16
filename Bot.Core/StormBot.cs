@@ -13,42 +13,38 @@ using Stormbot.Bot.Core.Modules.Audio;
 using Stormbot.Bot.Core.Modules.Relay;
 using Stormbot.Bot.Core.Modules.Twitch;
 using Stormbot.Bot.Core.Services;
-using Stormbot.Helpers;
 using StrmyCore;
 
 namespace Stormbot.Bot.Core
 {
     public class StormBot
     {
-        private readonly string _email;
-        private readonly string _password;
-
-        private DiscordClient Client { get; }
-
-        private readonly Dictionary<LogSeverity, ConsoleColor> _colorMap = new Dictionary<LogSeverity, ConsoleColor>()
+        private readonly Dictionary<LogSeverity, ConsoleColor> _colorMap = new Dictionary<LogSeverity, ConsoleColor>
         {
             {LogSeverity.Debug, ConsoleColor.DarkYellow},
-            {LogSeverity.Error, ConsoleColor.Red },
-            {LogSeverity.Info, ConsoleColor.Blue },
-            {LogSeverity.Verbose, ConsoleColor.Gray },
+            {LogSeverity.Error, ConsoleColor.Red},
+            {LogSeverity.Info, ConsoleColor.Blue},
+            {LogSeverity.Verbose, ConsoleColor.Gray},
             {LogSeverity.Warning, ConsoleColor.Yellow}
         };
 
-        private readonly HashSet<LogSeverity> _ignoredLogs = new HashSet<LogSeverity>()
+        private readonly string _email;
+
+        private readonly HashSet<LogSeverity> _ignoredLogs = new HashSet<LogSeverity>
         {
             LogSeverity.Debug,
             LogSeverity.Verbose
         };
+
+        private readonly string _password;
+        private DiscordClient Client { get; }
 
         public StormBot(string email, string password)
         {
             _email = email;
             _password = password;
 
-            Client = new DiscordClient(config =>
-            {
-                config.LogLevel = LogSeverity.Debug;
-            });
+            Client = new DiscordClient(config => { config.LogLevel = LogSeverity.Debug; });
         }
 
         public void Start() => Client.ExecuteAndWait(Init);
@@ -116,7 +112,8 @@ namespace Stormbot.Bot.Core
             Client.UsingAudio(audio =>
             {
                 audio.EnableMultiserver = true;
-                audio.Mode = AudioMode.Outgoing;;
+                audio.Mode = AudioMode.Outgoing;
+                ;
                 audio.Channels = 2;
                 audio.EnableEncryption = true;
             });
@@ -124,27 +121,27 @@ namespace Stormbot.Bot.Core
             Client.UsingPermissionLevels((u, c) =>
             {
                 if (u.Id == Constants.UserOwner)
-                    return (int)PermissionLevel.BotOwner;
+                    return (int) PermissionLevel.BotOwner;
 
                 if (u.Server != null)
                 {
                     if (Equals(u, c.Server.Owner))
-                        return (int)PermissionLevel.ServerOwner;
+                        return (int) PermissionLevel.ServerOwner;
 
                     ServerPermissions serverPerms = u.ServerPermissions;
                     if (serverPerms.ManageRoles)
-                        return (int)PermissionLevel.ServerAdmin;
+                        return (int) PermissionLevel.ServerAdmin;
                     if (serverPerms.ManageMessages && serverPerms.KickMembers && serverPerms.BanMembers)
-                        return (int)PermissionLevel.ServerModerator;
+                        return (int) PermissionLevel.ServerModerator;
 
                     ChannelPermissions channelPerms = u.GetPermissions(c);
                     if (channelPerms.ManagePermissions)
-                        return (int)PermissionLevel.ChannelAdmin;
+                        return (int) PermissionLevel.ChannelAdmin;
                     if (channelPerms.ManageMessages)
-                        return (int)PermissionLevel.ChannelModerator;
+                        return (int) PermissionLevel.ChannelModerator;
                 }
 
-                return (int)PermissionLevel.User;
+                return (int) PermissionLevel.User;
             });
 
             Client.UsingDynamicPerms();
@@ -168,13 +165,14 @@ namespace Stormbot.Bot.Core
             Client.AddModule<AnnouncementModule>("Announcements", ModuleFilter.ServerWhitelist);
             Client.AddModule<VermintideModule>("Vermintide", ModuleFilter.ServerWhitelist | ModuleFilter.ChannelWhitelist | ModuleFilter.AlwaysAllowPrivate);
             Client.AddModule<PersonalModule>("Personal", ModuleFilter.ServerWhitelist);
+
             Client.Log.Message += (sender, args) =>
             {
                 if (_ignoredLogs.Contains(args.Severity)) return;
 
                 Logger.FormattedWrite($"{args.Severity} {args.Source}", $"{args.Message}", _colorMap[args.Severity]);
 
-                if(args.Exception != null)
+                if (args.Exception != null)
                     Logger.Write($"Exception: {args.Exception}");
             };
 

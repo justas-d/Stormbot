@@ -21,13 +21,31 @@ namespace Stormbot.Bot.Core.Modules.Audio
         [JsonObject(MemberSerialization.OptIn)]
         private class AudioState
         {
+            private DiscordClient _client;
             private Server _hostServer;
+
+            /// <summary>pauses playback of the currently played track.</summary>
+            private bool _pausePlaybackFlag;
+
             private Channel _playbackVoiceChannel;
 
-            private IAudioClient _voiceClient;
-            private DiscordClient _client;
+            /// <summary>set when we want to go one track back.</summary>
+            private bool _prevFlag;
+
+            /// <summary>the time to which we will skip in the currently played track when the skiptoflag is set.</summary>
+            private TimeSpan _skipTime;
+
+            /// <summary>set when we want to skip to a ceratin point in the currently played track or in the playlist</summary>
+            private bool _skipToFlag;
+
+            /// <summary>stops playback of the track and playlist.</summary>
+            private bool _stopPlaylistFlag;
+
+            /// <summary>stops playback of the currently played track.</summary>
+            private bool _stopTrackFlag;
 
             [JsonProperty] private int _trackIndex;
+            private IAudioClient _voiceClient;
 
             public int TrackIndex
             {
@@ -43,10 +61,10 @@ namespace Stormbot.Bot.Core.Modules.Audio
                 }
             }
 
-            ///<summary>Returns the track that is supposed to be played at this moment.</summary>
+            /// <summary>Returns the track that is supposed to be played at this moment.</summary>
             public TrackData CurrentTrack => Playlist[TrackIndex];
 
-            ///<summary>Returns the server this audio state belongs to.</summary>
+            /// <summary>Returns the server this audio state belongs to.</summary>
             public Server HostServer
             {
                 get { return _hostServer; }
@@ -80,19 +98,7 @@ namespace Stormbot.Bot.Core.Modules.Audio
             private ulong PlaybackChannelId { get; set; }
 
             public Channel ChatChannel { get; set; }
-
             public bool IsPlaying { get; private set; }
-
-            private bool _stopTrackFlag; // stops playback of the currently played track.
-            private bool _stopPlaylistFlag; // stops playback of the track and playlist.
-            private bool _pausePlaybackFlag; // pauses playback of the currently played track.
-            private bool _prevFlag; // set when we want to go one track back.
-
-            private bool _skipToFlag;
-                // set when we want to skip to a ceratin point in the currently played track or in the playlist
-
-            // the time to which we will skip in the currently played track when the skiptoflag is set.
-            private TimeSpan _skipTime;
 
             [JsonConstructor]
             private AudioState(ulong hostServerId, List<TrackData> playlist = null, ushort trackIndex = 0,
@@ -322,7 +328,7 @@ namespace Stormbot.Bot.Core.Modules.Audio
                     {
                         StringBuilder builder = new StringBuilder($"Currently playing: {CurrentTrack.Name}");
                         if (CurrentTrack.Length != null && CurrentTrack.Length != TimeSpan.Zero)
-                            builder.Append($"[`{CurrentTrack.Length}`]");
+                            builder.Append($" `[{CurrentTrack.Length}]`");
 
                         await ChatChannel.SafeSendMessage(builder.ToString());
                     }
@@ -340,11 +346,26 @@ namespace Stormbot.Bot.Core.Modules.Audio
             }
         }
 
+        [DataSave, DataLoad] private ConcurrentDictionary<ulong, AudioState> _audioStates;
         private DiscordClient _client;
 
-        [DataSave, DataLoad] private ConcurrentDictionary<ulong, AudioState> _audioStates;
+        void IDataObject.OnDataLoad()
+        {
+            if (_audioStates == null)
+                _audioStates = new ConcurrentDictionary<ulong, AudioState>();
+            foreach (AudioState state in _audioStates.Values)
+            {
+                if (!state.FinishLoading(_client))
+                {
+                    Logger.FormattedWrite("AudioLoad",
+                        $"Tried to load AudioState for nonexistant server id : {state.HostServerId}. Removing",
+                        ConsoleColor.Yellow);
+                    _audioStates.Remove(state.HostServerId);
+                }
+            }
+        }
 
-        public void Install(ModuleManager manager)
+        void IModule.Install(ModuleManager manager)
         {
             _client = manager.Client;
 
@@ -522,7 +543,8 @@ namespace Stormbot.Bot.Core.Modules.Audio
                         else
                         {
                             audio.PlaybackChannel = channel;
-                            await e.Channel.SafeSendMessage($"Set playback channel to \"`{audio.PlaybackChannel.Name}`\"");
+                            await
+                                e.Channel.SafeSendMessage($"Set playback channel to \"`{audio.PlaybackChannel.Name}`\"");
                         }
                     });
             });
@@ -537,22 +559,6 @@ namespace Stormbot.Bot.Core.Modules.Audio
             state.ChatChannel = chat;
 
             return _audioStates[chat.Server.Id];
-        }
-
-        void IDataObject.OnDataLoad()
-        {
-            if(_audioStates == null)
-                _audioStates = new ConcurrentDictionary<ulong, AudioState>();
-            foreach (AudioState state in _audioStates.Values)
-            {
-                if (!state.FinishLoading(_client))
-                {
-                    Logger.FormattedWrite("AudioLoad",
-                        $"Tried to load AudioState for nonexistant server id : {state.HostServerId}. Removing",
-                        ConsoleColor.Yellow);
-                    _audioStates.Remove(state.HostServerId);
-                }
-            }
         }
     }
 }

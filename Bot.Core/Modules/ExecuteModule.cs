@@ -7,7 +7,6 @@ using Discord.Commands.Permissions.Levels;
 using Discord.Modules;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
-using Stormbot.Helpers;
 
 namespace Stormbot.Bot.Core.Modules
 {
@@ -15,8 +14,8 @@ namespace Stormbot.Bot.Core.Modules
     {
         public class Globals
         {
-            public CommandEventArgs e;
             public DiscordClient client;
+            public CommandEventArgs e;
 
             public Globals(CommandEventArgs e, DiscordClient client)
             {
@@ -26,10 +25,9 @@ namespace Stormbot.Bot.Core.Modules
         }
 
         private DiscordClient _client;
-
         private ScriptOptions _scriptOptions = ScriptOptions.Default;
 
-        public void Install(ModuleManager manager)
+        void IModule.Install(ModuleManager manager)
         {
             _client = manager.Client;
 
@@ -54,7 +52,9 @@ namespace Stormbot.Bot.Core.Modules
                         try
                         {
                             object output =
-                                await CSharpScript.EvaluateAsync(e.GetArg("query"), _scriptOptions, new Globals(e, _client));
+                                await
+                                    CSharpScript.EvaluateAsync(e.GetArg("query"), _scriptOptions,
+                                        new Globals(e, _client));
 
                             if (output == null || (output as Task) != null || (output as string) == string.Empty)
                                 await e.Channel.SafeSendMessage("Output was empty or null.");

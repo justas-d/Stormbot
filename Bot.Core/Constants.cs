@@ -1,6 +1,6 @@
 ﻿using Discord;
 
-namespace Stormbot.Helpers
+namespace Stormbot.Bot.Core
 {
     internal static class Constants
     {
@@ -33,6 +33,5 @@ namespace Stormbot.Helpers
         internal static string PastebinPassword;
 
         internal static int StreamingJobs = 0;
-
     }
 }

@@ -10,16 +10,22 @@ namespace Stormbot.Bot.Core.DynPerm
 {
     public class DynamicPermissionService : IService, IDataObject
     {
+        private DiscordClient _client;
         [DataLoad, DataSave] private ConcurrentDictionary<ulong, DynPermFullData> _perms;
 
-        private DiscordClient _client;
+        void IDataObject.OnDataLoad()
+        {
+            if (_perms == null)
+                _perms = new ConcurrentDictionary<ulong, DynPermFullData>();
+        }
 
         void IService.Install(DiscordClient client)
         {
             _client = client;
         }
 
-        public void DestroyServerPerms(ulong server) => _perms.Remove(server);
+        public void DestroyServerPerms(ulong server)
+            => _perms.Remove(server);
 
         public DynPermFullData TryAddOrUpdate(ulong serverId, string input, out string error)
         {
@@ -85,7 +91,8 @@ namespace Stormbot.Bot.Core.DynPerm
             => IsInvalidChannelsInDict(set.Commands, server, out invalidId) ||
                IsInvalidChannelsInDict(set.Modules, server, out invalidId);
 
-        private bool IsInvalidChannelsInDict(Dictionary<string, RestrictionData> dict, Server server, out ulong invalidId)
+        private bool IsInvalidChannelsInDict(Dictionary<string, RestrictionData> dict, Server server,
+            out ulong invalidId)
         {
             foreach (var pair in dict)
             {
@@ -108,12 +115,6 @@ namespace Stormbot.Bot.Core.DynPerm
             DynPermFullData perms;
             _perms.TryGetValue(server, out perms);
             return perms;
-        }
-
-        void IDataObject.OnDataLoad()
-        {
-            if (_perms == null)
-                _perms = new ConcurrentDictionary<ulong, DynPermFullData>();
         }
     }
 }

@@ -4,12 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Discord;
-using Discord.Commands.Permissions.Levels;
 using Discord.Modules;
 using Newtonsoft.Json.Linq;
 using Stormbot.Bot.Core.DynPerm;
 using Stormbot.Bot.Core.Services;
-using Stormbot.Helpers;
 using StrmyCore;
 using TwitchBotBase.Twitch.Bot;
 
@@ -17,17 +15,53 @@ namespace Stormbot.Bot.Core.Modules.Relay
 {
     public class TwitchRelayModule : IDataObject, IModule
     {
-        private static readonly string EscapePrefix = "}";
         private const int MaxViewsPerChannel = 500;
-
+        private static readonly string EscapePrefix = "}";
         private DiscordClient _client;
 
-        [DataLoad, DataSave]
-        private Dictionary<string, List<JsonChannel>> _relays = new Dictionary<string, List<JsonChannel>>();
+        [DataLoad, DataSave] private Dictionary<string, List<JsonChannel>> _relays =
+            new Dictionary<string, List<JsonChannel>>();
 
         private TwitchBot _twitch;
 
-        public void Install(ModuleManager manager)
+        void IDataObject.OnDataLoad()
+        {
+            if (_relays == null)
+            {
+                _relays = new Dictionary<string, List<JsonChannel>>();
+                return;
+            }
+
+            // load the data from _serializeRelays into _relays using Subscribe()
+            Task.Run(async () =>
+            {
+                foreach (var pair in _relays)
+                {
+                    List<JsonChannel> removeChannels = new List<JsonChannel>();
+
+                    foreach (JsonChannel channel in pair.Value)
+                    {
+                        if (channel.FinishLoading(_client))
+                            await Subscribe(pair.Key, channel);
+                        else
+                        {
+                            Logger.FormattedWrite("TwitchRelayLoad",
+                                $"Tried to load TwitchRelay discord channel for nonexistant channel id : {channel.ChannelId}. Removing",
+                                ConsoleColor.Yellow);
+                            removeChannels.Add(channel);
+                        }
+                    }
+
+                    foreach (JsonChannel channel in removeChannels)
+                        pair.Value.Remove(channel);
+
+                    if (!pair.Value.Any())
+                        _relays.Remove(pair.Key);
+                }
+            });
+        }
+
+        void IModule.Install(ModuleManager manager)
         {
             _client = manager.Client;
             _twitch = new TwitchBot();
@@ -59,10 +93,7 @@ namespace Stormbot.Bot.Core.Modules.Relay
                 group.CreateCommand("disconnect")
                     .Description("Disconnects this channel from the given twitch channel.")
                     .Parameter("channel")
-                    .Do(async e =>
-                    {
-                        await Unsubscribe(e.GetArg("channel"), e.Channel);
-                    });
+                    .Do(async e => { await Unsubscribe(e.GetArg("channel"), e.Channel); });
                 group.CreateCommand("list")
                     .MinDynPermissions((int) PermissionLevel.User)
                     .Description("Lists all the twitch channels this discord channel is connected to.")
@@ -130,7 +161,7 @@ namespace Stormbot.Bot.Core.Modules.Relay
             => _twitch.Connect(Constants.TwitchUsername, Constants.TwitchOauth);
 
         /// <summary>
-        /// Returns all the twitch channels the given discord channel is subscribed to.
+        ///     Returns all the twitch channels the given discord channel is subscribed to.
         /// </summary>
         private IEnumerable<string> GetTwitchChannels(Channel discordChannel)
             => (from pair in _relays
@@ -193,7 +224,6 @@ namespace Stormbot.Bot.Core.Modules.Relay
 
         #region TwitchApiWrap
 
-
         private async Task<dynamic> GetChannelData(string channel)
         {
             string callback = await Utils.AsyncDownloadRaw($"https://api.twitch.tv/kraken/streams/{channel}");
@@ -201,7 +231,7 @@ namespace Stormbot.Bot.Core.Modules.Relay
         }
 
         /// <summary>
-        /// Returns whether the given channel name is a valid twitch channel and that it is currently streaming.
+        ///     Returns whether the given channel name is a valid twitch channel and that it is currently streaming.
         /// </summary>
         private async Task<bool> IsValidTwitchChannelAndIsStreaming(string channel)
         {
@@ -233,43 +263,5 @@ namespace Stormbot.Bot.Core.Modules.Relay
         }
 
         #endregion
-
-        void IDataObject.OnDataLoad()
-        {
-
-            if (_relays == null)
-            {
-                _relays = new Dictionary<string, List<JsonChannel>>();
-                return;
-            }
-
-            // load the data from _serializeRelays into _relays using Subscribe()
-            Task.Run(async () =>
-            {
-                foreach (var pair in _relays)
-                {
-                    List<JsonChannel> removeChannels = new List<JsonChannel>();
-
-                    foreach (JsonChannel channel in pair.Value)
-                    {
-                        if (channel.FinishLoading(_client))
-                            await Subscribe(pair.Key, channel);
-                        else
-                        {
-                            Logger.FormattedWrite("TwitchRelayLoad",
-                                $"Tried to load TwitchRelay discord channel for nonexistant channel id : {channel.ChannelId}. Removing",
-                                ConsoleColor.Yellow);
-                            removeChannels.Add(channel);
-                        }
-                    }
-
-                    foreach (JsonChannel channel in removeChannels)
-                        pair.Value.Remove(channel);
-
-                    if (!pair.Value.Any())
-                        _relays.Remove(pair.Key);
-                }
-            });
-        }
     }
 }

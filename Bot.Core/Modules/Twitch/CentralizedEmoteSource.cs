@@ -5,17 +5,15 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using Stormbot.Bot.Core.Services;
-using Stormbot.Helpers;
 using StrmyCore;
 
 namespace Stormbot.Bot.Core.Modules.Twitch
 {
     internal abstract class CentralizedEmoteSource
     {
+        public readonly Dictionary<string, string> EmoteDict = new Dictionary<string, string>();
         public abstract string DataSource { get; }
         public abstract string CachedFileName { get; }
-
-        public readonly Dictionary<string, string> EmoteDict = new Dictionary<string, string>();
 
         public virtual async Task FetchData(HttpService http)
         {

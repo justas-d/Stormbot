@@ -5,7 +5,6 @@ using Discord;
 using Discord.Audio;
 using Discord.Commands;
 using Discord.Modules;
-using Stormbot.Helpers;
 
 namespace Stormbot.Bot.Core
 {
@@ -40,25 +39,25 @@ namespace Stormbot.Bot.Core
         }
 
         /// <summary>
-        /// Returns a user found by it's userid, null if not found.
+        ///     Returns a user found by it's userid, null if not found.
         /// </summary>
         public static User GetUser(this DiscordClient client, ulong userid)
             => client.Servers.Select(server => server.GetUser(userid)).FirstOrDefault(user => user != null);
 
         /// <summary>
-        /// Returns the role, which is found by the ulong paramater defined by Constants.RoleIdArg
+        ///     Returns the role, which is found by the ulong paramater defined by Constants.RoleIdArg
         /// </summary>
         public static Role GetRole(this CommandEventArgs e)
             => e.Server.GetRole(ulong.Parse(e.GetArg(Constants.RoleIdArg)));
 
         /// <summary>
-        /// Returns the user, which is found by the ulong paramater defined by Constants.UserIdArg
+        ///     Returns the user, which is found by the ulong paramater defined by Constants.UserIdArg
         /// </summary>
         public static User GetUser(this CommandEventArgs e)
             => e.Server.GetUser(DiscordUtils.ParseMention(e.GetArg(Constants.UserMentionArg)).FirstOrDefault());
 
         /// <summary>
-        /// Returns the channel, which is found by the ulong paramater defined by Constants.ChannelIdArg
+        ///     Returns the channel, which is found by the ulong paramater defined by Constants.ChannelIdArg
         /// </summary>
         public static Channel GetChannel(this CommandEventArgs e)
             => e.Server.GetChannel(ulong.Parse(e.GetArg(Constants.ChannelIdArg)));
@@ -82,18 +81,18 @@ namespace Stormbot.Bot.Core
         }
 
         /// <summary>
-        /// Attempts to send a message to the given channel.
+        ///     Attempts to send a message to the given channel.
         /// </summary>
         /// <returns>Sent message if sent successfuly, null if we don't have permissions.</returns>
         public static async Task<Message> SafeSendMessage(this Channel textChannel, string msg)
         {
-            if(textChannel.Type != ChannelType.Text) throw new ArgumentException(nameof(textChannel));
+            if (textChannel.Type != ChannelType.Text) throw new ArgumentException(nameof(textChannel));
 
-            if(textChannel.Server == null)
+            if (textChannel.Server == null)
                 return await textChannel.SendMessage(msg);
 
             if (!textChannel.Server.CurrentUser.GetPermissions(textChannel).SendMessages) return null;
-           
+
             return await textChannel.SendMessage(msg);
         }
 
@@ -112,7 +111,7 @@ namespace Stormbot.Bot.Core
         }
 
         /// <summary>
-        /// Attempts to join a voice channel.
+        ///     Attempts to join a voice channel.
         /// </summary>
         /// <param name="textCallback">Text callback channel to which we will write when we failed joining the audio channel.</param>
         /// <returns>Null if failed joining.</returns>

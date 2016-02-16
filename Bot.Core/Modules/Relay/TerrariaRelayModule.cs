@@ -5,7 +5,6 @@ using System.Text;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
-using Discord.Commands.Permissions.Levels;
 using Discord.Modules;
 using Newtonsoft.Json;
 using OpenTerrariaClient;
@@ -20,11 +19,13 @@ namespace Stormbot.Bot.Core.Modules.Relay
 {
     public class TerrariaRelayModule : IDataObject, IModule
     {
-        private const string EscapePrefix = ".";
-
         [JsonObject(MemberSerialization.OptIn)]
         public class TerrChannelRelay
         {
+            public EventHandler<MessageEventArgs> DiscordMessageReceivedEvent;
+            public EventHandler<DisconnectEventArgs> TerrariaDisconnectedEvent;
+            public EventHandler<MessageReceivedEventArgs> TerrariaMessageReceivedEvent;
+            public EventHandler<LoggedInEventArgs> TerrariaOnLoginEvent;
             public TerrariaClient Client { get; set; }
             public Channel Channel { get; set; }
 
@@ -39,11 +40,6 @@ namespace Stormbot.Bot.Core.Modules.Relay
 
             [JsonProperty]
             public int Port { get; }
-
-            public EventHandler<MessageReceivedEventArgs> TerrariaMessageReceivedEvent;
-            public EventHandler<DisconnectEventArgs> TerrariaDisconnectedEvent;
-            public EventHandler<MessageEventArgs> DiscordMessageReceivedEvent;
-            public EventHandler<LoggedInEventArgs> TerrariaOnLoginEvent;
 
             [JsonConstructor]
             private TerrChannelRelay(ulong channelId, string host, int port, string password)
@@ -64,19 +60,39 @@ namespace Stormbot.Bot.Core.Modules.Relay
                 => ChannelId == (obj as TerrChannelRelay)?.ChannelId;
 
             public override int GetHashCode()
-            {
-                unchecked
-                {
-                    return (int) ChannelId*13;
-                }
-            }
+                => unchecked((int)ChannelId*13);
         }
 
+        private const string EscapePrefix = ".";
+        private DiscordClient _client;
         [DataSave, DataLoad] private HashSet<TerrChannelRelay> _relays;
 
-        private DiscordClient _client;
+        void IDataObject.OnDataLoad()
+        {
+            if (_relays == null)
+                _relays = new HashSet<TerrChannelRelay>();
 
-        public void Install(ModuleManager manager)
+            Task.Run(async () =>
+            {
+                List<TerrChannelRelay> removeList = new List<TerrChannelRelay>();
+
+                foreach (TerrChannelRelay relay in _relays)
+                {
+                    if (!await StartClient(relay))
+                    {
+                        Logger.FormattedWrite("TerrRelayLoad",
+                            $"Tried to load TRelay for nonexistant channel id : {relay.ChannelId}. Removing",
+                            ConsoleColor.Yellow);
+                        removeList.Add(relay);
+                    }
+                }
+
+                foreach (TerrChannelRelay relay in removeList)
+                    _relays.Remove(relay);
+            });
+        }
+
+        void IModule.Install(ModuleManager manager)
         {
             _client = manager.Client;
 
@@ -242,7 +258,7 @@ namespace Stormbot.Bot.Core.Modules.Relay
                 relay.Client.LoggedIn += relay.TerrariaOnLoginEvent;
 
                 relay.Client.Log.MessageReceived +=
-                    (s, e) => StrmyCore.Logger.FormattedWrite(e.Severity.ToString(), e.Message, ConsoleColor.White);
+                    (s, e) => Logger.FormattedWrite(e.Severity.ToString(), e.Message, ConsoleColor.White);
 
                 relay.Client.ConnectAndLogin(relay.Host, relay.Port);
 
@@ -275,31 +291,5 @@ namespace Stormbot.Bot.Core.Modules.Relay
             _relays.Remove(relay);
             relay.Client.SocketDispose();
         }
-
-        void IDataObject.OnDataLoad()
-        {
-            if (_relays == null)
-                _relays = new HashSet<TerrChannelRelay>();
-
-            Task.Run(async () =>
-            {
-                List<TerrChannelRelay> removeList = new List<TerrChannelRelay>();
-
-                foreach (TerrChannelRelay relay in _relays)
-                {
-                    if (!await StartClient(relay))
-                    {
-                        Logger.FormattedWrite("TerrRelayLoad",
-                            $"Tried to load TRelay for nonexistant channel id : {relay.ChannelId}. Removing",
-                            ConsoleColor.Yellow);
-                        removeList.Add(relay);
-                    }
-                }
-
-                foreach (TerrChannelRelay relay in removeList)
-                    _relays.Remove(relay);
-            });
-        }
     }
 }
-

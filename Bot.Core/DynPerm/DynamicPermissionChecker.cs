@@ -11,7 +11,6 @@ namespace Stormbot.Bot.Core.DynPerm
     {
         private DynamicPermissionService DynPerms { get; }
         private PermissionLevelService DefaultPermChecker { get; }
-
         public int DefaultPermissionLevel { get; }
 
         public DynamicPermissionChecker(DiscordClient client, int defaultPerms)

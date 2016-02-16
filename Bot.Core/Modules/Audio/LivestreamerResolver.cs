@@ -1,41 +1,12 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
-using Stormbot.Helpers;
 using StrmyCore;
 
 namespace Stormbot.Bot.Core.Modules.Audio
 {
     public sealed class LivestreamerResolver : IStreamResolver
     {
-        private Task StartLivestreamer(string inputUrl, DataReceivedEventHandler onData)
-            => Task.Run(() =>
-            {
-                Process livestreamer = new Process
-                {
-                    StartInfo =
-                    {
-                        FileName = Constants.LivestreamerDir,
-                        Arguments = $"--stream-url {inputUrl} best",
-                        UseShellExecute = false,
-                        RedirectStandardOutput = true,
-                        CreateNoWindow = true
-                    },
-                    EnableRaisingEvents = true
-                };
-
-                livestreamer.OutputDataReceived += onData;
-
-                if (!livestreamer.Start())
-                    Logger.FormattedWrite(typeof (TrackData).Name, "Failed starting livestreamer.",
-                        ConsoleColor.Red);
-
-                livestreamer.BeginOutputReadLine();
-                livestreamer.WaitForExit();
-
-                livestreamer.OutputDataReceived -= onData;
-            });
-
         bool IStreamResolver.SupportsTrackNames => false;
         bool IStreamResolver.SupportsAsyncCanResolve => true;
 
@@ -85,5 +56,33 @@ namespace Stormbot.Bot.Core.Modules.Audio
         {
             throw new NotSupportedException();
         }
+
+        private Task StartLivestreamer(string inputUrl, DataReceivedEventHandler onData)
+            => Task.Run(() =>
+            {
+                Process livestreamer = new Process
+                {
+                    StartInfo =
+                    {
+                        FileName = Constants.LivestreamerDir,
+                        Arguments = $"--stream-url {inputUrl} best",
+                        UseShellExecute = false,
+                        RedirectStandardOutput = true,
+                        CreateNoWindow = true
+                    },
+                    EnableRaisingEvents = true
+                };
+
+                livestreamer.OutputDataReceived += onData;
+
+                if (!livestreamer.Start())
+                    Logger.FormattedWrite(typeof (TrackData).Name, "Failed starting livestreamer.",
+                        ConsoleColor.Red);
+
+                livestreamer.BeginOutputReadLine();
+                livestreamer.WaitForExit();
+
+                livestreamer.OutputDataReceived -= onData;
+            });
     }
 }

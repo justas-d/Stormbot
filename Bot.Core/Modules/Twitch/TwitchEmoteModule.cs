@@ -10,20 +10,20 @@ using StrmyCore;
 
 namespace Stormbot.Bot.Core.Modules.Twitch
 {
-    public class TwitchEmoteModule : IDataObject, IModule
+    public class TwitchEmoteModule : IModule
     {
-        private HttpService _http;
-        private DiscordClient _client;
-
         private const string EmotePrefix = ".";
 
         private readonly List<CentralizedEmoteSource> _emoteSources = new List<CentralizedEmoteSource>
         {
             new GlobalTwitchEmoteSource(),
-            new BttvEmoteSource(),
+            new BttvEmoteSource()
         };
 
-        public void Install(ModuleManager manager)
+        private DiscordClient _client;
+        private HttpService _http;
+
+        void IModule.Install(ModuleManager manager)
         {
             _client = manager.Client;
             _http = _client.Services.Get<HttpService>();
@@ -67,7 +67,5 @@ namespace Stormbot.Bot.Core.Modules.Twitch
 
             return null;
         }
-
-        void IDataObject.OnDataLoad() { }
     }
 }

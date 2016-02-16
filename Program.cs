@@ -3,7 +3,6 @@ using System.IO;
 using Newtonsoft.Json;
 using Stormbot.Bot.Core;
 using Stormbot.Bot.Core.Modules.Audio;
-using Stormbot.Helpers;
 using StrmyCore;
 
 namespace Stormbot

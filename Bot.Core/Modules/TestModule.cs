@@ -6,7 +6,7 @@ namespace Stormbot.Bot.Core.Modules
 {
     public class TestModule : IModule
     {
-        public void Install(ModuleManager manager)
+        void IModule.Install(ModuleManager manager)
         {
             manager.CreateCommands("test", group =>
             {

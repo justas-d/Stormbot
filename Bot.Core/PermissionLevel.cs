@@ -8,6 +8,6 @@
         ServerModerator,
         ServerAdmin,
         ServerOwner,
-        BotOwner,
+        BotOwner
     }
 }

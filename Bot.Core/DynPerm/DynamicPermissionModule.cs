@@ -4,19 +4,17 @@ using Discord;
 using Discord.Commands;
 using Discord.Modules;
 using Stormbot.Bot.Core.Services;
-using Stormbot.Helpers;
 using StrmyCore;
 
 namespace Stormbot.Bot.Core.DynPerm
 {
     public class DynamicPermissionModule : IModule
     {
-        private DiscordClient _client;
-        private DynamicPermissionService _dynPerms;
-
-        private PastebinService _pastebin;
         private const string PastebinIdentifier = "http://pastebin.com/";
         private const string RawPath = "raw/";
+        private DiscordClient _client;
+        private DynamicPermissionService _dynPerms;
+        private PastebinService _pastebin;
 
         public void Install(ModuleManager manager)
         {
@@ -61,7 +59,7 @@ namespace Stormbot.Bot.Core.DynPerm
                 // commands which can only be executed if the caller server has dynperms.
                 group.CreateGroup("", existsGroup =>
                 {
-                    existsGroup.AddCheck((cmd, usr, chnl) =>_dynPerms.GetPerms(chnl.Server.Id) != null);
+                    existsGroup.AddCheck((cmd, usr, chnl) => _dynPerms.GetPerms(chnl.Server.Id) != null);
 
                     existsGroup.CreateCommand("show")
                         .Description("Shows the Dynamic Permissions for this server.")
@@ -71,10 +69,10 @@ namespace Stormbot.Bot.Core.DynPerm
 
                             if (string.IsNullOrEmpty(data.PastebinUrl))
                             {
-                                if(!_pastebin.IsLoggedIn)
+                                if (!_pastebin.IsLoggedIn)
                                     await _pastebin.Login(Constants.PastebinUsername, Constants.PastebinPassword);
 
-                                data.PastebinUrl = await _pastebin.Paste(new PastebinService.PasteBinEntry()
+                                data.PastebinUrl = await _pastebin.Paste(new PastebinService.PasteBinEntry
                                 {
                                     Expiration = PastebinService.PasteBinExpiration.Never,
                                     Format = "json",

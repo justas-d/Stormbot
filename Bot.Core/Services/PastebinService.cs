@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Discord;
-using Stormbot.Helpers;
 
 namespace Stormbot.Bot.Core.Services
 {

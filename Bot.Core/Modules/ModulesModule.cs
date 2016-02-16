@@ -9,28 +9,25 @@ using Discord.Commands;
 using Discord.Modules;
 using Stormbot.Bot.Core.DynPerm;
 using Stormbot.Bot.Core.Services;
-using Stormbot.Helpers;
 using StrmyCore;
 
 namespace Stormbot.Bot.Core.Modules
 {
     public class ModulesModule : IDataObject, IModule
     {
-        private ModuleService _moduleService;
-        private DiscordClient _client;
-
         /// <summary>
-        /// Stores the server id and the list of modules the server has enabled.
+        ///     Stores the channel id and the list of modules it has enabled.
         /// </summary>
-        [DataLoad, DataSave]
-        private ConcurrentDictionary<ulong, HashSet<string>> _serverModulesDictionary =
+        [DataLoad, DataSave] private ConcurrentDictionary<ulong, HashSet<string>> _channelModulesDictionary =
             new ConcurrentDictionary<ulong, HashSet<string>>();
 
+        private DiscordClient _client;
+        private ModuleService _moduleService;
+
         /// <summary>
-        /// Stores the channel id and the list of modules it has enabled.
+        ///     Stores the server id and the list of modules the server has enabled.
         /// </summary>
-        [DataLoad, DataSave]
-        private ConcurrentDictionary<ulong, HashSet<string>> _channelModulesDictionary =
+        [DataLoad, DataSave] private ConcurrentDictionary<ulong, HashSet<string>> _serverModulesDictionary =
             new ConcurrentDictionary<ulong, HashSet<string>>();
 
         private HashSet<string> DefaultModules => new HashSet<string>
@@ -42,14 +39,52 @@ namespace Stormbot.Bot.Core.Modules
             "Execute"
         };
 
-        private HashSet<string> PrivateModules => new HashSet<string>()
+        private HashSet<string> PrivateModules => new HashSet<string>
         {
             "Audio",
             "Personal",
             "Test"
         };
 
-        public void Install(ModuleManager manager)
+        void IDataObject.OnDataLoad()
+        {
+            foreach (KeyValuePair<ulong, HashSet<string>> pair in _serverModulesDictionary)
+            {
+                Server server = _client.GetServer(pair.Key);
+
+                if (server == null)
+                {
+                    Logger.FormattedWrite("ModulesModule", $"Failed loading server id {pair.Key}. Removing.",
+                        ConsoleColor.Yellow);
+                    _serverModulesDictionary.Remove(pair.Key);
+                    continue;
+                }
+
+                foreach (ModuleManager module in pair.Value.Select(GetModule))
+                    if (module != null && module.FilterType.HasFlag(ModuleFilter.ServerWhitelist))
+                        module.EnableServer(server);
+            }
+
+
+            foreach (KeyValuePair<ulong, HashSet<string>> pair in _channelModulesDictionary)
+            {
+                Channel channel = _client.GetChannel(pair.Key);
+
+                if (channel == null)
+                {
+                    Logger.FormattedWrite("ModulesModule", $"Failed loading channel id {pair.Key}. Removing.",
+                        ConsoleColor.Yellow);
+                    _channelModulesDictionary.Remove(pair.Key);
+                    continue;
+                }
+
+                foreach (ModuleManager module in pair.Value.Select(GetModule))
+                    if (module != null && module.FilterType.HasFlag(ModuleFilter.ChannelWhitelist))
+                        module.EnableChannel(channel);
+            }
+        }
+
+        void IModule.Install(ModuleManager manager)
         {
             _client = manager.Client;
             _moduleService = _client.Modules();
@@ -130,7 +165,6 @@ namespace Stormbot.Bot.Core.Modules
                         }
                         _serverModulesDictionary.AddModuleToSave(module.Id, e.Server.Id);
                         await e.Channel.SafeSendMessage($"Module `{module.Id}` was enabled for server `{server.Name}`.");
-
                     });
                 group.CreateCommand("server disable")
                     .Description("Disables a module for the current server.")
@@ -204,11 +238,13 @@ namespace Stormbot.Bot.Core.Modules
             };
         }
 
-        private async Task<bool> CanChangeModuleStateInServer(ModuleManager module, ModuleFilter checkFilter, CommandEventArgs evnt, bool prviateCheck = true)
+        private async Task<bool> CanChangeModuleStateInServer(ModuleManager module, ModuleFilter checkFilter,
+            CommandEventArgs evnt, bool prviateCheck = true)
         {
             if (!module.FilterType.HasFlag(checkFilter))
             {
-                await evnt.Channel.SafeSendMessage($"This module doesn't support being enabled. (no `{checkFilter}` flag)");
+                await
+                    evnt.Channel.SafeSendMessage($"This module doesn't support being enabled. (no `{checkFilter}` flag)");
                 return false;
             }
 
@@ -249,42 +285,6 @@ namespace Stormbot.Bot.Core.Modules
             return module;
         }
 
-        void IDataObject.OnDataLoad()
-        {
-            foreach (KeyValuePair<ulong, HashSet<string>> pair in _serverModulesDictionary)
-            {
-                Server server = _client.GetServer(pair.Key);
-
-                if (server == null)
-                {
-                    Logger.FormattedWrite("ModulesModule", $"Failed loading server id {pair.Key}. Removing.", ConsoleColor.Yellow);
-                    _serverModulesDictionary.Remove(pair.Key);
-                    continue;
-                }
-
-                foreach (ModuleManager module in pair.Value.Select(GetModule))
-                    if (module != null && module.FilterType.HasFlag(ModuleFilter.ServerWhitelist))
-                        module.EnableServer(server);
-            }
-
-
-            foreach (KeyValuePair<ulong, HashSet<string>> pair in _channelModulesDictionary)
-            {
-                Channel channel = _client.GetChannel(pair.Key);
-
-                if (channel == null)
-                {
-                    Logger.FormattedWrite("ModulesModule", $"Failed loading channel id {pair.Key}. Removing.", ConsoleColor.Yellow);
-                    _channelModulesDictionary.Remove(pair.Key);
-                    continue;
-                }
-
-                foreach (ModuleManager module in pair.Value.Select(GetModule))
-                    if (module != null && module.FilterType.HasFlag(ModuleFilter.ChannelWhitelist))
-                        module.EnableChannel(channel);
-            }
-        }
-
         private ModuleManager GetModule(string id)
         {
             id = id.ToLowerInvariant();
@@ -295,15 +295,17 @@ namespace Stormbot.Bot.Core.Modules
     // tfw no nested class extension methods
     internal static class PrivateExtenstions
     {
-        internal static void AddModuleToSave(this ConcurrentDictionary<ulong, HashSet<string>> dict, string moduleId, ulong serverId)
+        internal static void AddModuleToSave(this ConcurrentDictionary<ulong, HashSet<string>> dict, string moduleId,
+            ulong serverId)
         {
             if (dict.ContainsKey(serverId))
                 dict[serverId].Add(moduleId);
             else
-                dict.TryAdd(serverId, new HashSet<string> { moduleId });
+                dict.TryAdd(serverId, new HashSet<string> {moduleId});
         }
 
-        internal static void DeleteModuleFromSave(this ConcurrentDictionary<ulong, HashSet<string>> dict, string moduleId, ulong serverId)
+        internal static void DeleteModuleFromSave(this ConcurrentDictionary<ulong, HashSet<string>> dict,
+            string moduleId, ulong serverId)
         {
             if (dict.ContainsKey(serverId))
                 dict[serverId].Remove(moduleId);

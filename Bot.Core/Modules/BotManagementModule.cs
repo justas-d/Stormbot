@@ -172,10 +172,9 @@ namespace Stormbot.Bot.Core.Modules
                 .AppendLine("# StormBot command table.")
                 .AppendLine($"This file was automatically generated at {DateTime.UtcNow} UTC.")
                 .AppendLine("## Preface")
-                .AppendLine(
-                    "This document contains every command, that has been registered in the CommandService system, their paramaters, their desciptions and their default permissions.")
-                .AppendLine(
-                    "Every command belongs to a cetain module. These modules can be enabled and disabled at will using the Modules module. Each comamnd is seperated into their parent modules command table.");
+                .AppendLine("This document contains every command, that has been registered in the CommandService system, their paramaters, their desciptions and their default permissions.")
+                .AppendLine("Every command belongs to a cetain module. These modules can be enabled and disabled at will using the Modules module. Each comamnd is seperated into their parent modules command table.")
+                .AppendLine($"{Environment.NewLine}### Commands");
 
             string currentModule = null;
             foreach (Command cmd in _client.Commands().AllCommands)
@@ -186,7 +185,7 @@ namespace Stormbot.Bot.Core.Modules
                 if (currentModule != cmd.Category)
                 {
                     currentModule = cmd.Category;
-                    builder.AppendLine($"{Environment.NewLine}### {currentModule}");
+                    builder.AppendLine($"{Environment.NewLine}#### {currentModule}");
                     builder.AppendLine(tableStart);
                 }
 
@@ -198,7 +197,7 @@ namespace Stormbot.Bot.Core.Modules
                     builder.Append("Aliases: (");
 
                     foreach (string alias in cmd.Aliases)
-                        builder.Append($"{alias} ");
+                        builder.Append($"`{alias}` ");
 
                     builder.Append(") ");
                 }
@@ -210,16 +209,16 @@ namespace Stormbot.Bot.Core.Modules
                     switch (param.Type)
                     {
                         case ParameterType.Required:
-                            builder.Append($" <{param.Name}>");
+                            builder.Append($" `<{param.Name}>`");
                             break;
                         case ParameterType.Optional:
-                            builder.Append($" [{param.Name}]");
+                            builder.Append($" `[{param.Name}]`");
                             break;
                         case ParameterType.Multiple:
-                            builder.Append($" [{param.Name}...]");
+                            builder.Append($" `[{param.Name}...]`");
                             break;
                         case ParameterType.Unparsed:
-                            builder.Append($" [-]");
+                            builder.Append(" `[-]`");
                             break;
                     }
                 }

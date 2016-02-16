@@ -125,7 +125,6 @@
     <Compile Include="Bot.Core\DynPerm\DynamicPermissionModule.cs" />
     <Compile Include="Bot.Core\DynPerm\DynPermExtenstions.cs" />
     <Compile Include="Bot.Core\DynPerm\DynPermJsonData.cs" />
-    <Compile Include="Bot.Core\DynPerm\PastebinApi.cs" />
     <Compile Include="Bot.Core\Extensions.cs" />
     <Compile Include="Bot.Core\JsonModels.cs" />
     <Compile Include="Bot.Core\Modules\AnnouncementModule.cs" />
@@ -155,6 +154,7 @@
     <Compile Include="Bot.Core\DynPerm\DynamicPermissionService.cs" />
     <Compile Include="Bot.Core\Services\HttpService.cs" />
     <Compile Include="Bot.Core\Modules\Twitch\TwitchEmoteModule.cs" />
+    <Compile Include="Bot.Core\Services\PastebinService.cs" />
     <Compile Include="Bot.Core\StormBot.cs" />
     <Compile Include="Bot.Core\Utils.cs" />
     <Compile Include="Helpers\Constants.cs" />

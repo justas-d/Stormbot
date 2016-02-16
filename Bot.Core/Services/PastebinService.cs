@@ -2,38 +2,39 @@
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Discord;
+using Stormbot.Helpers;
 
-namespace Stormbot.Bot.Core.DynPerm
+namespace Stormbot.Bot.Core.Services
 {
-    public class PasteBinApiException : Exception
+    public class PastebinService : IService
     {
-        public PasteBinApiException(string message)
-            : base(message)
+        public enum PasteBinExpiration
         {
+            Never,
+            TenMinutes,
+            OneHour,
+            OneDay,
+            OneMonth
         }
-    }
 
-    public class PasteBinEntry
-    {
-        public string Title { get; set; }
-        public string Text { get; set; }
-        public string Format { get; set; }
-        public bool Private { get; set; }
-        public PasteBinExpiration Expiration { get; set; }
-    }
+        public class PasteBinApiException : Exception
+        {
+            public PasteBinApiException(string message)
+                : base(message)
+            {
+            }
+        }
 
-    public enum PasteBinExpiration
-    {
-        Never,
-        TenMinutes,
-        OneHour,
-        OneDay,
-        OneMonth
-    }
+        public class PasteBinEntry
+        {
+            public string Title { get; set; }
+            public string Text { get; set; }
+            public string Format { get; set; }
+            public bool Private { get; set; }
+            public PasteBinExpiration Expiration { get; set; }
+        }
 
-    // initial source - http://stackoverflow.com/a/6919419
-    public class PasteBinClient : IDisposable
-    {
         private static class ApiParameters
         {
             public const string DevKey = "api_dev_key";
@@ -50,18 +51,12 @@ namespace Stormbot.Bot.Core.DynPerm
 
         private const string ApiPostUrl = "http://pastebin.com/api/api_post.php";
         private const string ApiLoginUrl = "http://pastebin.com/api/api_login.php";
+        private string _apiUserKey;
+        public bool IsLoggedIn => !string.IsNullOrEmpty(_apiUserKey);
         private HttpClient HttpClient => new HttpClient();
 
-        private readonly string _apiDevKey;
-        private string _apiUserKey;
-
-        public bool IsLoggedIn => !string.IsNullOrEmpty(_apiUserKey);
-
-        public PasteBinClient(string apiDevKey)
+        void IService.Install(DiscordClient client)
         {
-            if (string.IsNullOrEmpty(apiDevKey))
-                throw new ArgumentNullException(nameof(apiDevKey));
-            _apiDevKey = apiDevKey;
         }
 
         public async Task Login(string username, string password)
@@ -73,7 +68,7 @@ namespace Stormbot.Bot.Core.DynPerm
 
             FormUrlEncodedContent request = new FormUrlEncodedContent(new[]
             {
-                new KeyValuePair<string, string>(ApiParameters.DevKey, _apiDevKey),
+                new KeyValuePair<string, string>(ApiParameters.DevKey, Constants.PastebinApiKey),
                 new KeyValuePair<string, string>(ApiParameters.UserName, username),
                 new KeyValuePair<string, string>(ApiParameters.UserPassword, password)
             });
@@ -89,9 +84,9 @@ namespace Stormbot.Bot.Core.DynPerm
             if (string.IsNullOrEmpty(entry.Text))
                 throw new ArgumentException("The paste text must be set", nameof(entry));
 
-            IList<KeyValuePair<string, string>> content = new List<KeyValuePair<string, string>>()
+            IList<KeyValuePair<string, string>> content = new List<KeyValuePair<string, string>>
             {
-                new KeyValuePair<string, string>(ApiParameters.DevKey, _apiDevKey),
+                new KeyValuePair<string, string>(ApiParameters.DevKey, Constants.PastebinApiKey),
                 new KeyValuePair<string, string>(ApiParameters.Option, "paste"),
                 new KeyValuePair<string, string>(ApiParameters.PasteCode, entry.Text)
             };
@@ -142,8 +137,5 @@ namespace Stormbot.Bot.Core.DynPerm
             if (!string.IsNullOrEmpty(value))
                 content.Add(new KeyValuePair<string, string>(name, value));
         }
-
-        public void Dispose()
-            => HttpClient?.Dispose();
     }
 }

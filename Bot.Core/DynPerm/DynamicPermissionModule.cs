@@ -3,6 +3,7 @@ using System.Linq;
 using Discord;
 using Discord.Commands;
 using Discord.Modules;
+using Stormbot.Bot.Core.Services;
 using Stormbot.Helpers;
 using StrmyCore;
 
@@ -13,7 +14,7 @@ namespace Stormbot.Bot.Core.DynPerm
         private DiscordClient _client;
         private DynamicPermissionService _dynPerms;
 
-        private PasteBinClient _pastebin;
+        private PastebinService _pastebin;
         private const string PastebinIdentifier = "http://pastebin.com/";
         private const string RawPath = "raw/";
 
@@ -21,10 +22,9 @@ namespace Stormbot.Bot.Core.DynPerm
         {
             Nullcheck(Constants.PastebinPassword, Constants.PastebinUsername, Constants.PastebinApiKey);
 
-            _pastebin = new PasteBinClient(Constants.PastebinApiKey);
-
             _client = manager.Client;
-            _dynPerms = _client.DynPerms();
+            _dynPerms = _client.Services.Get<DynamicPermissionService>();
+            _pastebin = _client.Services.Get<PastebinService>();
 
             manager.CreateDynCommands("dynperm", PermissionLevel.ServerAdmin, group =>
             {
@@ -74,9 +74,9 @@ namespace Stormbot.Bot.Core.DynPerm
                                 if(!_pastebin.IsLoggedIn)
                                     await _pastebin.Login(Constants.PastebinUsername, Constants.PastebinPassword);
 
-                                data.PastebinUrl = await _pastebin.Paste(new PasteBinEntry()
+                                data.PastebinUrl = await _pastebin.Paste(new PastebinService.PasteBinEntry()
                                 {
-                                    Expiration = PasteBinExpiration.Never,
+                                    Expiration = PastebinService.PasteBinExpiration.Never,
                                     Format = "json",
                                     Private = true,
                                     Text = data.OriginalJson,

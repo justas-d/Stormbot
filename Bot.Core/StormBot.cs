@@ -62,6 +62,7 @@ namespace Stormbot.Bot.Core
             Client.Services.Add(new ModuleService());
 
             DataIoService io = Client.Services.Add(new DataIoService());
+            Client.Services.Add(new PastebinService());
 
             Client.UsingCommands(cmd =>
             {

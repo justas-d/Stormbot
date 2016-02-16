@@ -1,16 +1,12 @@
 ﻿using System;
 using Discord;
 using Discord.Commands;
-using Discord.Commands.Permissions.Levels;
 using Discord.Modules;
 
 namespace Stormbot.Bot.Core.DynPerm
 {
     public static class DynPermExtenstions
     {
-        public static DynamicPermissionService DynPerms(this DiscordClient client, bool required = true)
-            => client.Services.Get<DynamicPermissionService>(required);
-
         public static DiscordClient UsingDynamicPerms(this DiscordClient client)
         {
             client.Services.Add(new DynamicPermissionService());

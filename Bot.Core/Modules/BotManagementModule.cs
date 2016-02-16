@@ -112,7 +112,7 @@ namespace Stormbot.Bot.Core.Modules
                     .Do(async e => await Collect(e));
 
                 group.CreateCommand("gencmdmd")
-                    .Do(e => GenerateCommandMarkdown());
+                    .Do(e => GenerateCommandMarkdown(e));
             });
 
             manager.CreateDynCommands("", PermissionLevel.User, group =>
@@ -162,7 +162,7 @@ namespace Stormbot.Bot.Core.Modules
             };
         }
 
-        private void GenerateCommandMarkdown()
+        private void GenerateCommandMarkdown(CommandEventArgs e)
         {
             const string saveFileDir = Constants.DataFolderDir + "commands.md";
             string tableStart =
@@ -174,6 +174,8 @@ namespace Stormbot.Bot.Core.Modules
                 .AppendLine("### Preface")
                 .AppendLine("This document contains every command, that has been registered in the CommandService system, their paramaters, their desciptions and their default permissions.")
                 .AppendLine("Every command belongs to a cetain module. These modules can be enabled and disabled at will using the Modules module. Each comamnd is seperated into their parent modules command table.")
+                .AppendLine($"{Environment.NewLine}{Environment.NewLine}")
+                .AppendLine($"Each and every one of these commands can be triggered by saying `{_client.Commands().Config.PrefixChar}<command>` or `{e.Server.CurrentUser.Mention}<command>`")
                 .AppendLine($"{Environment.NewLine}## Commands");
 
             string currentModule = null;
@@ -225,7 +227,7 @@ namespace Stormbot.Bot.Core.Modules
 
                 builder.Append($" | {cmd.Description} | ");
 
-                // perms are a bit of a hack seeing as _checks is internal.
+                // perms are a bit of a hack seeing as _checks is private.
 
                 IPermissionChecker[] checkers = (IPermissionChecker[])
                     cmd.GetType()

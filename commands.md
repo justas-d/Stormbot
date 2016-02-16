@@ -1,8 +1,12 @@
 # StormBot command table.
-This file was automatically generated at 16-02-2016 08:44:43 UTC.
+This file was automatically generated at 16-02-2016 09:30:08 UTC.
 ### Preface
 This document contains every command, that has been registered in the CommandService system, their paramaters, their desciptions and their default permissions.
 Every command belongs to a cetain module. These modules can be enabled and disabled at will using the Modules module. Each comamnd is seperated into their parent modules command table.
+
+
+
+Each and every one of these commands can be triggered by saying `}<command>` or `<@136541337892683777><command>`
 
 ## Commands
 

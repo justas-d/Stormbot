@@ -1,5 +1,5 @@
 # Stormbot
-A Discord.Net based personal bot.
+A Discord.Net based bot.
 
 # Prerequisites.
 * C#6
@@ -13,12 +13,18 @@ A Discord.Net based personal bot.
 * TwitchBotBase for the Twitch bridge (https://github.com/SSStormy/TwitchBotBase)
 
 # Highlights
+* Dynamic Permissions (Role, user and channel Allows/Denies using JSON data)
+* Audio streaming from basically most video/audio services (twitch included)
 * Basic server management (editing users, roles, channels etc)
+* Various announcements (user joined, user left)
+* Auto add role on user joins.
 * Executing C# code on demand
-* Roles with custom hex colors
-* Reminders
-* Audio streaming from basically most of video/audio services (twitch included)
-* A chat bridge between Terraria, Twitch and Discord.
+* Various quality of life features (custom quotes, reminders, custom colors, lmgtfy, coin flipping, vermintide roulette)
+* Terraria bridge. (Traveling merchant ivnentory, event notifications, npc notifications, world info, server info etc it's basicalyl a custom terraria client)
+* Twitch chat <-> Discord bridge
+* Global Twitch and global BTTV emotes.
+
+These are just the main features of this bot. For a comprehensive list of commands see [commands.md](https://github.com/SSStormy/Stormbot/blob/master/commands.md)
 
 # Setup
 You will first want to set up a Data folder (stored in ````Stormbot.Helpers.Constants.DataFolderDir````). 
@@ -37,7 +43,11 @@ After that you will need to create a ````config.json```` and fill it with inform
   
   // only if using the twitch bridge
   "TwitchOauth"      : "",
-  "TwitchUsername"   : ""
+  "TwitchUsername"   : "",
+  
+  "PastebinApiKey"   : "",
+  "PastebinUsername" : "",
+  "PastebinPassword" : ""
 }
 
 ````
@@ -46,4 +56,3 @@ Then you will want to give it the owner id, stored in ````Stormbot.Helpers.Const
 
 # Contact
 If you wish to contact me you may do so whether it may be email or what ever you prefer. You can usualy find me hanging out in the Discord API channel over here: https://discordapp.com/invite/0SBTUU1wZTV9JAsL
-

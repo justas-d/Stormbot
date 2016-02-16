@@ -86,10 +86,7 @@ namespace Stormbot.Bot.Core.Modules
 
         private static readonly string DefaultMessage = $"{UserNameKeyword} has joined {LocationKeyword}!";
 
-        private string SyntaxMessage =>
-            $"**Syntax:**\r\n```" +
-            $"- {UserNameKeyword} - replaced with the name of the user who triggered the event" +
-            $"- {LocationKeyword} - replaced with the location (server or channel) where the event occured.```";
+        private string SyntaxMessage => $"Syntax: `{UserNameKeyword}` - replaced with the name of the user who triggered the event, `{LocationKeyword}` - replaced with the location (server or channel) where the event occured.```";
 
         private DiscordClient _client;
 

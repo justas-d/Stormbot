@@ -190,16 +190,16 @@ namespace Stormbot.Bot.Core.Modules
                 }
 
 
-                builder.Append($"{cmd.Text} ");
+                builder.Append($"`{cmd.Text}` ");
 
                 if (cmd.Aliases.Any())
                 {
-                    builder.Append("Aliases: (");
+                    builder.Append("*Aliases*: ");
 
                     foreach (string alias in cmd.Aliases)
                         builder.Append($"`{alias}` ");
 
-                    builder.Append(") ");
+                    builder.Append(" ");
                 }
 
                 builder.Append("| ");

@@ -9,34 +9,32 @@ namespace Stormbot.Bot.Core.Modules.Audio
     public sealed class LivestreamerResolver : IStreamResolver
     {
         private Task StartLivestreamer(string inputUrl, DataReceivedEventHandler onData)
-        {
-            TaskCompletionSource<int> tcs = new TaskCompletionSource<int>();
-
-            Process livestreamer = new Process
+            => Task.Run(() =>
             {
-                StartInfo =
+                Process livestreamer = new Process
                 {
-                    FileName = Constants.LivestreamerDir,
-                    Arguments = $"--stream-url {inputUrl} best",
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                    CreateNoWindow = true
-                },
-                EnableRaisingEvents = true
-            };
+                    StartInfo =
+                    {
+                        FileName = Constants.LivestreamerDir,
+                        Arguments = $"--stream-url {inputUrl} best",
+                        UseShellExecute = false,
+                        RedirectStandardOutput = true,
+                        CreateNoWindow = true
+                    },
+                    EnableRaisingEvents = true
+                };
 
-            livestreamer.OutputDataReceived += onData;
-            livestreamer.Exited += (s, e) => tcs.SetResult(livestreamer.ExitCode);
+                livestreamer.OutputDataReceived += onData;
 
-            if (!livestreamer.Start())
-                Logger.FormattedWrite(typeof (TrackData).Name, "Failed starting livestreamer.",
-                    ConsoleColor.Red);
+                if (!livestreamer.Start())
+                    Logger.FormattedWrite(typeof (TrackData).Name, "Failed starting livestreamer.",
+                        ConsoleColor.Red);
 
-            livestreamer.BeginOutputReadLine();
-            livestreamer.WaitForExit();
+                livestreamer.BeginOutputReadLine();
+                livestreamer.WaitForExit();
 
-            return tcs.Task;
-        }
+                livestreamer.OutputDataReceived -= onData;
+            });
 
         bool IStreamResolver.SupportsTrackNames => false;
         bool IStreamResolver.SupportsAsyncCanResolve => true;

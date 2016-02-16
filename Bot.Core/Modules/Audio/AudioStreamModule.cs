@@ -322,9 +322,8 @@ namespace Stormbot.Bot.Core.Modules.Audio
                     {
                         StringBuilder builder = new StringBuilder($"Currently playing: {CurrentTrack.Name}");
                         if (CurrentTrack.Length != null && CurrentTrack.Length != TimeSpan.Zero)
-                        {
                             builder.Append($"[`{CurrentTrack.Length}`]");
-                        }
+
                         await ChatChannel.SafeSendMessage(builder.ToString());
                     }
 

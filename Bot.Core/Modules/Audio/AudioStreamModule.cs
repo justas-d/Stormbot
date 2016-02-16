@@ -319,9 +319,15 @@ namespace Stormbot.Bot.Core.Modules.Audio
                 try
                 {
                     if (CurrentTrack != null)
-                        await
-                            ChatChannel.SafeSendMessage(
-                                $"Currently playing: `{CurrentTrack.Name}` [`{CurrentTrack.Length}`]");
+                    {
+                        StringBuilder builder = new StringBuilder($"Currently playing: {CurrentTrack.Name}");
+                        if (CurrentTrack.Length != null && CurrentTrack.Length != TimeSpan.Zero)
+                        {
+                            builder.Append($"[`{CurrentTrack.Length}`]");
+                        }
+                        await ChatChannel.SafeSendMessage(builder.ToString());
+                    }
+
                     else
                         await ChatChannel.SafeSendMessage("No track playing");
                 }

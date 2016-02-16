@@ -8,12 +8,44 @@ namespace Stormbot.Bot.Core.Modules.Audio
 {
     public sealed class LivestreamerResolver : IStreamResolver
     {
-        // todo : make this actually async
-        public async Task<string> ResolveStreamUrl(string input)
+        private Task StartLivestreamer(string inputUrl, DataReceivedEventHandler onData)
+        {
+            TaskCompletionSource<int> tcs = new TaskCompletionSource<int>();
+
+            Process livestreamer = new Process
+            {
+                StartInfo =
+                {
+                    FileName = Constants.LivestreamerDir,
+                    Arguments = $"--stream-url {inputUrl} best",
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    CreateNoWindow = true
+                },
+                EnableRaisingEvents = true
+            };
+
+            livestreamer.OutputDataReceived += onData;
+            livestreamer.Exited += (s, e) => tcs.SetResult(livestreamer.ExitCode);
+
+            if (!livestreamer.Start())
+                Logger.FormattedWrite(typeof (TrackData).Name, "Failed starting livestreamer.",
+                    ConsoleColor.Red);
+
+            livestreamer.BeginOutputReadLine();
+            livestreamer.WaitForExit();
+
+            return tcs.Task;
+        }
+
+        bool IStreamResolver.SupportsTrackNames => false;
+        bool IStreamResolver.SupportsAsyncCanResolve => true;
+
+        async Task<string> IStreamResolver.ResolveStreamUrl(string input)
         {
             string retval = string.Empty;
 
-            using (Process livestreamer = StartLivestreamer(input, (sender, args) =>
+            await StartLivestreamer(input, (sender, args) =>
             {
                 if (string.IsNullOrEmpty(args.Data)) return;
 
@@ -25,55 +57,35 @@ namespace Stormbot.Bot.Core.Modules.Audio
                 }
 
                 retval = args.Data;
-            }))
-                livestreamer.WaitForExit();
+            });
 
             return retval;
         }
 
-        public bool CanResolve(string input)
+        async Task<bool> IStreamResolver.AsyncCanResolve(string input)
         {
             bool retval = false;
 
             // let livestreamer decide whether it can handle the input.
-            using (Process livestreamer = StartLivestreamer(input, (sender, args) =>
+            await StartLivestreamer(input, (sender, args) =>
             {
                 if (string.IsNullOrEmpty(args.Data)) return;
 
                 if (args.Data.StartsWith("error")) retval = false;
                 retval = true;
-            }))
-                livestreamer.WaitForExit();
+            });
 
             return retval;
         }
 
-        private Process StartLivestreamer(string inputUrl, DataReceivedEventHandler onData)
+        bool IStreamResolver.SyncCanResolve(string input)
         {
-            Process livestreamer = new Process
-            {
-                StartInfo =
-                {
-                    FileName = Constants.LivestreamerDir,
-                    Arguments = $"--stream-url {inputUrl} best",
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                    CreateNoWindow = true,
-                },
-                EnableRaisingEvents = true
-            };
-
-            livestreamer.OutputDataReceived += onData;
-
-            if (!livestreamer.Start())
-                Logger.FormattedWrite(typeof(TrackData).Name, "Failed starting livestreamer.",
-                    ConsoleColor.Red);
-
-            livestreamer.BeginOutputReadLine();
-            return livestreamer;
+            throw new NotSupportedException();
         }
 
-        // todo : this too
-        public async Task<string> GetTrackName(string input) => input;
+        Task<string> IStreamResolver.GetTrackName(string input)
+        {
+            throw new NotSupportedException();
+        }
     }
 }

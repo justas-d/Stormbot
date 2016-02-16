@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using StrmyCore;
@@ -8,22 +9,9 @@ namespace Stormbot.Bot.Core.Modules.Audio
 {
     public sealed class YoutubeResolver : IStreamResolver
     {
-        public async Task<string> ResolveStreamUrl(string input)
+        private async Task<VideoInfo> GetVideo(string input)
         {
-            VideoInfo video = GetVideo(input);
-
-            if (video.RequiresDecryption)
-                DownloadUrlResolver.DecryptDownloadUrl(video);
-
-            return video.DownloadUrl;
-        }
-
-        // todo : this too
-        public async Task<string> GetTrackName(string input) => GetVideo(input).Title;
-
-        private VideoInfo GetVideo(string input)
-        {
-            VideoInfo video = DownloadUrlResolver.GetDownloadUrls(input)
+            VideoInfo video = (await GetDownloadUrlsAsync(input))
                 .OrderByDescending(v => v.AudioBitrate)
                 .FirstOrDefault();
 
@@ -35,10 +23,34 @@ namespace Stormbot.Bot.Core.Modules.Audio
             return video;
         }
 
-        public bool CanResolve(string input)
+        private static Task<IEnumerable<VideoInfo>> GetDownloadUrlsAsync(string videoUrl, bool decryptSignature = true)
+            => Task.Run(() => DownloadUrlResolver.GetDownloadUrls(videoUrl, decryptSignature));
+
+        bool IStreamResolver.SupportsTrackNames => true;
+        bool IStreamResolver.SupportsAsyncCanResolve => false;
+
+        async Task<string> IStreamResolver.ResolveStreamUrl(string input)
+        {
+            VideoInfo video = await GetVideo(input);
+
+            if (video.RequiresDecryption)
+                DownloadUrlResolver.DecryptDownloadUrl(video);
+
+            return video.DownloadUrl;
+        }
+
+        Task<bool> IStreamResolver.AsyncCanResolve(string input)
+        {
+            throw new NotSupportedException();
+        }
+
+        bool IStreamResolver.SyncCanResolve(string input)
         {
             string dummy;
             return DownloadUrlResolver.TryNormalizeYoutubeUrl(input, out dummy);
         }
+
+        async Task<string> IStreamResolver.GetTrackName(string input)
+            => (await GetVideo(input)).Title;
     }
 }

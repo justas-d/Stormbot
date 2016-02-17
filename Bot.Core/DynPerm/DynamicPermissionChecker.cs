@@ -84,7 +84,7 @@ namespace Stormbot.Bot.Core.DynPerm
             // look for group, don't bother with aliases here or the eval will take too long.
             foreach (var pair in dict)
             {
-                if (command.Text.StartsWith(pair.Key))
+                if (command.Text.StartsWith(pair.Key) || pair.Key == "*")
                     canRunState = EvalRestrictionData(pair.Value, channel, canRunState, setState, ref error);
             }
 
@@ -96,7 +96,7 @@ namespace Stormbot.Bot.Core.DynPerm
         {
             RestrictionData restData;
 
-            if (dict.TryGetValue(query, out restData))
+            if (dict.TryGetValue(query, out restData) || query == "*")
                 canRunState = EvalRestrictionData(restData, channel, canRunState, setState, ref error);
 
             return canRunState;

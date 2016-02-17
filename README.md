@@ -25,7 +25,9 @@ A Discord.Net based bot.
 * Twitch chat <-> Discord bridge
 * Global Twitch and global BTTV emotes.
 
-These are just the main features of this bot. For a comprehensive list of commands see [commands.md](https://github.com/SSStormy/Stormbot/blob/master/commands.md)
+These are just the main features of this bot. For a comprehensive list of commands see [commands.md](https://github.com/SSStormy/Stormbot/blob/master/docs/commands.md)
+
+Dynamic permissions documentation: [dynperm.md](https://github.com/SSStormy/Stormbot/blob/master/docs/dynperm.md)
 
 ## Setup
 You will first want to set up a Data folder (stored in ````Stormbot.Helpers.Constants.DataFolderDir````). 

@@ -21,8 +21,8 @@ namespace Stormbot.Bot.Core.DynPerm
             Nullcheck(Constants.PastebinPassword, Constants.PastebinUsername, Constants.PastebinApiKey);
 
             _client = manager.Client;
-            _dynPerms = _client.Services.Get<DynamicPermissionService>();
-            _pastebin = _client.Services.Get<PastebinService>();
+            _dynPerms = _client.GetService<DynamicPermissionService>();
+            _pastebin = _client.GetService<PastebinService>();
 
             manager.CreateDynCommands("dynperm", PermissionLevel.ServerAdmin, group =>
             {

@@ -48,7 +48,7 @@ namespace Stormbot.Bot.Core.Services
                         yield return elem;
                 }
             }
-            foreach (ModuleManager moduleManager in _client.Modules().Modules)
+            foreach (ModuleManager moduleManager in _client.GetService<ModuleService>().Modules)
             {
                 IDataObject module = moduleManager.Instance as IDataObject;
                 if (module != null)

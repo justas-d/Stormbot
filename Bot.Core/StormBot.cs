@@ -54,11 +54,11 @@ namespace Stormbot.Bot.Core
             Logger.Writeline("Initializing Stormbot v2");
             Logger.Writeline("Installing services... ");
 
-            Client.Services.Add(new HttpService());
-            Client.Services.Add(new ModuleService());
+            Client.AddService(new HttpService());
+            Client.AddService(new ModuleService());
 
-            DataIoService io = Client.Services.Add(new DataIoService());
-            Client.Services.Add(new PastebinService());
+            DataIoService io = Client.AddService(new DataIoService());
+            Client.AddService(new PastebinService());
 
             Client.UsingCommands(cmd =>
             {

@@ -37,7 +37,7 @@ namespace Stormbot.Bot.Core.Modules
                         ConsoleColor.White);
                 };
 
-            _io = _client.Services.Get<DataIoService>();
+            _io = _client.GetService<DataIoService>();
 
             manager.CreateCommands("", group =>
             {

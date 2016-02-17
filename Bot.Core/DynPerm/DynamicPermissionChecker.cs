@@ -15,8 +15,8 @@ namespace Stormbot.Bot.Core.DynPerm
 
         public DynamicPermissionChecker(DiscordClient client, int defaultPerms)
         {
-            DynPerms = client.Services.Get<DynamicPermissionService>();
-            DefaultPermChecker = client.Services.Get<PermissionLevelService>();
+            DynPerms = client.GetService<DynamicPermissionService>();
+            DefaultPermChecker = client.GetService<PermissionLevelService>();
             DefaultPermissionLevel = defaultPerms;
         }
 
@@ -76,7 +76,12 @@ namespace Stormbot.Bot.Core.DynPerm
             if (EvalPermsExact(dict, command.Text, channel, canRunState, setState, ref error) == setState)
                 return setState;
 
-            // look for group
+            // check if any alias of command exists in dict
+            foreach (string alias in command.Aliases)
+                if (EvalPermsExact(dict, alias, channel, canRunState, setState, ref error) == setState)
+                    return setState;
+
+            // look for group, don't bother with aliases here or the eval will take too long.
             foreach (var pair in dict)
             {
                 if (command.Text.StartsWith(pair.Key))

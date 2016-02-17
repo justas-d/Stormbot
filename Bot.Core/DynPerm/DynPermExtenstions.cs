@@ -9,7 +9,7 @@ namespace Stormbot.Bot.Core.DynPerm
     {
         public static DiscordClient UsingDynamicPerms(this DiscordClient client)
         {
-            client.Services.Add(new DynamicPermissionService());
+            client.AddService(new DynamicPermissionService());
             client.AddModule<DynamicPermissionModule>("Dynamic Permissions");
             return client;
         }
@@ -35,7 +35,7 @@ namespace Stormbot.Bot.Core.DynPerm
         public static void CreateDynCommands(this ModuleManager manager, string prefix,
             PermissionLevel defaultPermissionsLevel, Action<CommandGroupBuilder> builder)
         {
-            CommandService commandService = manager.Client.Services.Get<CommandService>();
+            CommandService commandService = manager.Client.GetService<CommandService>();
             commandService.CreateGroup(prefix, x =>
             {
                 x.Category(manager.Name);

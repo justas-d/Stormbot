@@ -11,10 +11,10 @@ namespace Stormbot.Bot.Core
     public static class Extensions
     {
         public static AudioService Audio(this DiscordClient client, bool required = true)
-            => client.Services.Get<AudioService>(required);
+            => client.GetService<AudioService>(required);
 
         public static CommandService Commands(this DiscordClient client, bool required = true)
-            => client.Services.Get<CommandService>(required);
+            => client.GetService<CommandService>(required);
 
         public static bool CanRun(this ModuleManager manager, Channel channel)
             => manager.EnabledServers.Contains(channel.Server) || manager.EnabledChannels.Contains(channel);

@@ -26,7 +26,7 @@ namespace Stormbot.Bot.Core.Modules.Twitch
         void IModule.Install(ModuleManager manager)
         {
             _client = manager.Client;
-            _http = _client.Services.Get<HttpService>();
+            _http = _client.GetService<HttpService>();
 
             Task.Run(async () =>
             {

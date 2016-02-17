@@ -87,7 +87,7 @@ namespace Stormbot.Bot.Core.Modules
         void IModule.Install(ModuleManager manager)
         {
             _client = manager.Client;
-            _moduleService = _client.Modules();
+            _moduleService = _client.GetService<ModuleService>();
 
             manager.CreateDynCommands("module", PermissionLevel.ServerAdmin, group =>
             {

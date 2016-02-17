@@ -1,7 +1,7 @@
 # Stormbot
 A Discord.Net based bot.
 
-# Prerequisites.
+### Prerequisites.
 * C#6
 * .NET 4.6
 * StrmyCore
@@ -11,8 +11,9 @@ A Discord.Net based bot.
 * Microsoft.CodeAnalysis.Scripting for the execute module.
 * TerrariaBridge for the Terraria module. (https://github.com/SSStormy/TerrariaBridge)
 * TwitchBotBase for the Twitch bridge (https://github.com/SSStormy/TwitchBotBase)
+* Pastebin user credentials and a API key
 
-# Highlights
+### Highlights
 * Dynamic Permissions (Role, user and channel Allows/Denies using JSON data)
 * Audio streaming from basically most video/audio services (twitch included)
 * Basic server management (editing users, roles, channels etc)
@@ -26,7 +27,7 @@ A Discord.Net based bot.
 
 These are just the main features of this bot. For a comprehensive list of commands see [commands.md](https://github.com/SSStormy/Stormbot/blob/master/commands.md)
 
-# Setup
+## Setup
 You will first want to set up a Data folder (stored in ````Stormbot.Helpers.Constants.DataFolderDir````). 
 
 After that you will need to create a ````config.json```` and fill it with information in the given json format:
@@ -54,5 +55,5 @@ After that you will need to create a ````config.json```` and fill it with inform
 Compile the bot, have it log in with the details we gave it in ````config.json````.
 Then you will want to give it the owner id, stored in ````Stormbot.Helpers.Constants.UserOwner````. You can use the !whoami command to find out your user id.
 
-# Contact
+### Contact
 If you wish to contact me you may do so whether it may be email or what ever you prefer. You can usualy find me hanging out in the Discord API channel over here: https://discordapp.com/invite/0SBTUU1wZTV9JAsL

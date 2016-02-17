@@ -1,12 +1,14 @@
 # StormBot command table.
-This file was automatically generated at 16-02-2016 09:30:08 UTC.
+This file was automatically generated at 17-02-2016 13:43:35 UTC.
+
+
 ### Preface
 This document contains every command, that has been registered in the CommandService system, their paramaters, their desciptions and their default permissions.
 Every command belongs to a cetain module. These modules can be enabled and disabled at will using the Modules module. Each comamnd is seperated into their parent modules command table.
 
 
 
-Each and every one of these commands can be triggered by saying `}<command>` or `<@136541337892683777><command>`
+Each and every one of these commands can be triggered by saying `}<command>` or `@StormBot-Dev <command>`
 
 ## Commands
 
@@ -137,7 +139,7 @@ Commands | Parameters | Description | Default Permissions
 #### Announcements
 Commands | Parameters | Description | Default Permissions
 --- | --- | --- | ---
-`announce disable` |  | Disables but owner announcements on this server. | ServerModerator
+`announce disable` |  | Disables bot owner announcements on this server. | ServerModerator
 `announce enable` |  | Enabled but owner announcements on this server. | ServerModerator
 `announce channel` |  `[-]` | Sets the default channel of any announcements from the bot's owner. | ServerModerator
 `announce current` |  | Returns the current announcement channel. | ServerModerator

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Discord;
@@ -166,6 +167,9 @@ namespace Stormbot.Bot.Core
             Client.AddModule<VermintideModule>("Vermintide", ModuleFilter.ServerWhitelist | ModuleFilter.ChannelWhitelist | ModuleFilter.AlwaysAllowPrivate);
             Client.AddModule<PersonalModule>("Personal", ModuleFilter.ServerWhitelist);
 
+            // auto generate commands.md
+            Client.GetModule<BotManagementModule>().Instance.GenerateCommandMarkdown(Client.Servers.FirstOrDefault().CurrentUser);
+
             Client.Log.Message += (sender, args) =>
             {
                 if (_ignoredLogs.Contains(args.Severity)) return;
@@ -180,7 +184,7 @@ namespace Stormbot.Bot.Core
             io.Load();
 
             Client.SetGame("}help for commands");
-            Constants.Owner = Client.GetUser(Constants.UserOwner);
+            Config.Owner = Client.GetUser(Constants.UserOwner);
 
             Logger.Writeline($" -WE ARE LIVE-{Environment.NewLine}");
         }

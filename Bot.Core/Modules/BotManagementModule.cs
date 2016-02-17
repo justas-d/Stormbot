@@ -54,7 +54,7 @@ namespace Stormbot.Bot.Core.Modules
                 group.CreateCommand("set name")
                     .Description("Changes the name of the bot")
                     .Parameter("name", ParameterType.Unparsed)
-                    .Do(async e => await _client.CurrentUser.Edit(Constants.Pass, e.GetArg("name")));
+                    .Do(async e => await _client.CurrentUser.Edit(Config.Pass, e.GetArg("name")));
 
                 group.CreateCommand("set avatar")
                     .Description("Changes the avatar of the bot")
@@ -79,7 +79,7 @@ namespace Stormbot.Bot.Core.Modules
                                     return;
                             }
 
-                            await _client.CurrentUser.Edit(Constants.Pass, avatar: stream, avatarType: type);
+                            await _client.CurrentUser.Edit(Config.Pass, avatar: stream, avatarType: type);
                             stream.Close();
                             stream.Dispose();
                         }
@@ -111,7 +111,8 @@ namespace Stormbot.Bot.Core.Modules
                     .Do(async e => await Collect(e));
 
                 group.CreateCommand("gencmdmd")
-                    .Do(e => GenerateCommandMarkdown(e));
+                    .AddCheck((cmd, usr, chnl) => !chnl.IsPrivate)
+                    .Do(e => GenerateCommandMarkdown(e.Server.CurrentUser));
             });
 
             manager.CreateDynCommands("", PermissionLevel.User, group =>
@@ -161,23 +162,19 @@ namespace Stormbot.Bot.Core.Modules
             };
         }
 
-        private void GenerateCommandMarkdown(CommandEventArgs e)
+        public void GenerateCommandMarkdown(User botUser)
         {
-            const string saveFileDir = Constants.DataFolderDir + "commands.md";
             string tableStart =
                 $"Commands | Parameters | Description | Default Permissions{Environment.NewLine}--- | --- | --- | ---";
 
             StringBuilder builder = new StringBuilder()
                 .AppendLine("# StormBot command table.")
-                .AppendLine($"This file was automatically generated at {DateTime.UtcNow} UTC.")
+                .AppendLine($"This file was automatically generated at {DateTime.UtcNow} UTC.\r\n\r\n")
                 .AppendLine("### Preface")
-                .AppendLine(
-                    "This document contains every command, that has been registered in the CommandService system, their paramaters, their desciptions and their default permissions.")
-                .AppendLine(
-                    "Every command belongs to a cetain module. These modules can be enabled and disabled at will using the Modules module. Each comamnd is seperated into their parent modules command table.")
+                .AppendLine("This document contains every command, that has been registered in the CommandService system, their paramaters, their desciptions and their default permissions.")
+                .AppendLine("Every command belongs to a cetain module. These modules can be enabled and disabled at will using the Modules module. Each comamnd is seperated into their parent modules command table.")
                 .AppendLine($"{Environment.NewLine}{Environment.NewLine}")
-                .AppendLine(
-                    $"Each and every one of these commands can be triggered by saying `{_client.Commands().Config.PrefixChar}<command>` or `{e.Server.CurrentUser.Mention}<command>`")
+                .AppendLine($"Each and every one of these commands can be triggered by saying `{_client.Commands().Config.PrefixChar}<command>` or `@{botUser.Name} <command>`")
                 .AppendLine($"{Environment.NewLine}## Commands");
 
             string currentModule = null;
@@ -255,7 +252,7 @@ namespace Stormbot.Bot.Core.Modules
                 builder.Append($"{lowestPermissionLevel}{Environment.NewLine}");
             }
 
-            File.WriteAllText(saveFileDir, builder.ToString());
+            File.WriteAllText(Config.CommandsMdDir, builder.ToString());
         }
 
         private async Task Collect(CommandEventArgs e)

@@ -128,7 +128,7 @@ namespace Stormbot.Bot.Core.Modules.Audio
                     {
                         StartInfo =
                         {
-                            FileName = Constants.FfprobeDir,
+                            FileName = Config.FfprobeDir,
                             Arguments =
                                 $"-v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 \"{location}\"",
                             UseShellExecute = false,

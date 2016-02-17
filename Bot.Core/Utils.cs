@@ -69,7 +69,7 @@ namespace Stormbot.Bot.Core
 
             await invite.Accept();
             await callback.SafeSendMessage("Joined server.");
-            await Constants.Owner.SendPrivate($"Joined server: `{invite.Server.Name}`.");
+            await Config.Owner.SendPrivate($"Joined server: `{invite.Server.Name}`.");
         }
     }
 }

@@ -137,7 +137,7 @@ namespace Stormbot.Bot.Core.Modules.Relay
             _twitch.ChatMessageReceived += async (s, e) =>
             {
                 if (!_relays.ContainsKey(e.Message.Channel)) return;
-                if (e.Message.Username == Constants.TwitchUsername) return;
+                if (e.Message.Username == Config.TwitchUsername) return;
 
                 if (e.Message.Text.StartsWith(EscapePrefix)) return;
 
@@ -158,7 +158,7 @@ namespace Stormbot.Bot.Core.Modules.Relay
         }
 
         private void TwitchTryConnect()
-            => _twitch.Connect(Constants.TwitchUsername, Constants.TwitchOauth);
+            => _twitch.Connect(Config.TwitchUsername, Config.TwitchOauth);
 
         /// <summary>
         ///     Returns all the twitch channels the given discord channel is subscribed to.

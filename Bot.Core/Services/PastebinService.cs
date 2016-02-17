@@ -67,7 +67,7 @@ namespace Stormbot.Bot.Core.Services
 
             FormUrlEncodedContent request = new FormUrlEncodedContent(new[]
             {
-                new KeyValuePair<string, string>(ApiParameters.DevKey, Constants.PastebinApiKey),
+                new KeyValuePair<string, string>(ApiParameters.DevKey, Config.PastebinApiKey),
                 new KeyValuePair<string, string>(ApiParameters.UserName, username),
                 new KeyValuePair<string, string>(ApiParameters.UserPassword, password)
             });
@@ -85,7 +85,7 @@ namespace Stormbot.Bot.Core.Services
 
             IList<KeyValuePair<string, string>> content = new List<KeyValuePair<string, string>>
             {
-                new KeyValuePair<string, string>(ApiParameters.DevKey, Constants.PastebinApiKey),
+                new KeyValuePair<string, string>(ApiParameters.DevKey, Config.PastebinApiKey),
                 new KeyValuePair<string, string>(ApiParameters.Option, "paste"),
                 new KeyValuePair<string, string>(ApiParameters.PasteCode, entry.Text)
             };

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Modules;
 using Stormbot.Bot.Core.DynPerm;
+using Stormbot.Bot.Core.Modules.Audio;
 
 namespace Stormbot.Bot.Core.Modules
 {
@@ -51,15 +52,15 @@ namespace Stormbot.Bot.Core.Modules
                         Tuple<int, int> serverData = GetServerData();
 
                         builder.AppendLine("- Owner: " +
-                                           (Constants.Owner == null
+                                           (Config.Owner == null
                                                ? "Not found."
-                                               : $"{Constants.Owner.Name} ({Constants.Owner.Id})"));
+                                               : $"{Config.Owner.Name} ({Config.Owner.Id})"));
                         builder.AppendLine(
                             $"- Uptime: {(DateTime.Now - Process.GetCurrentProcess().StartTime).ToString(@"dd\.hh\:mm\:ss")}");
                         builder.AppendLine("- GitHub: https://github.com/SSStormy/Stormbot");
                         builder.AppendLine(
                             $"- Memory Usage: {Math.Round(GC.GetTotalMemory(false)/(1024.0*1024.0), 2)} MB");
-                        builder.AppendLine($"- Audio streaming jobs: {Constants.StreamingJobs}");
+                        builder.AppendLine($"- Audio streaming jobs: {AudioStreamer.StreamingJobs}");
                         builder.AppendLine($"- Servers: {_client.Servers.Count()}");
                         builder.AppendLine($"- Channels: {serverData.Item1}");
                         builder.AppendLine($"- Users: {serverData.Item2}");

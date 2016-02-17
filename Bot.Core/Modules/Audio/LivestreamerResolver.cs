@@ -64,7 +64,7 @@ namespace Stormbot.Bot.Core.Modules.Audio
                 {
                     StartInfo =
                     {
-                        FileName = Constants.LivestreamerDir,
+                        FileName = Config.LivestreamerDir,
                         Arguments = $"--stream-url {inputUrl} best",
                         UseShellExecute = false,
                         RedirectStandardOutput = true,

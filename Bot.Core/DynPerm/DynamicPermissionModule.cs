@@ -18,7 +18,7 @@ namespace Stormbot.Bot.Core.DynPerm
 
         public void Install(ModuleManager manager)
         {
-            Nullcheck(Constants.PastebinPassword, Constants.PastebinUsername, Constants.PastebinApiKey);
+            Nullcheck(Config.PastebinPassword, Config.PastebinUsername, Config.PastebinApiKey);
 
             _client = manager.Client;
             _dynPerms = _client.GetService<DynamicPermissionService>();
@@ -70,7 +70,7 @@ namespace Stormbot.Bot.Core.DynPerm
                             if (string.IsNullOrEmpty(data.PastebinUrl))
                             {
                                 if (!_pastebin.IsLoggedIn)
-                                    await _pastebin.Login(Constants.PastebinUsername, Constants.PastebinPassword);
+                                    await _pastebin.Login(Config.PastebinUsername, Config.PastebinPassword);
 
                                 data.PastebinUrl = await _pastebin.Paste(new PastebinService.PasteBinEntry
                                 {

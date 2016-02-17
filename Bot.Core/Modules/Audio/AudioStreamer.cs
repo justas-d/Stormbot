@@ -8,6 +8,8 @@ namespace Stormbot.Bot.Core.Modules.Audio
 {
     internal class AudioStreamer : IDisposable
     {
+        internal static int StreamingJobs = 0;
+
         private Process _ffmpeg;
         private string Location { get; }
         private DiscordClient Client { get; }
@@ -24,7 +26,7 @@ namespace Stormbot.Bot.Core.Modules.Audio
 
         void IDisposable.Dispose()
         {
-            Constants.StreamingJobs--;
+            StreamingJobs--;
             OutputStream?.Dispose();
             _ffmpeg?.Dispose();
         }
@@ -38,7 +40,7 @@ namespace Stormbot.Bot.Core.Modules.Audio
             {
                 StartInfo =
                 {
-                    FileName = Constants.FfmpegDir,
+                    FileName = Config.FfmpegDir,
                     Arguments = args,
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
@@ -50,7 +52,7 @@ namespace Stormbot.Bot.Core.Modules.Audio
                 Logger.FormattedWrite(GetType().Name, "Failed starting ffmpeg.", ConsoleColor.Red);
                 return;
             }
-            Constants.StreamingJobs++;
+            StreamingJobs++;
             OutputStream = _ffmpeg.StandardOutput.BaseStream;
         }
     }

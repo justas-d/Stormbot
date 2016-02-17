@@ -115,7 +115,8 @@ namespace Stormbot.Bot.Core.DynPerm
                                 "This means that for example Role B, which is below Role A, will override any allows/denies Role A enforces.\r\n" +
                                 "\"Roles\" and \"Users\" are both arrays, meaning you can put multiple elements inside of them.\r\n" +
                                 "The `\"WhenInChannels\"` array contains channels in which the rule in enforced in.\r\n" +
-                                "The `\"Error\"` object will be printed out if a caller doesn't have permission to call the restricted action." +
+                                "The `\"Error\"` object will be printed out if a caller doesn't have permission to call the restricted action.\r\n" +
+                                "The `*` keyword for module and command names will make every permission check return true.\r\n" +
                                 "Here are some example rules: http://pastebin.com/qfekdmcM\r\n" +
                                 $"Since I am completely horrible at explaining concepts, please refer to these resources if you are still confused about JSON:\r\n" +
                                 $"- https://en.wikipedia.org/wiki/JSON#Data_types.2C_syntax_and_example\r\n" +

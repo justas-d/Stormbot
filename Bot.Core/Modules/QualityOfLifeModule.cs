@@ -44,8 +44,7 @@ namespace Stormbot.Bot.Core.Modules
             public ReminderData(ulong user, TimeSpan span, string reason)
             {
                 User = user;
-                EndTime = DateTime.Now + span;
-                CreateTime = DateTime.Now;
+                EndTime = DateTime.Now + span; 
                 Reason = reason;
             }
         }

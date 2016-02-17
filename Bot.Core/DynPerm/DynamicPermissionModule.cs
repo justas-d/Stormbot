@@ -109,13 +109,15 @@ namespace Stormbot.Bot.Core.DynPerm
                             e.Channel.SendMessage(
                                 "\r\n**Dynamic Permissions** allow users to choose what permissions they want to give to users and roles.\r\n" +
                                 "The rules are encoded in a JSON format, which you can easily validate.(http://pro.jsonlint.com/)\r\n" +
-                                "The base format: https://ghostbin.com/paste/rqqqm\r\n" +
-                                "You can get user ids from `\"ued list\"` and role ids from `\"role list\"` commands.\r\n" +
+                                "The base format: http://pastebin.com/YEQcUBmf\r\n" +
+                                "You can get user ids from `\"ued list\"`, role ids from `\"role list\"` and channel ids from `\"channel list text\"` commands. \r\n" +
                                 "Roles are checked from top to bottom.\r\n" +
                                 "This means that for example Role B, which is below Role A, will override any allows/denies Role A enforces.\r\n" +
                                 "\"Roles\" and \"Users\" are both arrays, meaning you can put multiple elements inside of them.\r\n" +
-                                "Here are some example rules: https://ghostbin.com/paste/ye267\r\n" +
-                                $"Since I am completely horrible at explaining concepts, please refer to these resources if you are still confused:\r\n" +
+                                "The `\"WhenInChannels\"` array contains channels in which the rule in enforced in.\r\n" +
+                                "The `\"Error\"` object will be printed out if a caller doesn't have permission to call the restricted action." +
+                                "Here are some example rules: http://pastebin.com/qfekdmcM\r\n" +
+                                $"Since I am completely horrible at explaining concepts, please refer to these resources if you are still confused about JSON:\r\n" +
                                 $"- https://en.wikipedia.org/wiki/JSON#Data_types.2C_syntax_and_example\r\n" +
                                 $"- http://www.w3schools.com/json/json_syntax.asp");
                     });

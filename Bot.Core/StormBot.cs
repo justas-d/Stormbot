@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Discord;
@@ -168,7 +167,7 @@ namespace Stormbot.Bot.Core
             Client.AddModule<PersonalModule>("Personal", ModuleFilter.ServerWhitelist);
 
             // auto generate commands.md
-            Client.GetModule<BotManagementModule>().Instance.GenerateCommandMarkdown();
+            await DiscordUtils.GenerateCommandMarkdown(Client);
 
             Client.Log.Message += (sender, args) =>
             {

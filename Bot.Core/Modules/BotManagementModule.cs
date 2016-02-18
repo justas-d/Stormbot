@@ -112,7 +112,7 @@ namespace Stormbot.Bot.Core.Modules
 
                 group.CreateCommand("gencmdmd")
                     .AddCheck((cmd, usr, chnl) => !chnl.IsPrivate)
-                    .Do(e => GenerateCommandMarkdown());
+                    .Do(async e => await DiscordUtils.GenerateCommandMarkdown(_client));
             });
 
             manager.CreateDynCommands("", PermissionLevel.User, group =>
@@ -161,106 +161,7 @@ namespace Stormbot.Bot.Core.Modules
                 }
             };
         }
-
-        public void GenerateCommandMarkdown()
-        {
-            if (string.IsNullOrEmpty(Config.CommandsMdDir))
-            {
-                Logger.FormattedWrite("CommandMd", "Skipping command.md auto generation. Config.CommandsMdDir was not set.");
-                return;
-            }
-
-            string tableStart =
-                $"Commands | Parameters | Description | Default Permissions{Environment.NewLine}--- | --- | --- | ---";
-
-            StringBuilder builder = new StringBuilder()
-                .AppendLine("# StormBot command table.")
-                .AppendLine($"This file was automatically generated at {DateTime.UtcNow} UTC.\r\n\r\n")
-                .AppendLine("### Preface")
-                .AppendLine("This document contains every command, that has been registered in the CommandService system, their paramaters, their desciptions and their default permissions.")
-                .AppendLine("Every command belongs to a cetain module. These modules can be enabled and disabled at will using the Modules module. Each comamnd is seperated into their parent modules command table.")
-                .AppendLine($"{Environment.NewLine}{Environment.NewLine}")
-                .AppendLine($"Each and every one of these commands can be triggered by saying `{_client.Commands().Config.PrefixChar}<command>` or `@<BotName> <command>`")
-                .AppendLine($"{Environment.NewLine}## Commands");
-
-            string currentModule = null;
-            foreach (Command cmd in _client.Commands().AllCommands)
-            {
-                if (cmd.Text == "help") continue;
-                if (cmd.Category == "Personal") continue;
-
-                if (currentModule != cmd.Category)
-                {
-                    currentModule = cmd.Category;
-                    builder.AppendLine($"{Environment.NewLine}#### {currentModule}");
-                    builder.AppendLine(tableStart);
-                }
-
-
-                builder.Append($"`{cmd.Text}` ");
-
-                if (cmd.Aliases.Any())
-                {
-                    builder.Append("*Aliases*: ");
-
-                    foreach (string alias in cmd.Aliases)
-                        builder.Append($"`{alias}` ");
-
-                    builder.Append(" ");
-                }
-
-                builder.Append("| ");
-
-                foreach (CommandParameter param in cmd.Parameters)
-                {
-                    switch (param.Type)
-                    {
-                        case ParameterType.Required:
-                            builder.Append($" `<{param.Name}>`");
-                            break;
-                        case ParameterType.Optional:
-                            builder.Append($" `[{param.Name}]`");
-                            break;
-                        case ParameterType.Multiple:
-                            builder.Append($" `[{param.Name}...]`");
-                            break;
-                        case ParameterType.Unparsed:
-                            builder.Append(" `[-]`");
-                            break;
-                    }
-                }
-
-                builder.Append($" | {cmd.Description} | ");
-
-                // perms are a bit of a hack seeing as _checks is private.
-
-                IPermissionChecker[] checkers = (IPermissionChecker[])
-                    cmd.GetType()
-                        .GetRuntimeFields()
-                        .FirstOrDefault(f => f.Name == "_checks")
-                        .GetValue(cmd);
-
-                // get max value of PermissionLevel
-                PermissionLevel lowestPermissionLevel =
-                    Enum.GetValues(typeof (PermissionLevel)).Cast<PermissionLevel>().Max();
-
-                foreach (IPermissionChecker permCheck in checkers)
-                {
-                    PermissionLevelChecker perms = permCheck as PermissionLevelChecker;
-                    if (perms?.MinPermissions < (int) lowestPermissionLevel)
-                        lowestPermissionLevel = (PermissionLevel) perms.MinPermissions;
-
-                    DynamicPermissionChecker dynPerms = permCheck as DynamicPermissionChecker;
-                    if (dynPerms?.DefaultPermissionLevel < (int) lowestPermissionLevel)
-                        lowestPermissionLevel = (PermissionLevel) dynPerms.DefaultPermissionLevel;
-                }
-
-                builder.Append($"{lowestPermissionLevel}{Environment.NewLine}");
-            }
-
-            File.WriteAllText(Config.CommandsMdDir, builder.ToString());
-        }
-
+        
         private async Task Collect(CommandEventArgs e)
         {
             double memoryBefore = GetMemoryUsage();

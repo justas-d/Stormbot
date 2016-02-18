@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Globalization;
+using System.Reflection;
 using Discord;
 using Discord.Commands;
 using Discord.Modules;
@@ -7,6 +9,10 @@ namespace Stormbot.Bot.Core.DynPerm
 {
     public static class DynPermExtenstions
     {
+        // we need to define these outside of the call to Activator seeing as, if we do, the compiler will use the `Type type, params object[] args` overload and not the one we want.
+        private static BindingFlags _moduleCheckerActivatorFlags = BindingFlags.Public | BindingFlags.NonPublic |
+                                                                   BindingFlags.Instance;
+
         public static DiscordClient UsingDynamicPerms(this DiscordClient client)
         {
             client.AddService(new DynamicPermissionService());
@@ -39,7 +45,11 @@ namespace Stormbot.Bot.Core.DynPerm
             commandService.CreateGroup(prefix, x =>
             {
                 x.Category(manager.Name);
-                x.AddCheck(new ModuleChecker(manager));
+
+                x.AddCheck((ModuleChecker)
+                    Activator.CreateInstance(typeof (ModuleChecker), _moduleCheckerActivatorFlags, null,
+                        new object[] {manager}, null));
+
                 x.MinDynPermissions((int) defaultPermissionsLevel);
                 builder(x);
             });

@@ -5,7 +5,8 @@ A Discord.Net based bot.
 * C#6
 * .NET 4.6
 * StrmyCore
-* Discord.Net, Modules, Commands, Audio
+* Discord.Net (slightly modified)
+* Discord.Net Modules, Commands, Audio
 * A Discord account the bot can log into.
 * Livestreamer, ffmpeg, ffprobe, YoutubeExtractor and a Soundcloud API key for audio.
 * Microsoft.CodeAnalysis.Scripting for the execute module.
@@ -58,4 +59,4 @@ Compile the bot, have it log in with the details we gave it in ````config.json``
 Then you will want to give it the owner id, stored in ````Stormbot.Helpers.Constants.UserOwner````. You can use the !whoami command to find out your user id.
 
 ### Contact
-If you wish to contact me you may do so whether it may be email or what ever you prefer. You can usualy find me hanging out in the Discord API channel over here: https://discordapp.com/invite/0SBTUU1wZTV9JAsL
+If you wish to contact me you may do so whether it may be email or what ever you prefer. You can usualy find me hanging out in the test channel over here: https://discord.gg/0lHgknA1Q2RIJK0m

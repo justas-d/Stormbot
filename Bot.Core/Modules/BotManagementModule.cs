@@ -1,12 +1,10 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
-using Discord.Commands.Permissions;
 using Discord.Commands.Permissions.Levels;
 using Discord.Modules;
 using Stormbot.Bot.Core.DynPerm;
@@ -80,8 +78,6 @@ namespace Stormbot.Bot.Core.Modules
                             }
 
                             await _client.CurrentUser.Edit(Config.Pass, avatar: stream, avatarType: type);
-                            stream.Close();
-                            stream.Dispose();
                         }
                     });
 

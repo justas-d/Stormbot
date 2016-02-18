@@ -93,6 +93,7 @@ namespace Stormbot.Bot.Core
 
             if (!textChannel.Server.CurrentUser.GetPermissions(textChannel).SendMessages) return null;
 
+            msg = msg.Replace("@everyone", "everyone");
             return await textChannel.SendMessage(msg);
         }
 

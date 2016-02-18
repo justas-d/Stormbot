@@ -136,7 +136,7 @@ namespace Stormbot.Bot.Core
                             builder.Append(" ");
                         }
 
-                        builder.Append("| ");
+                        builder.Append("|");
 
                         foreach (CommandParameter param in cmd.Parameters)
                         {
@@ -167,25 +167,25 @@ namespace Stormbot.Bot.Core
                                 .GetValue(cmd);
 
                         // get max value of PermissionLevel
-                        PermissionLevel lowestPermissionLevel =
+                        PermissionLevel permLevel =
                             Enum.GetValues(typeof (PermissionLevel)).Cast<PermissionLevel>().Max();
                         bool supportsDynPerms = false;
 
                         foreach (IPermissionChecker permCheck in checkers)
                         {
                             PermissionLevelChecker perms = permCheck as PermissionLevelChecker;
-                            if (perms?.MinPermissions < (int) lowestPermissionLevel)
-                                lowestPermissionLevel = (PermissionLevel) perms.MinPermissions;
+                            if (perms != null)
+                                permLevel = (PermissionLevel) perms.MinPermissions;
 
                             DynamicPermissionChecker dynPerms = permCheck as DynamicPermissionChecker;
-                            if (dynPerms?.DefaultPermissionLevel < (int) lowestPermissionLevel)
+                            if (dynPerms != null)
                             {
                                 supportsDynPerms = true;
-                                lowestPermissionLevel = (PermissionLevel) dynPerms.DefaultPermissionLevel;
+                                permLevel = (PermissionLevel) dynPerms.DefaultPermissionLevel;
                             }
                         }
 
-                        builder.Append($"{lowestPermissionLevel} | ");
+                        builder.Append($"{permLevel} | ");
                         builder.Append(supportsDynPerms ? "✓" : "-");
                         builder.Append(Environment.NewLine);
                     }

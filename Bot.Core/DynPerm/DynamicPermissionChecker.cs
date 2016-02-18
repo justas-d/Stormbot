@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Discord;
 using Discord.Commands;
@@ -12,6 +13,8 @@ namespace Stormbot.Bot.Core.DynPerm
         private DynamicPermissionService DynPerms { get; }
         private PermissionLevelService DefaultPermChecker { get; }
         public int DefaultPermissionLevel { get; }
+
+        private const string Wildcard = "*";
 
         public DynamicPermissionChecker(DiscordClient client, int defaultPerms)
         {
@@ -96,7 +99,7 @@ namespace Stormbot.Bot.Core.DynPerm
         {
             RestrictionData restData;
 
-            if (dict.TryGetValue(query, out restData) || query == "*")
+            if (dict.TryGetValue(query, out restData) || dict.TryGetValue(Wildcard, out restData))
                 canRunState = EvalRestrictionData(restData, channel, canRunState, setState, ref error);
 
             return canRunState;

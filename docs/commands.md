@@ -1,5 +1,5 @@
 # StormBot command table.
-This file was automatically generated at 17-02-2016 13:43:35 UTC.
+This file was automatically generated at 18-02-2016 03:47:43 UTC.
 
 
 ### Preface
@@ -8,7 +8,7 @@ Every command belongs to a cetain module. These modules can be enabled and disab
 
 
 
-Each and every one of these commands can be triggered by saying `}<command>` or `@StormBot-Dev <command>`
+Each and every one of these commands can be triggered by saying `}<command>` or `@<BotName> <command>`
 
 ## Commands
 
@@ -135,6 +135,11 @@ Commands | Parameters | Description | Default Permissions
 `twitch connect` |  `<channel>` | Connects this channel to a given twitch channel, relaying the messages between them. | ChannelModerator
 `twitch disconnect` |  `<channel>` | Disconnects this channel from the given twitch channel. | ChannelModerator
 `twitch list` |  | Lists all the twitch channels this discord channel is connected to. | User
+
+#### Twitch Emotes
+Commands | Parameters | Description | Default Permissions
+--- | --- | --- | ---
+`emote` |  `[-]` |  | User
 
 #### Announcements
 Commands | Parameters | Description | Default Permissions

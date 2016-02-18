@@ -4,7 +4,9 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
+using Discord.Commands;
 using Discord.Modules;
+using Stormbot.Bot.Core.DynPerm;
 using Stormbot.Bot.Core.Services;
 using StrmyCore;
 
@@ -46,18 +48,20 @@ namespace Stormbot.Bot.Core.Modules.Twitch
                 GC.Collect();
             });
 
-            _client.MessageReceived += async (sender, args) =>
+            manager.CreateDynCommands("emote", PermissionLevel.User, group =>
             {
-                if (!manager.CanRun(args.Channel)) return;
+                group.CreateCommand("")
+                .Parameter("emote", ParameterType.Unparsed)
+                    .Do(async e =>
+                    {
+                        string emotePath = await ResolveEmoteDir(e.GetArg("emote"));
 
-                if (!args.Message.Text.StartsWith(EmotePrefix)) return;
-                string emote = (args.Message.Text.Split(' ').FirstOrDefault()).Remove(0, 1);
+                        if (!File.Exists(emotePath))
+                            return; // todo : lower case == upper case in this case. KAPPA = Kappa
 
-                string emotePath = await ResolveEmoteDir(emote);
-                if (!File.Exists(emotePath)) return; // todo : lower case == upper case in this case. KAPPA = Kappa
-
-                await args.Channel.SafeSendFile(emotePath);
-            };
+                        await e.Channel.SafeSendFile(emotePath);
+                    });
+            });
         }
 
         private async Task<string> ResolveEmoteDir(string userInput)

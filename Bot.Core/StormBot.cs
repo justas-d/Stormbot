@@ -168,7 +168,7 @@ namespace Stormbot.Bot.Core
             Client.AddModule<PersonalModule>("Personal", ModuleFilter.ServerWhitelist);
 
             // auto generate commands.md
-            Client.GetModule<BotManagementModule>().Instance.GenerateCommandMarkdown(Client.Servers.FirstOrDefault().CurrentUser);
+            Client.GetModule<BotManagementModule>().Instance.GenerateCommandMarkdown();
 
             Client.Log.Message += (sender, args) =>
             {

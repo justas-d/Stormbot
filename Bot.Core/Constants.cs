@@ -1,6 +1,4 @@
-﻿using Discord;
-
-namespace Stormbot.Bot.Core
+﻿namespace Stormbot.Bot.Core
 {
     internal static class Constants
     {

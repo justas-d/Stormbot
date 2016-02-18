@@ -2,6 +2,7 @@
 using System.Linq;
 using Discord;
 using Discord.Commands;
+using Discord.Commands.Permissions.Levels;
 using Discord.Modules;
 using Stormbot.Bot.Core.Services;
 using StrmyCore;
@@ -24,8 +25,10 @@ namespace Stormbot.Bot.Core.DynPerm
             _dynPerms = _client.GetService<DynamicPermissionService>();
             _pastebin = _client.GetService<PastebinService>();
 
-            manager.CreateDynCommands("dynperm", PermissionLevel.ServerAdmin, group =>
+            manager.CreateCommands("dynperm", group =>
             {
+                group.MinPermissions((int) PermissionLevel.ServerAdmin);
+
                 group.AddCheck((cmd, usr, chnl) => !chnl.IsPrivate);
 
                 group.CreateCommand("set")

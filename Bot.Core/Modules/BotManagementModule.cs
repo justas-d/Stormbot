@@ -112,7 +112,7 @@ namespace Stormbot.Bot.Core.Modules
 
                 group.CreateCommand("gencmdmd")
                     .AddCheck((cmd, usr, chnl) => !chnl.IsPrivate)
-                    .Do(e => GenerateCommandMarkdown(e.Server.CurrentUser));
+                    .Do(e => GenerateCommandMarkdown());
             });
 
             manager.CreateDynCommands("", PermissionLevel.User, group =>
@@ -162,8 +162,14 @@ namespace Stormbot.Bot.Core.Modules
             };
         }
 
-        public void GenerateCommandMarkdown(User botUser)
+        public void GenerateCommandMarkdown()
         {
+            if (string.IsNullOrEmpty(Config.CommandsMdDir))
+            {
+                Logger.FormattedWrite("CommandMd", "Skipping command.md auto generation. Config.CommandsMdDir was not set.");
+                return;
+            }
+
             string tableStart =
                 $"Commands | Parameters | Description | Default Permissions{Environment.NewLine}--- | --- | --- | ---";
 
@@ -174,7 +180,7 @@ namespace Stormbot.Bot.Core.Modules
                 .AppendLine("This document contains every command, that has been registered in the CommandService system, their paramaters, their desciptions and their default permissions.")
                 .AppendLine("Every command belongs to a cetain module. These modules can be enabled and disabled at will using the Modules module. Each comamnd is seperated into their parent modules command table.")
                 .AppendLine($"{Environment.NewLine}{Environment.NewLine}")
-                .AppendLine($"Each and every one of these commands can be triggered by saying `{_client.Commands().Config.PrefixChar}<command>` or `@{botUser.Name} <command>`")
+                .AppendLine($"Each and every one of these commands can be triggered by saying `{_client.Commands().Config.PrefixChar}<command>` or `@<BotName> <command>`")
                 .AppendLine($"{Environment.NewLine}## Commands");
 
             string currentModule = null;

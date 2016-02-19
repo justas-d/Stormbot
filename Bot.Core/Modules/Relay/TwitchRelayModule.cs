@@ -115,9 +115,6 @@ namespace Stormbot.Bot.Core.Modules.Relay
                     });
             });
 
-            // connect the twitch bot to tmi.twitch.tv
-            TwitchTryConnect();
-
             _twitch.DisconnectFromTwitch +=
                 async (s, e) =>
                 {
@@ -127,7 +124,7 @@ namespace Stormbot.Bot.Core.Modules.Relay
                     while (!_twitch.IsConnected)
                     {
                         Logger.FormattedWrite("Twitch", "Attempting to reconnect to twitch...", ConsoleColor.Red);
-                        TwitchTryConnect();
+                        await TwitchTryConnect();
                         await Task.Delay(5000);
                     }
 
@@ -157,8 +154,8 @@ namespace Stormbot.Bot.Core.Modules.Relay
             };
         }
 
-        private void TwitchTryConnect()
-            => _twitch.Connect(Config.TwitchUsername, Config.TwitchOauth);
+        private async Task TwitchTryConnect()
+            => await _twitch.Connect(Config.TwitchUsername, Config.TwitchOauth);
 
         /// <summary>
         ///     Returns all the twitch channels the given discord channel is subscribed to.
@@ -194,6 +191,9 @@ namespace Stormbot.Bot.Core.Modules.Relay
 
         private async Task Subscribe(string twitchChannel, Channel discordChannel)
         {
+            if (!_twitch.IsConnected)
+                await TwitchTryConnect();
+
             // normalize channel name.
             twitchChannel = TwitchBot.NormalizeChannelName(twitchChannel);
 

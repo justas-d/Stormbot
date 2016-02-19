@@ -19,6 +19,7 @@ Dynamic permissions documentation: [dynperm.md](https://github.com/SSStormy/Stor
 
 #### Branches
 Master - what's running on `BeepBoop` bot
+
 Dev - unfinished, untested, or even broken changes.
 
 ### Contact

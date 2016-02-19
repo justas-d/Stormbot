@@ -7,24 +7,39 @@ namespace Stormbot.Bot.Core.DynPerm
     [JsonObject]
     public class DynPermFullData
     {
-        [JsonProperty]
-        public string OriginalJson { get; }
+        private DynamicPerms _perms;
 
         [JsonProperty]
-        public DynamicPerms Perms { get; }
+        public bool IsDirty { get; private set; }
+
+        [JsonProperty]
+        public DynamicPerms Perms
+        {
+            get { return _perms; }
+            private set
+            {
+                _perms = value;
+                IsDirty = true;
+            }
+        }
 
         [JsonProperty]
         public string PastebinUrl { get; set; }
 
         [JsonConstructor]
-        private DynPermFullData(string originalJson, DynamicPerms perms, string pastebinUrl)
+        private DynPermFullData(DynamicPerms perms, string pastebinUrl)
         {
-            OriginalJson = originalJson;
             Perms = perms;
             PastebinUrl = pastebinUrl;
+            if (string.IsNullOrEmpty(pastebinUrl))
+                IsDirty = true;
         }
 
-        internal DynPermFullData(string originalJson, DynamicPerms perms) : this(originalJson, perms, null)
+        public DynPermFullData(DynamicPerms perms) : this(perms, null)
+        {
+        }
+
+        public DynPermFullData() : this(new DynamicPerms(null, null), null)
         {
         }
     }
@@ -32,14 +47,14 @@ namespace Stormbot.Bot.Core.DynPerm
     [JsonObject]
     public class DynamicPerms
     {
-        [JsonProperty]
+        [JsonProperty("Roles")]
         public Dictionary<ulong, DynamicPermissionBlock> RolePerms { get; }
 
-        [JsonProperty]
+        [JsonProperty("Users")]
         public Dictionary<ulong, DynamicPermissionBlock> UserPerms { get; }
 
         [JsonConstructor]
-        private DynamicPerms(Dictionary<ulong, DynamicPermissionBlock> roles,
+        public DynamicPerms(Dictionary<ulong, DynamicPermissionBlock> roles,
             Dictionary<ulong, DynamicPermissionBlock> users)
         {
             if (roles == null)
@@ -63,7 +78,7 @@ namespace Stormbot.Bot.Core.DynPerm
         public DynamicRestricionSet Deny { get; }
 
         [JsonConstructor]
-        private DynamicPermissionBlock(ulong id, DynamicRestricionSet allow, DynamicRestricionSet deny)
+        public DynamicPermissionBlock(DynamicRestricionSet allow, DynamicRestricionSet deny)
         {
             if (allow == null)
                 allow = new DynamicRestricionSet();

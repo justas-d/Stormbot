@@ -113,7 +113,6 @@ namespace Stormbot.Bot.Core
             {
                 audio.EnableMultiserver = true;
                 audio.Mode = AudioMode.Outgoing;
-                ;
                 audio.Channels = 2;
                 audio.EnableEncryption = true;
             });

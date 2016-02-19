@@ -17,6 +17,10 @@ These are just the main features of this bot. For a comprehensive list of comman
 
 Dynamic permissions documentation: [dynperm.md](https://github.com/SSStormy/Stormbot/blob/master/docs/dynperm.md)
 
+#### Branches
+Master - what's running on `BeepBoop` bot
+Dev - unfinished, untested, or even broken changes.
+
 ### Contact
 The easiest way you can contact me is via the StormBot test server over [here](https://discord.gg/0lHgknA1Q2RIJK0m)
 

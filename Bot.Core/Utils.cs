@@ -194,5 +194,21 @@ namespace Stormbot.Bot.Core
                     File.WriteAllText(Config.CommandsMdDir, builder.ToString());
                 }
             });
+
+        public static bool CommandExists(DiscordClient client, string query)
+        {
+            query = query.ToLowerInvariant();
+
+            foreach (Command cmd in client.GetService<CommandService>().AllCommands)
+            {
+                if (cmd.Text.ToLowerInvariant().StartsWith(query))
+                    return true;
+
+                foreach (string alias in cmd.Aliases)
+                    if (alias.ToLowerInvariant().StartsWith(query))
+                        return true;
+            }
+            return false;
+        }
     }
 }

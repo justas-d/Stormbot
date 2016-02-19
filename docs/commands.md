@@ -1,5 +1,5 @@
 # StormBot command table.
-This file was automatically generated at 19-02-2016 03:19:33 UTC.
+This file was automatically generated at 19-02-2016 04:01:16 UTC.
 
 
 ### Preface
@@ -15,6 +15,8 @@ Each and every one of these commands can be triggered by saying `}<command>` or 
 #### Dynamic Permissions
 Commands | Parameters | Description | Default Permissions | Supports DynPerms? 
 --- | --- | --- | --- | ---
+`dynperm role allow command add` | `<roleId>` `[-]` | Allow a role to use a command. | ServerAdmin | -
+`dynperm role allow command remove` | `<roleId>` `[-]` | Removes an allow on a role to use a command. | ServerAdmin | -
 `dynperm role add` | `<roleId>` | Adds a role to the dynamic permissions system. | ServerAdmin | -
 `dynperm role remove` | `<roleId>` | Removes a role from the dynamic permissions system. | ServerAdmin | -
 `dynperm user add` | `<userId>` | Adds an user to the dynamic permissions system. | ServerAdmin | -

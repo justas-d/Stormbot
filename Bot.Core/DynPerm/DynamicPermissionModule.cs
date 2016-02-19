@@ -34,6 +34,75 @@ namespace Stormbot.Bot.Core.DynPerm
 
                 #region Edit dynperm commands
 
+                #region allow command add/remvoes
+                group.CreateCommand("role allow command add")
+                    .Description("Allow a role to use a command.")
+                    .Parameter("roleId")
+                    .Parameter("command", ParameterType.Unparsed)
+                    .Do(async e =>
+                    {
+                        ulong roleId = ulong.Parse(e.GetArg("roleId"));
+                        string command = e.GetArg("command");
+
+                        if (!DiscordUtils.CommandExists(_client, command))
+                        {
+                            await e.Channel.SafeSendMessage("Command not found.");
+                            return;
+                        }
+
+                        if (!e.Server.RoleExists(roleId))
+                        {
+                            await e.Channel.SafeSendMessage("Role not found.");
+                            return;
+                        }
+
+                        DynamicPerms perms = _dynPerms.GetOrAddPerms(e.Server).Perms;
+                        if (!perms.RolePerms.ContainsKey(roleId))
+                        {
+                            await e.Channel.SafeSendMessage("Role has no dynperms. Use dynperm role add <roleid>");
+                            return;
+                        }
+
+                        DynamicPermissionBlock block = perms.RolePerms[roleId];
+                        if (block.Allow.Commands.ContainsKey(command))
+                        {
+                            await e.Channel.SafeSendMessage("Command is already allowed for role.");
+                            return;
+                        }
+
+                        block.Allow.Commands.Add(command, new RestrictionData(null, null));
+                        await e.Channel.SendMessage($"Command `{command}` allowed for role id {roleId}");
+                    });
+
+                group.CreateCommand("role allow command remove")
+                    .Description("Removes an allow on a role to use a command.")
+                    .Parameter("roleId")
+                    .Parameter("command", ParameterType.Unparsed)
+                    .Do(async e =>
+                    {
+                        ulong roleId = ulong.Parse(e.GetArg("roleId"));
+                        string command = e.GetArg("command");
+
+                        DynamicPerms perms = _dynPerms.GetOrAddPerms(e.Server).Perms;
+                        if (!perms.RolePerms.ContainsKey(roleId))
+                        {
+                            await e.Channel.SafeSendMessage("Role has no dynperms. Use dynperm role add <roleid>");
+                            return;
+                        }
+
+                        DynamicPermissionBlock block = perms.RolePerms[roleId];
+                        if (!block.Allow.Commands.ContainsKey(command))
+                        {
+                            await e.Channel.SafeSendMessage("Command doesn't have an allow for this role.");
+                            return;
+                        }
+
+                        block.Allow.Commands.Remove(command);
+                        await e.Channel.SendMessage($"Removed command `{command}` allow for role id {roleId}");
+                    });
+
+                #endregion
+                #region Role/User Add/Removes
                 group.CreateCommand("role add")
                    .Description("Adds a role to the dynamic permissions system.")
                    .Parameter("roleId")
@@ -126,6 +195,8 @@ namespace Stormbot.Bot.Core.DynPerm
                         perms.UserPerms.Remove(userId);
                         await e.Channel.SafeSendMessage($"Removed dynperms for user id: `{userId}`");
                     });
+
+                #endregion
 
                 #endregion
 

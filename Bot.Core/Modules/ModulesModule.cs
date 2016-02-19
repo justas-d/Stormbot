@@ -33,15 +33,19 @@ namespace Stormbot.Bot.Core.Modules
         private HashSet<string> DefaultModules => new HashSet<string>
         {
             "Bot",
+            "Server Management",
+            "Audio",
             "QoL",
             "Information",
-            "Annoucements",
-            "Execute"
+            "Terraria Relay",
+            "Execute",
+            "Twitch Relay",
+            "Twitch Emotes",
+            "Announcements"
         };
 
         private HashSet<string> PrivateModules => new HashSet<string>
         {
-            "Audio",
             "Personal",
             "Test"
         };

@@ -1,5 +1,5 @@
 # StormBot command table.
-This file was automatically generated at 18-02-2016 12:44:08 UTC.
+This file was automatically generated at 18-02-2016 14:20:28 UTC.
 
 
 ### Preface

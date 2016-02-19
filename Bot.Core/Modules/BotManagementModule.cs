@@ -141,7 +141,7 @@ namespace Stormbot.Bot.Core.Modules
             {
                 if (!e.Channel.IsPrivate) return;
 
-                if (e.Message.Text.StartsWith("https://discord.gg/"))
+                if (e.Message.Text.StartsWith("https://discord"))
                 {
                     string invite = string.Empty;
                     try

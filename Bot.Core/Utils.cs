@@ -103,7 +103,7 @@ namespace Stormbot.Bot.Core
                         .AppendLine($"This file was automatically generated at {DateTime.UtcNow} UTC.\r\n\r\n")
                         .AppendLine("### Preface")
                         .AppendLine(
-                            "This document contains every command, that has been registered in the CommandService system, their paramaters, their desciptions and their default permissions.")
+                            "This document contains every command, that has been registered in the CommandService system, their paramaters, their desciptions, their default permissions and whether they support dynamic permissions.")
                         .AppendLine(
                             "Every command belongs to a cetain module. These modules can be enabled and disabled at will using the Modules module. Each comamnd is seperated into their parent modules command table.")
                         .AppendLine($"{Environment.NewLine}{Environment.NewLine}")

@@ -133,6 +133,7 @@ namespace Stormbot.Bot.Core.Modules.Audio
             public void ClearPlaylist()
             {
                 _stopPlaylistFlag = true;
+                _trackIndex = 0;
                 Playlist.Clear();
             }
 
@@ -439,6 +440,24 @@ namespace Stormbot.Bot.Core.Modules.Audio
 
                             await audio.StartPlaylist();
                         });
+
+                    idleGroup.CreateCommand("startat")
+                        .Alias("playat")
+                        .Description("Starts playback at at given point in the track")
+                        .Parameter("time")
+                        .Do(async e =>
+                        {
+                            AudioState audio = GetAudio(e.Channel);
+
+                            if (audio.PlaybackChannel == null)
+                            {
+                                await e.Channel.SafeSendMessage("Playback channel not set.");
+                                return;
+                            }
+
+                            audio.SkipToTimeInTrack(TimeSpan.Parse(e.GetArg("time")));
+                            await audio.StartPlaylist();
+                        });
                 });
 
                 group.CreateCommand("add")
@@ -506,7 +525,11 @@ namespace Stormbot.Bot.Core.Modules.Audio
                 group.CreateCommand("clear")
                     .Description("Stops music and clears the playlist.")
                     .MinPermissions((int) PermissionLevel.ServerModerator)
-                    .Do(e => GetAudio(e.Channel).ClearPlaylist());
+                    .Do(async e =>
+                    {
+                        GetAudio(e.Channel).ClearPlaylist();
+                        await e.Channel.SafeSendMessage("Cleared playlist.");
+                    });
 
                 group.CreateCommand("channel")
                     .Description(

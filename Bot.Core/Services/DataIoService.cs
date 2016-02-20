@@ -57,8 +57,8 @@ namespace Stormbot.Bot.Core.Services
                     catch (TaskCanceledException)
                     {
                     }
-                    Logger.Writeline("Stopped autosave loop.");
                 }
+                Logger.Writeline("Stopped autosave loop.");
             });
         }
 

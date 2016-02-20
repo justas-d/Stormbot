@@ -44,7 +44,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>TRACE;RELEASE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -121,6 +121,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Bot.Core\Config.cs" />
     <Compile Include="Bot.Core\DynPerm\DynamicPermissionChecker.cs" />
     <Compile Include="Bot.Core\DynPerm\DynamicPermissionModule.cs" />
     <Compile Include="Bot.Core\DynPerm\DynPermExtenstions.cs" />
@@ -145,6 +146,7 @@
     <Compile Include="Bot.Core\Modules\Relay\TerrariaRelayModule.cs" />
     <Compile Include="Bot.Core\Modules\TestModule.cs" />
     <Compile Include="Bot.Core\Modules\Relay\TwitchRelayModule.cs" />
+    <Compile Include="Bot.Core\Modules\Twitch\BttvChannelEmoteSource.cs" />
     <Compile Include="Bot.Core\Modules\Twitch\BttvEmoteSource.cs" />
     <Compile Include="Bot.Core\Modules\Twitch\CentralizedEmoteSource.cs" />
     <Compile Include="Bot.Core\Modules\Twitch\GlobalTwitchEmoteSource.cs" />
@@ -194,9 +196,6 @@
       <Project>{a9883f21-3cfd-483b-8247-e645f484d0f5}</Project>
       <Name>TwitchBot</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="todo.txt" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.5.2">

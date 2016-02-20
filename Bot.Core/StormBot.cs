@@ -113,7 +113,6 @@ namespace Stormbot.Bot.Core
             {
                 audio.EnableMultiserver = true;
                 audio.Mode = AudioMode.Outgoing;
-                ;
                 audio.Channels = 2;
                 audio.EnableEncryption = true;
             });
@@ -165,7 +164,9 @@ namespace Stormbot.Bot.Core
             Client.AddModule<AnnouncementModule>("Announcements", ModuleFilter.ServerWhitelist);
             Client.AddModule<VermintideModule>("Vermintide", ModuleFilter.ServerWhitelist | ModuleFilter.ChannelWhitelist | ModuleFilter.AlwaysAllowPrivate);
             Client.AddModule<PersonalModule>("Personal", ModuleFilter.ServerWhitelist);
-
+#if RELEASE
+            await DiscordUtils.GenerateCommandMarkdown(Client);
+#endif
             Client.Log.Message += (sender, args) =>
             {
                 if (_ignoredLogs.Contains(args.Severity)) return;
@@ -180,7 +181,7 @@ namespace Stormbot.Bot.Core
             io.Load();
 
             Client.SetGame("}help for commands");
-            Constants.Owner = Client.GetUser(Constants.UserOwner);
+            Config.Owner = Client.GetUser(Constants.UserOwner);
 
             Logger.Writeline($" -WE ARE LIVE-{Environment.NewLine}");
         }

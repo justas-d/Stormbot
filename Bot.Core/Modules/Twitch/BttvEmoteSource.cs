@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -9,10 +8,9 @@ using StrmyCore;
 
 namespace Stormbot.Bot.Core.Modules.Twitch
 {
-    internal class BttvEmoteSource : CentralizedEmoteSource
+    internal sealed class BttvEmoteSource : CentralziedEmoteSource
     {
-        public override string DataSource => "https://api.betterttv.net/2/emotes";
-        public override string CachedFileName => "bttv.json";
+        protected override string DataSource => "https://api.betterttv.net/2/emotes";
 
         protected override void PopulateDictionary(JObject data)
         {
@@ -24,29 +22,20 @@ namespace Stormbot.Bot.Core.Modules.Twitch
 
         public override async Task<string> GetEmote(string emote, HttpService http)
         {
-            try
+            if (!EmoteDict.ContainsKey(emote))
+                return null;
+
+            string imageId = EmoteDict[emote];
+            string dir = Path.Combine(Constants.TwitchEmoteFolderDir, imageId + ".png");
+
+            if (!File.Exists(dir))
             {
-                string imageId = EmoteDict[emote];
-                string dir = Path.Combine(Constants.TwitchEmoteFolderDir, imageId + ".png");
-
-                if (!File.Exists(dir))
-                {
-                    HttpContent content =
-                        await http.Send(HttpMethod.Get, $"https://cdn.betterttv.net/emote/{imageId}/2x");
-                    File.WriteAllBytes(dir, await content.ReadAsByteArrayAsync());
-                }
-
-                return dir;
+                HttpContent content =
+                    await http.Send(HttpMethod.Get, $"https://cdn.betterttv.net/emote/{imageId}/2x");
+                File.WriteAllBytes(dir, await content.ReadAsByteArrayAsync());
             }
-            catch (KeyNotFoundException)
-            {
-            } //ignored
-            return null;
-        }
 
-        public override bool ContainsEmote(string emote)
-        {
-            return EmoteDict.ContainsKey(emote);
+            return dir;
         }
     }
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Threading.Tasks;
 using Discord;
 using Discord.Modules;
 using Newtonsoft.Json;
@@ -33,9 +34,32 @@ namespace Stormbot.Bot.Core.Services
         private const string DataDir = Constants.DataFolderDir + @"data\";
         private DiscordClient _client;
 
+        private bool _isAutoSaveLoopRunning;
+        private const int _autosaveSecondInterval = 60*10; // 10 minutes
+
         void IService.Install(DiscordClient client)
         {
             _client = client;
+
+            Task.Run(async () =>
+            {
+                if (_isAutoSaveLoopRunning) return;
+                _isAutoSaveLoopRunning = true;
+
+                while (true)
+                {
+                    try
+                    {
+                        await Task.Delay(1000*_autosaveSecondInterval);
+                        Logger.FormattedWrite(GetType().Name, "Autosaving...", ConsoleColor.Green);
+                        Save();
+                    }
+                    catch (TaskCanceledException)
+                    {
+                    }
+                    Logger.Writeline("Stopped autosave loop.");
+                }
+            });
         }
 
         private IEnumerable<SerializationData> GetAllFields<T>() where T : Attribute

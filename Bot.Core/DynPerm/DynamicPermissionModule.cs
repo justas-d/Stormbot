@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Discord;
 using Discord.Commands;
+using Discord.Commands.Permissions.Levels;
 using Discord.Modules;
+using Newtonsoft.Json;
 using Stormbot.Bot.Core.Services;
 using StrmyCore;
 
@@ -18,14 +21,16 @@ namespace Stormbot.Bot.Core.DynPerm
 
         public void Install(ModuleManager manager)
         {
-            Nullcheck(Constants.PastebinPassword, Constants.PastebinUsername, Constants.PastebinApiKey);
+            Nullcheck(Config.PastebinPassword, Config.PastebinUsername, Config.PastebinApiKey);
 
             _client = manager.Client;
             _dynPerms = _client.GetService<DynamicPermissionService>();
             _pastebin = _client.GetService<PastebinService>();
 
-            manager.CreateDynCommands("dynperm", PermissionLevel.ServerAdmin, group =>
+            manager.CreateCommands("dynperm", group =>
             {
+                group.MinPermissions((int) PermissionLevel.ServerAdmin);
+
                 group.AddCheck((cmd, usr, chnl) => !chnl.IsPrivate);
 
                 group.CreateCommand("set")
@@ -43,7 +48,7 @@ namespace Stormbot.Bot.Core.DynPerm
                             input = await Utils.AsyncDownloadRaw(rawUrl);
                         }
 
-                        DynPermFullData perms = _dynPerms.TryAddOrUpdate(e.Server.Id, input, out error);
+                        DynPermFullData perms = _dynPerms.SetDynPermFullData(e.Server.Id, input, out error);
 
                         if (!string.IsNullOrEmpty(error))
                         {
@@ -67,17 +72,17 @@ namespace Stormbot.Bot.Core.DynPerm
                         {
                             DynPermFullData data = _dynPerms.GetPerms(e.Server.Id);
 
-                            if (string.IsNullOrEmpty(data.PastebinUrl))
+                            if (string.IsNullOrEmpty(data.PastebinUrl) || data.IsDirty)
                             {
                                 if (!_pastebin.IsLoggedIn)
-                                    await _pastebin.Login(Constants.PastebinUsername, Constants.PastebinPassword);
+                                    await _pastebin.Login(Config.PastebinUsername, Config.PastebinPassword);
 
                                 data.PastebinUrl = await _pastebin.Paste(new PastebinService.PasteBinEntry
                                 {
                                     Expiration = PastebinService.PasteBinExpiration.Never,
                                     Format = "json",
                                     Private = true,
-                                    Text = data.OriginalJson,
+                                    Text = JsonConvert.SerializeObject(data.Perms),
                                     Title = $"{e.Server.Name}@{DateTime.Now}"
                                 });
                             }
@@ -103,7 +108,10 @@ namespace Stormbot.Bot.Core.DynPerm
 
                 group.CreateCommand("help")
                     .Description("help")
-                    .Do(async e => await e.Channel.SendMessage("https://github.com/SSStormy/Stormbot/blob/master/docs/dynperm.md"));
+                    .Do(
+                        async e =>
+                            await
+                                e.Channel.SendMessage("https://github.com/SSStormy/Stormbot/blob/master/docs/dynperm.md"));
             });
         }
 

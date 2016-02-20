@@ -1,12 +1,10 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
-using Discord.Commands.Permissions;
 using Discord.Commands.Permissions.Levels;
 using Discord.Modules;
 using Stormbot.Bot.Core.DynPerm;
@@ -54,7 +52,7 @@ namespace Stormbot.Bot.Core.Modules
                 group.CreateCommand("set name")
                     .Description("Changes the name of the bot")
                     .Parameter("name", ParameterType.Unparsed)
-                    .Do(async e => await _client.CurrentUser.Edit(Constants.Pass, e.GetArg("name")));
+                    .Do(async e => await _client.CurrentUser.Edit(Config.Pass, e.GetArg("name")));
 
                 group.CreateCommand("set avatar")
                     .Description("Changes the avatar of the bot")
@@ -79,9 +77,7 @@ namespace Stormbot.Bot.Core.Modules
                                     return;
                             }
 
-                            await _client.CurrentUser.Edit(Constants.Pass, avatar: stream, avatarType: type);
-                            stream.Close();
-                            stream.Dispose();
+                            await _client.CurrentUser.Edit(Config.Pass, avatar: stream, avatarType: type);
                         }
                     });
 
@@ -111,7 +107,8 @@ namespace Stormbot.Bot.Core.Modules
                     .Do(async e => await Collect(e));
 
                 group.CreateCommand("gencmdmd")
-                    .Do(e => GenerateCommandMarkdown(e));
+                    .AddCheck((cmd, usr, chnl) => !chnl.IsPrivate)
+                    .Do(async e => await DiscordUtils.GenerateCommandMarkdown(_client));
             });
 
             manager.CreateDynCommands("", PermissionLevel.User, group =>
@@ -144,7 +141,7 @@ namespace Stormbot.Bot.Core.Modules
             {
                 if (!e.Channel.IsPrivate) return;
 
-                if (e.Message.Text.StartsWith("https://discord.gg/"))
+                if (e.Message.Text.StartsWith("https://discord"))
                 {
                     string invite = string.Empty;
                     try
@@ -160,104 +157,7 @@ namespace Stormbot.Bot.Core.Modules
                 }
             };
         }
-
-        private void GenerateCommandMarkdown(CommandEventArgs e)
-        {
-            const string saveFileDir = Constants.DataFolderDir + "commands.md";
-            string tableStart =
-                $"Commands | Parameters | Description | Default Permissions{Environment.NewLine}--- | --- | --- | ---";
-
-            StringBuilder builder = new StringBuilder()
-                .AppendLine("# StormBot command table.")
-                .AppendLine($"This file was automatically generated at {DateTime.UtcNow} UTC.")
-                .AppendLine("### Preface")
-                .AppendLine(
-                    "This document contains every command, that has been registered in the CommandService system, their paramaters, their desciptions and their default permissions.")
-                .AppendLine(
-                    "Every command belongs to a cetain module. These modules can be enabled and disabled at will using the Modules module. Each comamnd is seperated into their parent modules command table.")
-                .AppendLine($"{Environment.NewLine}{Environment.NewLine}")
-                .AppendLine(
-                    $"Each and every one of these commands can be triggered by saying `{_client.Commands().Config.PrefixChar}<command>` or `{e.Server.CurrentUser.Mention}<command>`")
-                .AppendLine($"{Environment.NewLine}## Commands");
-
-            string currentModule = null;
-            foreach (Command cmd in _client.Commands().AllCommands)
-            {
-                if (cmd.Text == "help") continue;
-                if (cmd.Category == "Personal") continue;
-
-                if (currentModule != cmd.Category)
-                {
-                    currentModule = cmd.Category;
-                    builder.AppendLine($"{Environment.NewLine}#### {currentModule}");
-                    builder.AppendLine(tableStart);
-                }
-
-
-                builder.Append($"`{cmd.Text}` ");
-
-                if (cmd.Aliases.Any())
-                {
-                    builder.Append("*Aliases*: ");
-
-                    foreach (string alias in cmd.Aliases)
-                        builder.Append($"`{alias}` ");
-
-                    builder.Append(" ");
-                }
-
-                builder.Append("| ");
-
-                foreach (CommandParameter param in cmd.Parameters)
-                {
-                    switch (param.Type)
-                    {
-                        case ParameterType.Required:
-                            builder.Append($" `<{param.Name}>`");
-                            break;
-                        case ParameterType.Optional:
-                            builder.Append($" `[{param.Name}]`");
-                            break;
-                        case ParameterType.Multiple:
-                            builder.Append($" `[{param.Name}...]`");
-                            break;
-                        case ParameterType.Unparsed:
-                            builder.Append(" `[-]`");
-                            break;
-                    }
-                }
-
-                builder.Append($" | {cmd.Description} | ");
-
-                // perms are a bit of a hack seeing as _checks is private.
-
-                IPermissionChecker[] checkers = (IPermissionChecker[])
-                    cmd.GetType()
-                        .GetRuntimeFields()
-                        .FirstOrDefault(f => f.Name == "_checks")
-                        .GetValue(cmd);
-
-                // get max value of PermissionLevel
-                PermissionLevel lowestPermissionLevel =
-                    Enum.GetValues(typeof (PermissionLevel)).Cast<PermissionLevel>().Max();
-
-                foreach (IPermissionChecker permCheck in checkers)
-                {
-                    PermissionLevelChecker perms = permCheck as PermissionLevelChecker;
-                    if (perms?.MinPermissions < (int) lowestPermissionLevel)
-                        lowestPermissionLevel = (PermissionLevel) perms.MinPermissions;
-
-                    DynamicPermissionChecker dynPerms = permCheck as DynamicPermissionChecker;
-                    if (dynPerms?.DefaultPermissionLevel < (int) lowestPermissionLevel)
-                        lowestPermissionLevel = (PermissionLevel) dynPerms.DefaultPermissionLevel;
-                }
-
-                builder.Append($"{lowestPermissionLevel}{Environment.NewLine}");
-            }
-
-            File.WriteAllText(saveFileDir, builder.ToString());
-        }
-
+        
         private async Task Collect(CommandEventArgs e)
         {
             double memoryBefore = GetMemoryUsage();

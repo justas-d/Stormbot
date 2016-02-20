@@ -8,15 +8,14 @@ namespace Stormbot.Bot.Core.Modules.Audio
 {
     internal sealed class SoundcloudResolver : IStreamResolver
     {
-        internal static string ApiKey;
         private readonly Dictionary<string, dynamic> _cachedTrackData = new Dictionary<string, dynamic>();
-        private string ClientIdParam => $"client_id={ApiKey}";
+        private string ClientIdParam => $"client_id={Config.SoundcloudApiKey}";
         bool IStreamResolver.SupportsTrackNames => true;
         bool IStreamResolver.SupportsAsyncCanResolve => false;
 
         async Task<string> IStreamResolver.ResolveStreamUrl(string input)
         {
-            if (ApiKey != null)
+            if (Config.SoundcloudApiKey != null)
                 return $"{(string) (await GetTrackData(input)).stream_url}?{ClientIdParam}";
 
             Logger.FormattedWrite(GetType().Name, "Soundcloud API Key was not set.");

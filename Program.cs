@@ -11,33 +11,62 @@ namespace Stormbot
     {
         private static void Main(string[] args)
         {
-            if (File.Exists(Constants.ConfigDir))
+            if (!File.Exists(Constants.CredentialsConfigDir))
             {
-                dynamic config = JsonConvert.DeserializeObject(File.ReadAllText(Constants.ConfigDir));
-                try
-                {
-                    Constants.Pass = config.Password;
-                    Constants.FfprobeDir = config.FfprobeDir;
-                    Constants.FfmpegDir = config.FfmpegDir;
-                    Constants.LivestreamerDir = config.LivestreamerDir;
-                    SoundcloudResolver.ApiKey = config.SoundcloudApiKey;
-                    Constants.TwitchOauth = config.TwitchOauth;
-                    Constants.TwitchUsername = config.TwitchUsername;
-                    Constants.PastebinApiKey = config.PastebinApiKey;
-                    Constants.PastebinUsername = config.PastebinUsername;
-                    Constants.PastebinPassword= config.PastebinPassword;
-                }
-                catch (Exception ex)
-                {
-                    Logger.FormattedWrite("Entry", $"Failed parsing config.json. Exception: {ex}");
-                    Console.ReadLine();
-                    return;
-                }
-                StormBot bot = new StormBot((string)config.Email, (string)config.Password);
-                bot.Start();
+                Logger.WriteLine("credentials.json not found.");
+                Console.ReadLine();
+                return;
             }
-            else
-                Logger.Writeline("config.json was not found.");
+
+            if (!File.Exists(Constants.CommonConfigDir))
+            {
+                Logger.WriteLine("config.json not found.");
+                Console.ReadLine();
+                return;
+            }
+
+            dynamic credentials = JsonConvert.DeserializeObject(File.ReadAllText(Constants.CredentialsConfigDir));
+            string email;
+            string password;
+
+            try
+            {
+                email = credentials.Email;
+                password = credentials.Password;
+            }
+            catch (Exception ex)
+            {
+                Logger.WriteLine($"Failed parsing credentials.json. Exception: {ex}");
+                Console.ReadLine();
+                return;
+            }
+
+            dynamic config = JsonConvert.DeserializeObject(File.ReadAllText(Constants.CommonConfigDir));
+
+            try
+            {
+                Config.Pass = password;
+                Config.FfprobeDir = config.FfprobeDir;
+                Config.FfmpegDir = config.FfmpegDir;
+                Config.LivestreamerDir = config.LivestreamerDir;
+                Config.SoundcloudApiKey = config.SoundcloudApiKey;
+                Config.TwitchOauth = config.TwitchOauth;
+                Config.TwitchUsername = config.TwitchUsername;
+                Config.PastebinApiKey = config.PastebinApiKey;
+                Config.PastebinUsername = config.PastebinUsername;
+                Config.PastebinPassword = config.PastebinPassword;
+                Config.CommandsMdDir = config.CommandsMdDir;
+            }
+            catch (Exception ex)
+            {
+                Logger.FormattedWrite("Entry", $"Failed parsing config.json. Exception: {ex}");
+                Console.ReadLine();
+                return;
+            }
+
+            StormBot bot = new StormBot(email, password);
+            bot.Start();
+            Logger.Writeline("credentials.json was not found.");
 
             Logger.Writeline("Press any key to exit...");
             Console.ReadLine();

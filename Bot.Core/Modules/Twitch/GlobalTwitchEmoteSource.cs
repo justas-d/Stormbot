@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -10,10 +9,9 @@ using StrmyCore;
 
 namespace Stormbot.Bot.Core.Modules.Twitch
 {
-    internal class GlobalTwitchEmoteSource : CentralizedEmoteSource
+    internal sealed class GlobalTwitchEmoteSource : CentralziedEmoteSource
     {
-        public override string DataSource => "https://api.twitch.tv/kraken/chat/emoticons";
-        public override string CachedFileName => "globaltwitch.json";
+        protected override string DataSource => "https://api.twitch.tv/kraken/chat/emoticons";
 
         protected override void PopulateDictionary(JObject data)
         {
@@ -31,26 +29,19 @@ namespace Stormbot.Bot.Core.Modules.Twitch
 
         public override async Task<string> GetEmote(string emote, HttpService http)
         {
-            try
+            if (!EmoteDict.ContainsKey(emote))
+                return null;
+
+            string url = EmoteDict[emote];
+            string dir = Path.Combine(Constants.TwitchEmoteFolderDir, emote + ".png");
+
+            if (!File.Exists(dir))
             {
-                string url = EmoteDict[emote];
-                string dir = Path.Combine(Constants.TwitchEmoteFolderDir, emote + ".png");
-
-                if (!File.Exists(dir))
-                {
-                    HttpContent content = await http.Send(HttpMethod.Get, url);
-                    File.WriteAllBytes(dir, await content.ReadAsByteArrayAsync());
-                }
-
-                return dir;
+                HttpContent content = await http.Send(HttpMethod.Get, url);
+                File.WriteAllBytes(dir, await content.ReadAsByteArrayAsync());
             }
-            catch (KeyNotFoundException)
-            {
-            } //ignored
-            return null;
-        }
 
-        public override bool ContainsEmote(string emote)
-            => EmoteDict.ContainsKey(emote);
+            return dir;
+        }
     }
 }

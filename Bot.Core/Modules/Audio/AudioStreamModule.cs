@@ -243,7 +243,6 @@ namespace Stormbot.Bot.Core.Modules.Audio
                         streamer.Start();
                     }
 
-
                     int bufferSize = 1920*_client.Audio().Config.Channels;
                     byte[] buffer = new byte[bufferSize];
 

@@ -27,7 +27,7 @@ namespace Stormbot.Bot.Core.DynPerm
         public void DestroyServerPerms(ulong server)
             => _perms.Remove(server);
 
-        public DynPermFullData TryAddOrUpdate(ulong serverId, string input, out string error)
+        public DynPermFullData SetDynPermFullData(ulong serverId, string input, out string error)
         {
             try
             {
@@ -39,7 +39,7 @@ namespace Stormbot.Bot.Core.DynPerm
                     return null;
                 }
 
-                DynPermFullData fullPermData = new DynPermFullData(input, perms);
+                DynPermFullData fullPermData = new DynPermFullData(perms);
                 Server server = _client.GetServer(serverId);
 
                 // verify the data (role && user ids)
@@ -112,9 +112,12 @@ namespace Stormbot.Bot.Core.DynPerm
 
         public DynPermFullData GetPerms(ulong server)
         {
-            DynPermFullData perms;
-            _perms.TryGetValue(server, out perms);
-            return perms;
+            DynPermFullData data;
+            _perms.TryGetValue(server, out data);
+            return data;
         }
+
+        public DynPermFullData GetOrAddPerms(Server server)
+            => _perms.GetOrAdd(server.Id, key => new DynPermFullData());
     }
 }

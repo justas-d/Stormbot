@@ -10,6 +10,15 @@ namespace Stormbot.Bot.Core
 {
     public static class Extensions
     {
+        public static bool RoleExists(this Server server, ulong role)
+            => server.GetRole(role) != null;
+
+        public static bool UserExists(this Server server, ulong user)
+            => server.GetUser(user) != null;
+
+        public static bool TextChannelExists(this Server server, ulong channel)
+            => server.TextChannels.FirstOrDefault(c => c.Id == channel) != null;
+
         public static AudioService Audio(this DiscordClient client, bool required = true)
             => client.GetService<AudioService>(required);
 
@@ -93,6 +102,7 @@ namespace Stormbot.Bot.Core
 
             if (!textChannel.Server.CurrentUser.GetPermissions(textChannel).SendMessages) return null;
 
+            msg = msg.Replace("@everyone", "everyone");
             return await textChannel.SendMessage(msg);
         }
 

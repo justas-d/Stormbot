@@ -1,9 +1,9 @@
 # StormBot command table.
-This file was automatically generated at 19-02-2016 12:45:47 UTC.
+This file was automatically generated at 20-02-2016 10:37:21 UTC.
 
 
 ### Preface
-This document contains every command, that has been registered in the CommandService system, their paramaters, their desciptions and their default permissions.
+This document contains every command, that has been registered in the CommandService system, their paramaters, their desciptions, their default permissions and whether they support dynamic permissions.
 Every command belongs to a cetain module. These modules can be enabled and disabled at will using the Modules module. Each comamnd is seperated into their parent modules command table.
 
 
@@ -15,12 +15,6 @@ Each and every one of these commands can be triggered by saying `}<command>` or 
 #### Dynamic Permissions
 Commands | Parameters | Description | Default Permissions | Supports DynPerms? 
 --- | --- | --- | --- | ---
-`dynperm role allow command add` | `<roleId>` `[-]` | Allow a role to use a command. | ServerAdmin | -
-`dynperm role allow command remove` | `<roleId>` `[-]` | Removes an allow on a role to use a command. | ServerAdmin | -
-`dynperm role add` | `<roleId>` | Adds a role to the dynamic permissions system. | ServerAdmin | -
-`dynperm role remove` | `<roleId>` | Removes a role from the dynamic permissions system. | ServerAdmin | -
-`dynperm user add` | `<userId>` | Adds an user to the dynamic permissions system. | ServerAdmin | -
-`dynperm user remove` | `<userId>` | Removes an user from the dynamic permissions system. | ServerAdmin | -
 `dynperm set` | `[-]` | Sets the dynamic permissions for this server.**Pastebin links are supported.**Use the dynperm help command for more info. | ServerAdmin | -
 `dynperm show` | | Shows the Dynamic Permissions for this server. | ServerAdmin | -
 `dynperm clear` | `<areyousure>` | Clears the Dynamic Permissions. This cannot be undone. Pass yes as an argument for this to work. | ServerAdmin | -
@@ -145,6 +139,7 @@ Commands | Parameters | Description | Default Permissions | Supports DynPerms?
 #### Twitch Emotes
 Commands | Parameters | Description | Default Permissions | Supports DynPerms? 
 --- | --- | --- | --- | ---
+`bttv` | `<channel>` | Add a BTTV channel to the emote sources. | User | ✓
 `emote` | `[-]` |  | User | ✓
 
 #### Announcements

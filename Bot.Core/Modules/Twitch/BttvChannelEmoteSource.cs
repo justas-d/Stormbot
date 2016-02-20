@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -8,7 +7,6 @@ using Discord.Net;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Stormbot.Bot.Core.Services;
-using StrmyCore;
 
 namespace Stormbot.Bot.Core.Modules.Twitch
 {

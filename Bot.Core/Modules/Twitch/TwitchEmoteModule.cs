@@ -14,8 +14,6 @@ namespace Stormbot.Bot.Core.Modules.Twitch
 {
     public class TwitchEmoteModule : IModule, IDataObject
     {
-        private const string EmotePrefix = ".";
-
         private readonly List<EmoteSourceBase> _emoteSources = new List<EmoteSourceBase>
         {
             new GlobalTwitchEmoteSource(),

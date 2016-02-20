@@ -321,27 +321,16 @@ namespace Stormbot.Bot.Core.Modules.Audio
 
             public async Task PrintCurrentTrack()
             {
-                try
+                if (CurrentTrack != null)
                 {
-                    if (CurrentTrack != null)
-                    {
-                        StringBuilder builder = new StringBuilder($"Currently playing: {CurrentTrack.Name}");
-                        if (CurrentTrack.Length != null && CurrentTrack.Length != TimeSpan.Zero)
-                            builder.Append($" `[{CurrentTrack.Length}]`");
+                    StringBuilder builder = new StringBuilder($"Currently playing: {CurrentTrack.Name}");
+                    if (CurrentTrack.Length != null && CurrentTrack.Length != TimeSpan.Zero)
+                        builder.Append($" `[{CurrentTrack.Length}]`");
 
-                        await ChatChannel.SafeSendMessage(builder.ToString());
-                    }
-
-                    else
-                        await ChatChannel.SafeSendMessage("No track playing");
+                    await ChatChannel.SafeSendMessage(builder.ToString());
                 }
-                catch (IndexOutOfRangeException)
-                {
-                    await
-                        ChatChannel.SafeSendMessage(
-                            $"Welp something went wrong with the Track index, which has been reset so try again. \r\n Debug: index {TrackIndex} size {Playlist.Count}");
-                    TrackIndex = 0;
-                }
+                else
+                    await ChatChannel.SafeSendMessage("No track playing");
             }
         }
 

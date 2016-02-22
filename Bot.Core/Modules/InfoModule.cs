@@ -76,7 +76,8 @@ namespace Stormbot.Bot.Core.Modules
                         await
                             e.Channel.SafeSendMessage(
                                 $"**Reach my developer at**:\r\n" +
-                                $"- http://steamcommunity.com/profiles/76561198035041409/");
+                                $"- http://steamcommunity.com/profiles/76561198035041409/" +
+                                $"- https://discord.gg/0lHgknA1Q2RIJK0m");
                     });
             });
         }

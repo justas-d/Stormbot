@@ -44,12 +44,9 @@ The easiest way you can contact me is via the StormBot test server over [here](h
 
 You will first want to set up a Data folder (stored in ````Stormbot.Helpers.Constants.DataFolderDir````). 
 
-After that you will need to create a ````config.json```` and fill it with information in the given json format:
+Then, in the data folder, create a file named ````config-common.json```` and fill it with information in the given json format:
 ````
 {
-  "Email"            : "",
-  "Password"         : "",
-
   // only if using audio
   "FfmpegDir"        : "",
   "FfprobeDir"       : "", 
@@ -66,5 +63,14 @@ After that you will need to create a ````config.json```` and fill it with inform
 }
 
 ````
-Compile the bot, have it log in with the details we gave it in ````config.json````.
+
+After that you'll need a ```` credentials.json ```` file in this format:
+````
+{
+	  "Email"            : "",
+    "Password"         : ""
+}
+````
+
+Compile the bot, and run it.
 Then you will want to give it the owner id, stored in ````Stormbot.Helpers.Constants.UserOwner````. You can use the !whoami command to find out your user id.

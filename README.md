@@ -1,3 +1,6 @@
+# Migrated to GitLab
+###### https://gitlab.com/SSStormy/Stormbot
+```
 # Stormbot
 A Discord.Net based bot.
 
@@ -74,3 +77,4 @@ After that you'll need a ```` credentials.json ```` file in this format:
 
 Compile the bot, and run it.
 Then you will want to give it the owner id, stored in ````Stormbot.Helpers.Constants.UserOwner````. You can use the !whoami command to find out your user id.
+```

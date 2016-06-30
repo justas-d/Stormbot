@@ -1,4 +1,4 @@
-Superseded by (discord-personal-bot)[https://gitlab.com/SSStormy/discord-personal-bot]
+Superseded by [discord-personal-bot](https://gitlab.com/SSStormy/discord-personal-bot)
 
 ```
 # Stormbot

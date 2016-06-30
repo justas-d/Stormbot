@@ -1,5 +1,5 @@
-# Migrated to GitLab
-###### https://gitlab.com/SSStormy/Stormbot
+Superseded by (discord-personal-bot)[https://gitlab.com/SSStormy/discord-personal-bot]
+
 ```
 # Stormbot
 A Discord.Net based bot.

@@ -1,5 +1,4 @@
-Superseded by [discord-personal-bot](https://gitlab.com/SSStormy/discord-personal-bot)
-
+This project is old and dusty. You might find some gems in the modules section but other then that this project is rotten. Stored for archival purpooses.
 ```
 # Stormbot
 A Discord.Net based bot.
